@@ -1,0 +1,4 @@
+supabase
+pypdf
+google-genai
+python-dotenv
