@@ -3,8 +3,7 @@ INSERT INTO storage.buckets (id, name, public)
 VALUES ('quotes-bucket', 'quotes-bucket', false)
 ON CONFLICT (id) DO NOTHING;
 
--- RLS for storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- RLS is already enabled by default in Supabase storage.objects
 
 -- 1. Managers can insert (upload) PDFs
 CREATE POLICY "Managers can upload quotes"
