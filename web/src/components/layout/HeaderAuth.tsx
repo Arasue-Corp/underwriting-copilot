@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { createClient } from "@/lib/supabase/server"
 import AccountDropdown from "./AccountDropdown"
 
@@ -8,9 +9,12 @@ export default async function HeaderAuth() {
   
   if (!user) {
     return (
-      <div className="h-8 w-8 rounded-full bg-muted border border-border flex items-center justify-center text-sm font-medium text-muted-foreground">
-        ?
-      </div>
+      <Link 
+        href="/login" 
+        className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2"
+      >
+        Iniciar Sesión
+      </Link>
     )
   }
 
