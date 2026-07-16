@@ -24,17 +24,17 @@ export function DistributionChart() {
           stroke="none"
         >
           {data.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={`hsl(var(--chart-${index + 1}))`} />
+            <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
           ))}
         </Pie>
         <Tooltip 
-          contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
+          contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: "8px", color: "var(--foreground)" }}
         />
         <Legend 
           verticalAlign="bottom" 
           height={36} 
           iconType="circle"
-          wrapperStyle={{ fontSize: '12px', color: 'hsl(var(--muted-foreground))' }}
+          wrapperStyle={{ fontSize: '12px', color: 'var(--muted-foreground)' }}
         />
       </PieChart>
     </ResponsiveContainer>

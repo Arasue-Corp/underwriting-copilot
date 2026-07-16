@@ -21,32 +21,32 @@ export function OverviewChart() {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis
           dataKey="name"
-          stroke="hsl(var(--muted-foreground))"
+          stroke="var(--muted-foreground)"
           fontSize={12}
           tickLine={false}
           axisLine={false}
           padding={{ left: 10, right: 10 }}
         />
         <YAxis
-          stroke="hsl(var(--muted-foreground))"
+          stroke="var(--muted-foreground)"
           fontSize={12}
           tickLine={false}
           axisLine={false}
           tickFormatter={(value) => `$${value}`}
         />
         <Tooltip
-          contentStyle={{ backgroundColor: "hsl(var(--card))", borderColor: "hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }}
-          itemStyle={{ color: "hsl(var(--chart-1))" }}
+          contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: "8px", color: "var(--foreground)" }}
+          itemStyle={{ color: "var(--chart-1)" }}
         />
         <Line
           type="monotone"
           dataKey="total"
-          stroke="hsl(var(--chart-1))"
+          stroke="var(--chart-1)"
           strokeWidth={3}
-          dot={{ r: 4, fill: "hsl(var(--chart-1))" }}
+          dot={{ r: 4, fill: "var(--chart-1)" }}
           activeDot={{ r: 6 }}
         />
       </LineChart>

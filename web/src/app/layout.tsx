@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2 } from "lucide-react";
 
 const inter = Inter({
   variable: "--font-sans",
+  subsets: ["latin"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
 });
 
@@ -17,6 +22,11 @@ import { createClient } from "@/lib/supabase/server";
 import HeaderAuth from "@/components/layout/HeaderAuth";
 import MobileNav from "@/components/layout/MobileNav";
 import { Users } from "lucide-react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { LanguageProvider } from "@/components/language-provider";
+import { LanguageToggle } from "@/components/language-toggle";
+import { cookies } from "next/headers";
 
 export default async function RootLayout({
   children,
@@ -32,85 +42,120 @@ export default async function RootLayout({
     if (profile) role = profile.role;
   }
 
+  const cookieStore = await cookies();
+  const langCookie = cookieStore.get('NEXT_LOCALE')?.value as 'en' | 'es' | undefined;
+  const lang = langCookie === 'es' ? 'es' : 'en';
+
+  const t = {
+    en: {
+      dashboard: 'Dashboard',
+      appetite: 'Appetite Finder',
+      requests: 'Quotes',
+      admin: 'Administration',
+      ingestion: 'BI Ingestion',
+      agencies: 'Carriers / Agencies',
+      users: 'User Management',
+      myAgency: 'My Agency',
+      settings: 'Settings'
+    },
+    es: {
+      dashboard: 'Dashboard',
+      appetite: 'Buscador de Apetito',
+      requests: 'Solicitudes',
+      admin: 'Administración',
+      ingestion: 'BI Ingestion',
+      agencies: 'Compañías / Agencias',
+      users: 'Gestión de Usuarios',
+      myAgency: 'Mi Agencia',
+      settings: 'Configuración'
+    }
+  }[lang];
+
   return (
-    <html lang="es" className="light">
+    <html lang={lang} suppressHydrationWarning>
       <body
-        className={`${inter.variable} antialiased min-h-screen text-slate-900 bg-slate-50 font-sans flex flex-col md:flex-row`}
+        className={`${inter.variable} ${playfair.variable} antialiased min-h-screen text-foreground premium-bg font-sans flex flex-col md:flex-row selection:bg-primary/20 selection:text-primary`}
       >
+        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+          <LanguageProvider lang={lang}>
         {/* Sidebar (Desktop Only) */}
-        <aside className="w-64 border-r border-border bg-sidebar text-sidebar-foreground hidden md:flex flex-col">
-          <div className="h-16 flex items-center px-6 border-b border-sidebar-border">
-            <ShieldCheck className="h-6 w-6 text-primary mr-2" />
-            <span className="font-bold tracking-tight text-lg">UW Co-Pilot</span>
+        <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+          <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
+            <div className="bg-primary/10 p-1.5 rounded-lg mr-3 shadow-sm border border-primary/20">
+              <ShieldCheck className="h-5 w-5 text-primary" />
+            </div>
+            <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Arasue UW</span>
           </div>
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-3">
+          <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
+            <ul className="space-y-1.5 px-4">
               <li>
-                <a href="/" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium bg-sidebar-accent text-sidebar-accent-foreground">
+                <a href="/" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold bg-primary/10 text-primary transition-all border border-primary/10 shadow-sm">
                   <Home className="h-4 w-4" />
-                  Dashboard
+                  {t.dashboard}
                 </a>
               </li>
               <li>
-                <a href="/appetite" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                  <Search className="h-4 w-4" />
-                  Buscador de Apetito
+                <a href="/appetite" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                  <Search className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                  {t.appetite}
                 </a>
               </li>
               <li>
-                <a href="/quotes" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                  <FileText className="h-4 w-4" />
-                  Solicitudes
+                <a href="/quotes" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                  <FileText className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                  {t.requests}
                 </a>
               </li>
               {role === 'ADMIN' && (
                 <>
-                  <li className="pt-4 pb-1 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Administración
+                  <li className="pt-6 pb-2 px-3 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest">
+                    {t.admin}
                   </li>
                   <li>
-                    <a href="/admin/upload-appetite" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                      <Database className="h-4 w-4" />
-                      BI Ingestion
+                    <a href="/admin/upload-appetite" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                      <Database className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                      {t.ingestion}
                     </a>
                   </li>
                   <li>
-                    <a href="/admin/agencies" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                      <Building2 className="h-4 w-4" />
-                      Compañías / Agencias
+                    <a href="/admin/agencies" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                      <Building2 className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                      {t.agencies}
                     </a>
                   </li>
                   <li>
-                    <a href="/admin/users" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                      <ShieldCheck className="h-4 w-4" />
-                      Gestión de Usuarios
+                    <a href="/admin/users" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                      <ShieldCheck className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                      {t.users}
                     </a>
                   </li>
                 </>
               )}
               {(role === 'MANAGER' || role === 'ADMIN') && (
                 <li>
-                  <a href="/agency" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                    <Users className="h-4 w-4" />
-                    Mi Agencia
+                  <a href="/agency" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                    <Users className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                    {t.myAgency}
                   </a>
                 </li>
               )}
             </ul>
           </nav>
-          <div className="p-4 border-t border-sidebar-border">
-            <a href="#" className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-              <Settings className="h-4 w-4" />
-              Configuración
+          <div className="p-4 border-t border-border/40 bg-card/20 space-y-2">
+            <ThemeToggle />
+            <LanguageToggle />
+            <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+              <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
+              {t.settings}
             </a>
           </div>
         </aside>
         
         {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <header className="h-16 border-b border-border flex items-center justify-between md:justify-end px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <main className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
+          <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
             <MobileNav role={role} />
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <HeaderAuth />
             </div>
           </header>
@@ -118,6 +163,8 @@ export default async function RootLayout({
             {children}
           </div>
         </main>
+          </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
