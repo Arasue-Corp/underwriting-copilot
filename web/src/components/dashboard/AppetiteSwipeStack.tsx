@@ -2,7 +2,8 @@
 
 import { useState } from "react"
 import { motion, AnimatePresence, PanInfo } from "framer-motion"
-import { Building2, AlertCircle, CheckCircle2, ChevronRight, RefreshCcw } from "lucide-react"
+import { Building2, AlertCircle, CheckCircle2, ChevronRight, RefreshCcw, FileText } from "lucide-react"
+import { QuoteModal } from "@/components/appetite/QuoteModal"
 
 type CarrierData = {
   id: number
@@ -68,6 +69,7 @@ export function AppetiteSwipeStack({
 }) {
   const [cards, setCards] = useState(data)
   const [leaveX, setLeaveX] = useState(0)
+  const [quoteCard, setQuoteCard] = useState<CarrierData | null>(null)
 
   const removeCard = (id: number, action: 'left' | 'right') => {
     setLeaveX(action === 'right' ? 300 : -300)
@@ -115,7 +117,7 @@ export function AppetiteSwipeStack({
 
   return (
     <div className="w-full flex flex-col items-center">
-    <div className="relative w-full h-[550px] flex items-center justify-center perspective-1000">
+    <div className="relative w-full h-[580px] flex items-center justify-center perspective-1000">
       <AnimatePresence>
         {cards.map((card, index) => {
           const isFront = index === 0;
@@ -123,7 +125,7 @@ export function AppetiteSwipeStack({
           return (
             <motion.div
               key={card.id}
-              className="absolute w-full max-w-[340px] h-[480px] rounded-[2rem] glass-panel p-6 flex flex-col items-center justify-between"
+              className="absolute w-full max-w-[340px] h-[520px] rounded-[2rem] glass-panel p-6 flex flex-col items-center justify-between"
               style={{
                 zIndex: cards.length - index,
                 borderTop: `4px solid ${card.status === 'ELIGIBLE' ? '#10b981' : card.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444'}`
@@ -208,6 +210,15 @@ export function AppetiteSwipeStack({
                  </div>
               </div>
 
+              {/* Request Quote Button */}
+              <button 
+                onClick={() => setQuoteCard(card)}
+                className="w-full mt-4 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+              </button>
+
               {/* Swipe indicators (Only visible when dragging) */}
               {isFront && (
                 <div className="absolute top-1/2 -translate-y-1/2 w-full px-6 flex justify-between pointer-events-none opacity-0 group-active:opacity-100 transition-opacity">
@@ -236,6 +247,12 @@ export function AppetiteSwipeStack({
         </div>
       </div>
     )}
+    
+    <QuoteModal 
+      isOpen={!!quoteCard} 
+      onClose={() => setQuoteCard(null)} 
+      rule={quoteCard} 
+    />
     </div>
   )
 }

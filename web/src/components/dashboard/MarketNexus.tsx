@@ -2,7 +2,8 @@
 
 import { useState, useMemo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Building2, Activity, CheckCircle2, AlertCircle, XCircle, Search, ChevronDown, ListFilter } from "lucide-react"
+import { Building2, Activity, CheckCircle2, AlertCircle, XCircle, Search, ChevronDown, ListFilter, FileText } from "lucide-react"
+import { QuoteModal } from "@/components/appetite/QuoteModal"
 
 type CarrierData = {
   id: number
@@ -71,6 +72,7 @@ export function MarketNexus({
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedDetail, setSelectedDetail] = useState<CarrierData | null>(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
 
   // Compute unique sets and map
   const { groupedByCarrier, groupedByIndustry } = useMemo(() => {
@@ -377,7 +379,7 @@ export function MarketNexus({
                 </div>
               )}
 
-              <div className="flex gap-4">
+              <div className="flex gap-4 mb-6">
                 <div className="flex-1 bg-background/50 p-3 rounded-xl border border-border/50 text-center">
                   <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
                     {language === 'es' ? 'Prima Mínima' : 'Min Premium'}
@@ -395,10 +397,24 @@ export function MarketNexus({
                   </span>
                 </div>
               </div>
+
+              <button 
+                onClick={() => setShowQuoteModal(true)}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              >
+                <FileText className="w-5 h-5" />
+                {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+              </button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
+
+      <QuoteModal 
+        isOpen={showQuoteModal} 
+        onClose={() => setShowQuoteModal(false)} 
+        rule={selectedDetail} 
+      />
     </div>
   )
 }
