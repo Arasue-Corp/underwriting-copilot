@@ -13,6 +13,7 @@ import { getAppetiteMatrix } from "@/app/actions/appetite_matrix"
 import { AppetiteRadar } from "@/components/dashboard/AppetiteRadar"
 import { AppetiteSwipeStack } from "@/components/dashboard/AppetiteSwipeStack"
 import { MarketNexus } from "@/components/dashboard/MarketNexus"
+import { QuoteModal } from "@/components/appetite/QuoteModal"
 
 const getCategoryIcon = (category: string) => {
   const c = category.toLowerCase()
@@ -111,6 +112,9 @@ export default function AppetiteBIDashboard() {
   // Mobile filters toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   
+  // Quote modal state
+  const [quoteRule, setQuoteRule] = useState<any>(null)
+
   // Computed active filters count
   const activeFiltersCount = (searchIndustry ? 1 : 0) + (searchProduct ? 1 : 0) + (searchCarrier ? 1 : 0)
 
@@ -578,9 +582,17 @@ export default function AppetiteBIDashboard() {
                                  <div className="grid grid-cols-1 gap-4">
                                     {eligible.map((r, idx) => (
                                       <div key={r.id} className="bg-card/50 border border-emerald-500/20 rounded-2xl p-6 hover:border-emerald-500/40 transition-colors animate-in fade-in slide-in-from-bottom-2 fill-mode-both" style={{ animationDelay: `${idx * 50}ms` }}>
-                                        <div className="font-bold text-foreground mb-3 flex items-center gap-3">
-                                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
-                                          <span className="text-lg">{r.industry_name}</span>
+                                        <div className="font-bold text-foreground mb-3 flex items-center justify-between gap-3">
+                                          <div className="flex items-center gap-3">
+                                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
+                                            <span className="text-lg">{r.industry_name}</span>
+                                          </div>
+                                          <button 
+                                            onClick={() => setQuoteRule(r)}
+                                            className="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 text-xs font-bold uppercase tracking-wider transition-colors border border-emerald-500/20"
+                                          >
+                                            {language === 'es' ? 'Cotizar' : 'Quote'}
+                                          </button>
                                         </div>
                                         <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed mb-5">
                                           {r.conditions || 'Sin condiciones específicas.'}
@@ -661,6 +673,12 @@ export default function AppetiteBIDashboard() {
 
         </div>
       )}
+
+      <QuoteModal 
+        isOpen={!!quoteRule} 
+        onClose={() => setQuoteRule(null)} 
+        rule={quoteRule} 
+      />
     </div>
   )
 }

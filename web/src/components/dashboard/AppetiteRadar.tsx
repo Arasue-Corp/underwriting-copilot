@@ -2,7 +2,8 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useMemo } from "react"
-import { Search, Building2, Crosshair, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Search, Building2, Crosshair, AlertCircle, CheckCircle2, FileText } from "lucide-react"
+import { QuoteModal } from "@/components/appetite/QuoteModal"
 
 type CarrierData = {
   id: number
@@ -68,6 +69,7 @@ export function AppetiteRadar({
   language: 'en' | 'es'
 }) {
   const [hoveredCarrier, setHoveredCarrier] = useState<CarrierData | null>(null);
+  const [quoteCarrier, setQuoteCarrier] = useState<CarrierData | null>(null);
 
   // Distribute carriers on the radar rings
   const radarNodes = useMemo(() => {
@@ -194,13 +196,26 @@ export function AppetiteRadar({
             <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
               {hoveredCarrier.product_line}
             </div>
-            <p className="text-sm text-foreground/80 leading-relaxed">
+            <p className="text-sm text-foreground/80 leading-relaxed mb-4">
               {hoveredCarrier.conditions || (language === 'es' ? 'Sin condiciones adicionales.' : 'No additional conditions.')}
             </p>
+            
+            <button
+              onClick={() => setQuoteCarrier(hoveredCarrier)}
+              className="w-full py-2 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
 
+      <QuoteModal 
+        isOpen={!!quoteCarrier} 
+        onClose={() => setQuoteCarrier(null)} 
+        rule={quoteCarrier} 
+      />
     </div>
   )
 }
