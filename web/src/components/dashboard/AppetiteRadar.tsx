@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion"
 import { useState, useMemo } from "react"
-import { Search, Building2, Crosshair, AlertCircle, CheckCircle2, FileText } from "lucide-react"
+import { Search, Building2, Crosshair, AlertCircle, CheckCircle2, FileText, XCircle } from "lucide-react"
 import { QuoteModal } from "@/components/appetite/QuoteModal"
 
 type CarrierData = {
@@ -95,7 +95,10 @@ export function AppetiteRadar({
   }, [data])
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto h-[700px] flex items-center justify-center overflow-hidden rounded-[3rem] glass-panel bg-black/5 dark:bg-black/20">
+    <div 
+      className="relative w-full max-w-4xl mx-auto h-[700px] flex items-center justify-center overflow-hidden rounded-[3rem] glass-panel bg-black/5 dark:bg-black/20"
+      onClick={() => setHoveredCarrier(null)}
+    >
       
       {/* Radar Rings Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 dark:opacity-40">
@@ -138,8 +141,10 @@ export function AppetiteRadar({
               damping: 15,
               delay: i * 0.05 
             }}
-            onMouseEnter={() => setHoveredCarrier(node)}
-            onMouseLeave={() => setHoveredCarrier(null)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setHoveredCarrier(hoveredCarrier?.id === node.id ? null : node)
+            }}
           >
             {/* The Node visually */}
             <div className="relative group">
@@ -185,11 +190,19 @@ export function AppetiteRadar({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel p-6 rounded-2xl w-[90%] max-w-md border-t-4"
+            onClick={(e) => e.stopPropagation()}
             style={{ 
               borderTopColor: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' 
             }}
           >
-            <div className="flex items-center gap-3 mb-2">
+            <button 
+              onClick={() => setHoveredCarrier(null)}
+              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground bg-muted/50 rounded-full transition-colors"
+            >
+              <XCircle className="w-5 h-5" />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-2 pr-8">
               {hoveredCarrier.status === 'ELIGIBLE' ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
               <h4 className="font-bold text-lg">{hoveredCarrier.carrier_name}</h4>
             </div>
