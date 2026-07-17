@@ -19,6 +19,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [files, setFiles] = useState<Record<string, File>>({})
   const [error, setError] = useState<string | null>(null)
+  const [invalidFields, setInvalidFields] = useState<string[]>([])
   const formRef = useRef<HTMLFormElement>(null)
 
   if (!isOpen || !rule) return null
@@ -26,10 +27,16 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
   const handleInputChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }))
     if (error) setError(null)
+    if (invalidFields.includes(id)) {
+      setInvalidFields(prev => prev.filter(f => f !== id))
+    }
   }
 
   const handleFileChange = (id: string, file: File | null) => {
     if (error) setError(null)
+    if (invalidFields.includes(id)) {
+      setInvalidFields(prev => prev.filter(f => f !== id))
+    }
     if (file) {
       setFiles(prev => ({ ...prev, [id]: file }))
     } else {
@@ -69,6 +76,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
       
       const missingFields = requiredStep1.filter(f => !formData[f.id] || String(formData[f.id]).trim() === '')
       if (missingFields.length > 0) {
+        setInvalidFields(missingFields.map(m => m.id))
         setError(language === 'es' ? `Faltan campos obligatorios:\n${missingFields.map(m => '- ' + m.label).join('\n')}` : `Missing required fields:\n${missingFields.map(m => '- ' + m.label).join('\n')}`)
         return
       }
@@ -77,6 +85,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
         setError(language === 'es' ? "Por favor selecciona al menos un producto para cotizar." : "Please select at least one product to quote.")
         return
       }
+      setInvalidFields([])
       setStep(2)
       // Scroll to top
       setTimeout(() => { if (formRef.current) formRef.current.scrollTop = 0 }, 10)
@@ -84,24 +93,29 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
     }
 
     // Validate step 2 manually
-    let missingStep2: string[] = []
+    let missingStep2Names: string[] = []
     const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
     selectedProducts.forEach(product => {
       product.fields.forEach(field => {
         if (field.required) {
           if (field.type === 'file') {
-            if (!files[field.id]) missingStep2.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+            if (!files[field.id]) {
+              missingStep2Names.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+              missingStep2Ids.push(field.id)
+            }
           } else {
             if (!formData[field.id] || String(formData[field.id]).trim() === '') {
-              missingStep2.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+              missingStep2Names.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+              missingStep2Ids.push(field.id)
             }
           }
         }
       })
     })
 
-    if (missingStep2.length > 0) {
-      setError(language === 'es' ? `Faltan campos obligatorios:\n${missingStep2.map(m => '- ' + m).join('\n')}` : `Missing required fields:\n${missingStep2.map(m => '- ' + m).join('\n')}`)
+    if (missingStep2Names.length > 0) {
+      setInvalidFields(missingStep2Ids)
+      setError(language === 'es' ? `Faltan campos obligatorios:\n${missingStep2Names.map(m => '- ' + m).join('\n')}` : `Missing required fields:\n${missingStep2Names.map(m => '- ' + m).join('\n')}`)
       // Scroll to top
       if (formRef.current) formRef.current.scrollTop = 0
       return
@@ -144,74 +158,84 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
 
   const renderField = (field: ProductField | any) => {
     const value = formData[field.id] || ""
+    const isInvalid = invalidFields.includes(field.id)
+    const baseClasses = "flex w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+    const inputClasses = `${baseClasses} h-10 ${isInvalid ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : 'border-input'}`
     
     if (field.type === 'textarea') {
       return (
-        <textarea
-          id={field.id}
-          value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
-          required={field.required}
-          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
+        <div className="space-y-1 w-full">
+          <textarea
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            className={`${baseClasses} min-h-[80px] ${isInvalid ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : 'border-input'}`}
+            placeholder={language === 'es' ? field.label : field.labelEn}
+          />
+          {isInvalid && <p className="text-[0.8rem] text-destructive">{language === 'es' ? 'Este campo es obligatorio' : 'This field is required'}</p>}
+        </div>
       )
     }
 
-    if (field.type === 'select') {
+    if (field.type === 'select' || field.type === 'boolean') {
+      const options = field.type === 'boolean' 
+        ? (language === 'es' ? ['Sí', 'No'] : ['Yes', 'No'])
+        : (language === 'es' ? field.options : field.optionsEn) || []
+      
       return (
-        <select
-          id={field.id}
-          value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
-          required={field.required}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <option value="">Selecciona una opción</option>
-          {field.options?.map((opt: string) => (
-            <option key={opt} value={opt}>{opt}</option>
-          ))}
-        </select>
-      )
-    }
-
-    if (field.type === 'boolean') {
-      return (
-        <select
-          id={field.id}
-          value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
-          required={field.required}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <option value="">Selecciona...</option>
-          <option value="Si">Sí</option>
-          <option value="No">No</option>
-        </select>
+        <div className="space-y-1 w-full">
+          <select
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            className={inputClasses}
+          >
+            <option value="">{language === 'es' ? 'Seleccionar...' : 'Select...'}</option>
+            {options?.map((opt: string) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+          {isInvalid && <p className="text-[0.8rem] text-destructive">{language === 'es' ? 'Este campo es obligatorio' : 'This field is required'}</p>}
+        </div>
       )
     }
 
     if (field.type === 'file') {
+      const file = files[field.id]
       return (
-        <input
-          id={field.id}
-          type="file"
-          accept=".pdf,.jpg,.jpeg,.png"
-          onChange={(e) => handleFileChange(field.id, e.target.files?.[0] || null)}
-          required={field.required}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-primary file:text-primary-foreground file:px-4 file:py-1 file:rounded-md file:mr-4 file:text-xs file:font-medium hover:file:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
+        <div className="space-y-1 w-full">
+          <div className="flex items-center space-x-2">
+            <label className={`cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 disabled:pointer-events-none h-10 px-4 py-2 border ${isInvalid ? 'border-destructive text-destructive bg-destructive/5 hover:bg-destructive/10' : 'border-input bg-background hover:bg-accent hover:text-accent-foreground'}`}>
+              <Upload className="w-4 h-4 mr-2" />
+              {file ? (language === 'es' ? 'Cambiar Archivo' : 'Change File') : (language === 'es' ? 'Subir Archivo' : 'Upload File')}
+              <input
+                type="file"
+                className="hidden"
+                onChange={(e) => handleFileChange(field.id, e.target.files?.[0] || null)}
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.jpeg,.jpg,.png"
+              />
+            </label>
+            {file && (
+              <span className="text-sm text-muted-foreground flex items-center">
+                <Check className="w-4 h-4 mr-1 text-emerald-500" />
+                {file.name}
+              </span>
+            )}
+          </div>
+          {isInvalid && <p className="text-[0.8rem] text-destructive">{language === 'es' ? 'Debe subir un archivo' : 'You must upload a file'}</p>}
+        </div>
       )
     }
 
     return (
-      <input
-        id={field.id}
-        type={field.type === 'number' ? 'number' : 'text'}
-        value={value}
-        onChange={(e) => handleInputChange(field.id, e.target.value)}
-        required={field.required}
-        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      />
+      <div className="space-y-1 w-full">
+        <input
+          type={field.type === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => handleInputChange(field.id, e.target.value)}
+          className={inputClasses}
+          placeholder={language === 'es' ? field.label : field.labelEn}
+        />
+        {isInvalid && <p className="text-[0.8rem] text-destructive">{language === 'es' ? 'Este campo es obligatorio' : 'This field is required'}</p>}
+      </div>
     )
   }
 
