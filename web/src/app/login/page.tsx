@@ -33,7 +33,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
         <div className="flex flex-col items-center">
-          <img src="/logo-crisol.png" alt="Crisol Logo" className="h-32 w-auto mb-2 object-contain" />
+          <img src="/logo-crisol.png" alt="Crisol Logo" className="h-64 w-auto -mt-6 mb-2 object-contain" />
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Acceso al Portal</h2>
           <p className="text-sm text-muted-foreground mt-2">Ingresa tus credenciales para continuar</p>
         </div>
