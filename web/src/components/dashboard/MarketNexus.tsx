@@ -368,10 +368,10 @@ export function MarketNexus({
 
               {selectedDetail.general_prohibited_operations && selectedDetail.general_prohibited_operations.length > 0 && (
                 <div className="bg-rose-500/5 border border-rose-500/20 p-4 rounded-xl text-sm leading-relaxed mb-4">
-                  <span className="block text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-2">
+                  <span className="block text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-2">
                     {language === 'es' ? 'Operaciones Prohibidas (General)' : 'General Prohibited Operations'}
                   </span>
-                  <ul className="list-disc pl-4 text-rose-600/80 space-y-1">
+                  <ul className="list-disc pl-4 text-foreground/90 space-y-1">
                     {selectedDetail.general_prohibited_operations.map((op, i) => (
                       <li key={i}>{op}</li>
                     ))}
