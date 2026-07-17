@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("pass1234")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [resetSuccess, setResetSuccess] = useState(false)
   const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -29,6 +30,28 @@ export default function LoginPage() {
     }
   }
 
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError("Por favor, ingresa tu correo electrónico arriba para recuperar tu contraseña")
+      return
+    }
+    
+    setLoading(true)
+    setError(null)
+    setResetSuccess(false)
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/update-password`,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setResetSuccess(true)
+    }
+    setLoading(false)
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
@@ -40,8 +63,13 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-6">
           {error && (
-            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/30">
+            <div className="bg-destructive/15 text-destructive text-sm p-3 rounded-md border border-destructive/30 animate-in fade-in slide-in-from-top-2">
               {error}
+            </div>
+          )}
+          {resetSuccess && (
+            <div className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-sm p-3 rounded-md border border-emerald-500/30 animate-in fade-in slide-in-from-top-2">
+              Se ha enviado un correo con las instrucciones para recuperar tu contraseña. Revisa tu bandeja de entrada o spam.
             </div>
           )}
           <div className="space-y-2">
@@ -55,7 +83,17 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none text-foreground">Contraseña</label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium leading-none text-foreground">Contraseña</label>
+              <button 
+                type="button" 
+                onClick={handleResetPassword}
+                disabled={loading}
+                className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm disabled:opacity-50"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
             <input 
               type="password" 
               required
