@@ -173,16 +173,18 @@ export function AppetiteRadar({
       {/* Laser Connection Line on Hover */}
       {hoveredCarrier && (
         <svg className="absolute inset-0 w-full h-full pointer-events-none z-20">
-          <motion.line 
-            x1="50%" y1="50%" 
-            x2={`calc(50% + ${hoveredCarrier.x}px)`} 
-            y2={`calc(50% + ${hoveredCarrier.y}px)`}
-            stroke={hoveredCarrier.status === 'ELIGIBLE' ? 'rgba(16,185,129,0.5)' : hoveredCarrier.status === 'RESTRICTED' ? 'rgba(245,158,11,0.5)' : 'rgba(239,68,68,0.3)'}
-            strokeWidth="2"
-            strokeDasharray="4 4"
-            initial={{ pathLength: 0, opacity: 0 }}
-            animate={{ pathLength: 1, opacity: 1 }}
-          />
+          <g style={{ transform: 'translate(50%, 50%)' }}>
+            <motion.line 
+              x1="0" y1="0" 
+              x2={hoveredCarrier.x} 
+              y2={hoveredCarrier.y}
+              stroke={hoveredCarrier.status === 'ELIGIBLE' ? 'rgba(16,185,129,0.5)' : hoveredCarrier.status === 'RESTRICTED' ? 'rgba(245,158,11,0.5)' : 'rgba(239,68,68,0.3)'}
+              strokeWidth="2"
+              strokeDasharray="4 4"
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: 1, opacity: 1 }}
+            />
+          </g>
         </svg>
       )}
 

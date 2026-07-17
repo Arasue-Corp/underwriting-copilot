@@ -123,12 +123,19 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           submitData.append(key, file)
         })
 
-        await submitQuoteRequest(submitData)
+        const result = await submitQuoteRequest(submitData)
+        if (result && !result.success) {
+          setError(language === 'es' ? `Hubo un error al solicitar la cotización: ${result.error}` : `There was an error requesting the quote: ${result.error}`)
+          // Scroll to top to see error
+          if (formRef.current) formRef.current.scrollTop = 0
+          return
+        }
         alert(language === 'es' ? "Cotización solicitada exitosamente" : "Quote requested successfully")
         onClose()
-      } catch (error) {
+      } catch (error: any) {
         console.error(error)
-        alert(language === 'es' ? "Hubo un error al solicitar la cotización." : "There was an error requesting the quote.")
+        setError(language === 'es' ? `Hubo un error inesperado: ${error.message || 'Error desconocido'}` : `There was an unexpected error: ${error.message || 'Unknown error'}`)
+        if (formRef.current) formRef.current.scrollTop = 0
       }
     })
   }

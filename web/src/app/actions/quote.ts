@@ -9,7 +9,7 @@ export async function submitQuoteRequest(formData: FormData) {
   // In a real app, these come from the authenticated session
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    throw new Error("Unauthorized")
+    return { success: false, error: "Unauthorized" }
   }
 
   // Fetch the agent's profile to get agency_id
@@ -20,7 +20,7 @@ export async function submitQuoteRequest(formData: FormData) {
     .single()
 
   if (!profile) {
-    throw new Error("Profile not found")
+    return { success: false, error: "Profile not found" }
   }
 
   const clientName = formData.get("client_name") as string
@@ -67,7 +67,7 @@ export async function submitQuoteRequest(formData: FormData) {
 
   if (error) {
     console.error("Error submitting quote:", error)
-    throw new Error("Failed to submit quote")
+    return { success: false, error: error.message || "Failed to submit quote" }
   }
 
   revalidatePath("/appetite")
