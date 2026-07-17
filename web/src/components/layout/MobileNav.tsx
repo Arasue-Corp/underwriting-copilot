@@ -40,8 +40,8 @@ export default function MobileNav({ role }: { role: string }) {
       >
         <div className="h-16 flex items-center justify-between px-6 border-b border-sidebar-border">
           <div className="flex items-center">
-            <ShieldCheck className="h-6 w-6 text-primary mr-2" />
-            <span className="font-bold tracking-tight text-lg">UW Co-Pilot</span>
+            <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-8 h-8 object-contain rounded-lg mr-2" />
+            <span className="font-playfair font-bold tracking-tight text-lg">Crisol</span>
           </div>
           <button 
             onClick={() => setIsOpen(false)}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2, Flame } from "lucide-react";
+import { Database, FileText, Home, Search, Settings, Building2 } from "lucide-react";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -82,9 +82,7 @@ export default async function RootLayout({
         <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
           <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-tr from-orange-500 to-amber-500 p-2.5 rounded-xl shadow-sm text-white">
-                <Flame className="w-5 h-5" />
-              </div>
+              <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-10 h-10 object-contain rounded-xl shadow-sm" />
               <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
             </div>
           </div>
