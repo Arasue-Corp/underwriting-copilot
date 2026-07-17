@@ -482,7 +482,7 @@ export default function AppetiteBIDashboard() {
                 {sortedCarriers.map((carrier) => {
                   const typedRecords = Object.values(groupedByCarrier[carrier] || {}).flat()
                   const total = typedRecords.length
-                  const eligible = typedRecords.filter(r => r.status === 'ELIGIBLE' || r.status === 'RESTRICTED').length
+                  const eligible = typedRecords.filter((r: any) => r.status === 'ELIGIBLE' || r.status === 'RESTRICTED').length
                   const percent = total > 0 ? Math.round((eligible / total) * 100) : 0
                   
                   return (
