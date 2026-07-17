@@ -226,7 +226,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           </button>
         </div>
         
-        <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6" noValidate>
+        <form id="quote-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6" noValidate>
           
           {error && (
             <div className="mb-6 p-4 bg-destructive/15 text-destructive rounded-lg flex items-start space-x-3 border border-destructive/30">
@@ -380,6 +380,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           {step < 2 ? (
             <button 
               type="submit" 
+              form="quote-form"
               className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
             >
               {language === 'es' ? 'Siguiente' : 'Next'} <ChevronRight className="w-4 h-4 ml-2" />
@@ -387,6 +388,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           ) : (
             <button 
               type="submit" 
+              form="quote-form"
               disabled={isPending}
               className="inline-flex items-center px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-bold hover:bg-primary/90 disabled:opacity-50"
             >
