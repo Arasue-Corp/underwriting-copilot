@@ -14,7 +14,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Underwriting Co-Pilot",
+  title: "Crisol",
   description: "Portal premium de cotizaciones y apetito.",
 };
 
@@ -81,10 +81,12 @@ export default async function RootLayout({
         {/* Sidebar (Desktop Only) */}
         <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
           <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
-            <div className="bg-primary/10 p-1.5 rounded-lg mr-3 shadow-sm border border-primary/20">
-              <ShieldCheck className="h-5 w-5 text-primary" />
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-tr from-primary to-primary/70 p-2.5 rounded-xl shadow-sm text-primary-foreground">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
             </div>
-            <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Arasue UW</span>
           </div>
           <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
             <ul className="space-y-1.5 px-4">

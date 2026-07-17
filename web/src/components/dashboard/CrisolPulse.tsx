@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Sparkles, Activity } from "lucide-react"
 
-export function CopilotPulse({ title, desc, lang }: { title: string, desc: string, lang: string }) {
+export function CrisolPulse({ title, desc, lang }: { title: string, desc: string, lang: string }) {
   const [insightIndex, setInsightIndex] = useState(0)
   
   const insights = lang === 'es' ? [

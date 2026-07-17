@@ -5,8 +5,8 @@ import { ShieldCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("manager@uwcopilot.com")
-  const [password, setPassword] = useState("securepassword123")
+  const [email, setEmail] = useState("manager@crisol.app")
+  const [password, setPassword] = useState("pass1234")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()

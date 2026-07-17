@@ -1,7 +1,7 @@
 import { Activity, CircleDollarSign, Files, Users, TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from "lucide-react"
 import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
-import { CopilotPulse } from "@/components/dashboard/CopilotPulse"
+import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
 import { cookies } from "next/headers"
 
 export default async function Dashboard() {
@@ -49,7 +49,7 @@ export default async function Dashboard() {
   return (
     <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <CopilotPulse title={t.title} desc={t.desc} lang={lang} />
+        <CrisolPulse title={t.title} desc={t.desc} lang={lang} />
         <div className="flex items-center space-x-2">
           {/* Controls like date picker could go here */}
         </div>
