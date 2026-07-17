@@ -147,11 +147,17 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground bg-fixed;
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
   }
   html {
     @apply font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    font-variant-numeric: tabular-nums;
+    @apply bg-background text-foreground bg-fixed;
   }
 }
 

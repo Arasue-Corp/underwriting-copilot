@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2 } from "lucide-react";
+import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2, Flame } from "lucide-react";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -82,8 +82,8 @@ export default async function RootLayout({
         <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
           <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-tr from-primary to-primary/70 p-2.5 rounded-xl shadow-sm text-primary-foreground">
-                <ShieldCheck className="w-5 h-5" />
+              <div className="bg-gradient-to-tr from-orange-500 to-amber-500 p-2.5 rounded-xl shadow-sm text-white">
+                <Flame className="w-5 h-5" />
               </div>
               <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
             </div>
@@ -150,6 +150,10 @@ export default async function RootLayout({
               <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
               {t.settings}
             </a>
+          </div>
+          <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
+            Desarrollado por <br/>
+            <span className="text-primary font-bold">Arasue Forge</span>
           </div>
         </aside>
         
