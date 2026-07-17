@@ -50,24 +50,34 @@ export default async function Dashboard() {
   const supabase = await createClient();
   
   // Real Data Fetching
-  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount');
+  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, carrier_id, carriers(name)');
   
   let totalPremium = 0;
   let totalCommissions = 0;
   let pendingQuotes = 0;
   let pendingManagerQuotes = 0;
 
+  const distribution: Record<string, number> = {};
+  const monthlyData: Record<string, number> = {};
+  
   if (quotes) {
     quotes.forEach((q: any) => {
       if (q.status === 'QUOTED') {
         totalPremium += q.premium_amount || 0;
         totalCommissions += q.commission_amount || 0;
+        
+        const carrierName = q.carriers?.name || q.carrier_id;
+        if (carrierName) {
+          distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+        }
       } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
         pendingQuotes++;
         if (q.status === 'PENDING_MANAGER') pendingManagerQuotes++;
       }
     });
   }
+
+  const distData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
 
   const { count: agentsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
   const activeAgents = agentsCount || 0;
@@ -98,10 +108,6 @@ export default async function Dashboard() {
           </div>
           <div className="p-6 pt-0">
             <div className="font-playfair text-3xl font-bold">{formatCurrency(totalPremium)}</div>
-            <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mr-1" />
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1.5">+20.1%</span> {t.vsMonth}
-            </p>
           </div>
         </div>
         
@@ -114,10 +120,6 @@ export default async function Dashboard() {
           </div>
           <div className="p-6 pt-0">
             <div className="font-playfair text-3xl font-bold text-[#8C6D41] dark:text-[#F2D3AC]">{formatCurrency(totalCommissions)}</div>
-            <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
-              <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mr-1" />
-              <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1.5">+15.0%</span> {t.vsMonth}
-            </p>
           </div>
         </div>
         
@@ -161,7 +163,7 @@ export default async function Dashboard() {
             <p className="text-sm text-muted-foreground">{t.evoDesc}</p>
           </div>
           <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
-            <OverviewChart />
+            <OverviewChart data={[]} />
           </div>
         </div>
         <div className="col-span-3 rounded-2xl glass-panel text-card-foreground flex flex-col">
@@ -170,7 +172,7 @@ export default async function Dashboard() {
             <p className="text-sm text-muted-foreground">{t.distDesc}</p>
           </div>
           <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
-            <DistributionChart />
+            <DistributionChart data={distData} />
           </div>
         </div>
       </div>

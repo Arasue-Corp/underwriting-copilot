@@ -2,19 +2,16 @@
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from "recharts"
 
-const data = [
-  { name: "Chubb", value: 400 },
-  { name: "Travelers", value: 300 },
-  { name: "CNA", value: 300 },
-  { name: "Liberty Mutual", value: 200 },
-]
+export function DistributionChart({ data }: { data?: any[] }) {
+  const chartData = data && data.length > 0 ? data : [
+    { name: "Sin datos", value: 1 }
+  ];
 
-export function DistributionChart() {
   return (
     <ResponsiveContainer width="100%" height={300}>
       <PieChart>
         <Pie
-          data={data}
+          data={chartData}
           cx="50%"
           cy="45%"
           innerRadius={60}

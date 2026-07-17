@@ -2,25 +2,19 @@
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
 
-const data = [
-  { name: "Ene", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Feb", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Mar", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Abr", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "May", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jun", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Jul", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Ago", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Sep", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Oct", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Nov", total: Math.floor(Math.random() * 5000) + 1000 },
-  { name: "Dic", total: Math.floor(Math.random() * 5000) + 1000 },
-]
+export function OverviewChart({ data }: { data?: any[] }) {
+  const chartData = data && data.length > 0 ? data : [
+    { name: "Ene", total: 0 },
+    { name: "Feb", total: 0 },
+    { name: "Mar", total: 0 },
+    { name: "Abr", total: 0 },
+    { name: "May", total: 0 },
+    { name: "Jun", total: 0 },
+  ]
 
-export function OverviewChart() {
   return (
     <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={data}>
+      <LineChart data={chartData}>
         <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
         <XAxis
           dataKey="name"
