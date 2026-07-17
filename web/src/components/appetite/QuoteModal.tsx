@@ -9,9 +9,10 @@ interface QuoteModalProps {
   isOpen: boolean
   onClose: () => void
   rule: any
+  language?: 'en' | 'es'
 }
 
-export function QuoteModal({ isOpen, onClose, rule }: QuoteModalProps) {
+export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModalProps) {
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
@@ -156,35 +157,43 @@ export function QuoteModal({ isOpen, onClose, rule }: QuoteModalProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="relative w-full max-w-3xl rounded-xl border border-border bg-card shadow-lg my-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-full flex flex-col rounded-xl border border-border bg-card shadow-lg">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-border p-6 sticky top-0 bg-card z-10 rounded-t-xl">
-          <div>
-            <h2 className="text-xl font-bold leading-none tracking-tight text-foreground">Solicitar Cotización</h2>
+        <div className="flex-none flex items-center justify-between border-b border-border p-6 bg-card z-10 rounded-t-xl">
+          <div className="pr-8">
+            <h2 className="text-xl font-bold leading-none tracking-tight text-foreground">
+              {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+            </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              Para {rule.carrier_name} - {rule.business_class || rule.industry_name}
+              {language === 'es' ? 'Para' : 'For'} {rule.carrier_name} - {rule.business_class || rule.industry_name}
             </p>
           </div>
-          <button onClick={onClose} className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring">
+          <button onClick={onClose} className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring shrink-0">
             <X className="h-6 w-6 text-foreground" />
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
           
           {/* Step 1: General Info & Product Selection */}
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
               <div>
-                <h3 className="text-lg font-semibold mb-4">Información General (Obligatoria)</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  {language === 'es' ? 'Información General (Obligatoria)' : 'General Information (Required)'}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Nombre Legal de la Empresa y DBA</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                    </label>
                     {renderField({ id: 'general_client_name', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Estructura Legal</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                    </label>
                     {renderField({ id: 'general_legal_structure', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2">
@@ -192,42 +201,53 @@ export function QuoteModal({ isOpen, onClose, rule }: QuoteModalProps) {
                     {renderField({ id: 'general_fein', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Medio de Contacto (Tel o Email)</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)'}
+                    </label>
                     {renderField({ id: 'general_contact', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">Dirección Física (Dirección, ZIP, Ciudad, Estado)</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Dirección Física (Dirección, ZIP, Ciudad, Estado)' : 'Physical Address (Street, ZIP, City, State)'}
+                    </label>
                     {renderField({ id: 'general_address', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">Descripción Detallada de las Operaciones</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
+                    </label>
                     {renderField({ id: 'general_operations', type: 'textarea', required: true })}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Años de Experiencia en la Industria</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
+                    </label>
                     {renderField({ id: 'general_experience_years', type: 'number', required: true })}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Historial de Siniestralidad (Loss Runs)</label>
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
+                    </label>
                     {renderField({ id: 'general_loss_runs', type: 'file' })}
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold mb-4">¿Qué productos necesitas cotizar?</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  {language === 'es' ? '¿Qué productos necesitas cotizar?' : 'What products do you need to quote?'}
+                </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
                   {INSURANCE_PRODUCTS.map(product => (
                     <label key={product.id} className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedProductIds.includes(product.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}>
-                      <input 
-                        type="checkbox" 
-                        className="mt-1 w-4 h-4 text-primary" 
-                        checked={selectedProductIds.includes(product.id)}
-                        onChange={() => toggleProduct(product.id)}
-                      />
+                      <input type="checkbox" className="mt-1 shrink-0" checked={selectedProductIds.includes(product.id)} onChange={() => handleProductToggle(product.id)} />
                       <div>
-                        <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">{product.description}</p>
+                        <div className="font-medium text-sm">
+                          {language === 'es' ? product.name : product.nameEn}
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {language === 'es' ? product.description : product.descriptionEn}
+                        </div>
                       </div>
                     </label>
                   ))}
@@ -239,17 +259,26 @@ export function QuoteModal({ isOpen, onClose, rule }: QuoteModalProps) {
           {/* Step 2: Dynamic Product Fields */}
           {step === 2 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
-              <h3 className="text-lg font-semibold border-b pb-2">Detalles Específicos por Producto</h3>
+              <h3 className="text-lg font-semibold border-b pb-2">
+                {language === 'es' ? 'Detalles Específicos por Producto' : 'Product Specific Details'}
+              </h3>
               
               {selectedProducts.map(product => (
                 <div key={product.id} className="bg-muted/30 p-5 rounded-xl border border-border">
-                  <h4 className="font-bold text-primary mb-4 flex items-center gap-2">
-                    <Check className="w-4 h-4" /> {product.name}
+                  <h4 className="font-bold text-foreground mb-4">
+                    {language === 'es' ? product.name : product.nameEn}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     {product.fields.map(field => (
-                      <div key={field.id} className={`space-y-2 ${field.type === 'textarea' || field.type === 'file' ? 'md:col-span-2' : ''}`}>
-                        <label className="text-sm font-medium text-foreground">{field.label}</label>
+                      <div key={field.id} className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? field.label : field.labelEn}
+                          {!field.required && (
+                            <span className="text-muted-foreground font-normal ml-1">
+                              ({language === 'es' ? 'Opcional' : 'Optional'})
+                            </span>
+                          )}
+                        </label>
                         {renderField(field)}
                       </div>
                     ))}
@@ -258,50 +287,55 @@ export function QuoteModal({ isOpen, onClose, rule }: QuoteModalProps) {
               ))}
 
               <div className="bg-muted/30 p-5 rounded-xl border border-border">
-                <h4 className="font-bold text-foreground mb-4">Campos Personalizados o Notas Adicionales</h4>
+                <h4 className="font-bold text-foreground mb-4">
+                  {language === 'es' ? 'Campos Personalizados o Notas Adicionales' : 'Custom Fields or Additional Notes'}
+                </h4>
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Añade cualquier información adicional requerida para esta cotización específica</label>
+                  <label className="text-sm font-medium text-foreground">
+                    {language === 'es' ? 'Añade cualquier información adicional requerida para esta cotización específica' : 'Add any additional information required for this specific quote'}
+                  </label>
                   {renderField({ id: 'custom_notes', type: 'textarea' })}
                 </div>
               </div>
             </div>
           )}
 
-          {/* Footer Navigation */}
-          <div className="mt-8 pt-4 border-t border-border flex justify-between items-center sticky bottom-0 bg-card z-10">
-            {step > 1 ? (
-              <button 
-                type="button" 
-                onClick={handleBack}
-                className="inline-flex items-center px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent"
-              >
-                <ChevronLeft className="w-4 h-4 mr-2" /> Atrás
-              </button>
-            ) : (
-              <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground font-medium">
-                Cancelar
-              </button>
-            )}
-            
-            {step < 2 ? (
-              <button 
-                type="button" 
-                onClick={handleNext}
-                className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
-              >
-                Siguiente <ChevronRight className="w-4 h-4 ml-2" />
-              </button>
-            ) : (
-              <button 
-                type="submit" 
-                disabled={isPending}
-                className="inline-flex items-center px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-bold hover:bg-primary/90 disabled:opacity-50"
-              >
-                {isPending ? "Procesando..." : "Enviar Cotización"}
-              </button>
-            )}
-          </div>
         </form>
+
+        {/* Footer Navigation */}
+        <div className="flex-none mt-auto p-4 border-t border-border flex justify-between items-center bg-card rounded-b-xl z-10">
+          {step > 1 ? (
+            <button 
+              type="button" 
+              onClick={handleBack}
+              className="inline-flex items-center px-4 py-2 border border-input rounded-md text-sm font-medium hover:bg-accent"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" /> {language === 'es' ? 'Atrás' : 'Back'}
+            </button>
+          ) : (
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground font-medium">
+              {language === 'es' ? 'Cancelar' : 'Cancel'}
+            </button>
+          )}
+          
+          {step < 2 ? (
+            <button 
+              type="button" 
+              onClick={handleNext}
+              className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
+            >
+              {language === 'es' ? 'Siguiente' : 'Next'} <ChevronRight className="w-4 h-4 ml-2" />
+            </button>
+          ) : (
+            <button 
+              type="submit" 
+              disabled={isPending}
+              className="inline-flex items-center px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-bold hover:bg-primary/90 disabled:opacity-50"
+            >
+              {isPending ? (language === 'es' ? 'Procesando...' : 'Processing...') : (language === 'es' ? 'Enviar Cotización' : 'Submit Quote')}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )

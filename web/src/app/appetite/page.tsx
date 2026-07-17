@@ -677,7 +677,8 @@ export default function AppetiteBIDashboard() {
       <QuoteModal 
         isOpen={!!quoteRule} 
         onClose={() => setQuoteRule(null)} 
-        rule={quoteRule} 
+        rule={quoteRule}
+        language={language}
       />
     </div>
   )
