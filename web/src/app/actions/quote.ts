@@ -24,16 +24,44 @@ export async function submitQuoteRequest(formData: FormData) {
   }
 
   const clientName = formData.get("client_name") as string
-  const coverageRequested = formData.get("coverage") as string
-  const carrierId = formData.get("carrier_name") as string // simplified
+  const carrierId = formData.get("carrier_name") as string
+  
+  const products = JSON.parse((formData.get("products") as string) || "[]")
+  const rawFormData = JSON.parse((formData.get("form_data") as string) || "{}")
+
+  // Upload attachments if present
+  const attachments: string[] = []
+  
+  // Example of finding files in FormData
+  for (const [key, value] of formData.entries()) {
+    if (value instanceof File) {
+      const fileExt = value.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${profile.agency_id}/${fileName}`
+      
+      const { error: uploadError } = await supabase.storage
+        .from('quote-attachments')
+        .upload(filePath, value)
+        
+      if (!uploadError) {
+        attachments.push(filePath)
+        // Store path in rawFormData so UI knows this field has a file
+        rawFormData[key] = filePath
+      } else {
+        console.error("Upload error:", uploadError)
+      }
+    }
+  }
 
   const { error } = await supabase.from("quote_requests").insert({
     agent_id: user.id,
     agency_id: profile.agency_id,
     client_name: clientName,
-    client_business_type: "Unknown", // simplified for now
+    client_business_type: rawFormData.general_legal_structure || null,
     carrier_id: carrierId,
-    coverage_requested: coverageRequested,
+    coverage_requested: products.join(", "),
+    products: products,
+    form_data: rawFormData,
     status: "PENDING_MANAGER"
   })
 
