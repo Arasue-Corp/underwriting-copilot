@@ -166,17 +166,26 @@ export default function AppetiteBIDashboard() {
       'distribuidores': 'distribuidor',
       'limpiadores': 'limpiador',
       'inspectores': 'inspector',
-      'consultores': 'consultor'
+      'consultores': 'consultor',
+      'agentes': 'agente',
+      'asistentes': 'asistente',
+      'banquetes': 'banquete',
+      'bares': 'bar',
+      'autobuses': 'autobús',
+      'camiones': 'camión',
+      'hoteles': 'hotel',
+      'clubes': 'club',
+      'talleres': 'taller',
+      'bienes': 'bienes',
+      'análisis': 'análisis'
     }
 
     if (dictionary[firstWord]) {
       firstWord = dictionary[firstWord]
     } else {
-      // Reglas básicas de terminaciones en español (fallback)
+      // Reglas seguras para terminaciones (evitamos mutilar palabras quitando 's' o 'es' ciegamente)
       if (firstWord.endsWith('iones')) firstWord = firstWord.slice(0, -5) + 'ión'
       else if (firstWord.endsWith('ces')) firstWord = firstWord.slice(0, -3) + 'z'
-      else if (firstWord.endsWith('es') && firstWord.length > 5) firstWord = firstWord.slice(0, -2)
-      else if (firstWord.endsWith('s') && firstWord.length > 4) firstWord = firstWord.slice(0, -1)
     }
 
     return firstWord.charAt(0).toUpperCase() + firstWord.slice(1)
