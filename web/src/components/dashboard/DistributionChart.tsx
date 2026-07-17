@@ -20,7 +20,7 @@ export function DistributionChart({ data }: { data?: any[] }) {
           dataKey="value"
           stroke="none"
         >
-          {data.map((entry, index) => (
+          {chartData.map((entry, index) => (
             <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
           ))}
         </Pie>
