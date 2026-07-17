@@ -8,9 +8,13 @@ import { QuoteModal } from "@/components/appetite/QuoteModal"
 type CarrierData = {
   id: number
   carrier_name: string
+  industry_name: string
   product_line: string
   status: string
   conditions: string | null
+  min_premium?: number | null
+  max_limits?: number | null
+  general_prohibited_operations?: string[] | null
   x?: number
   y?: number
 }
@@ -189,7 +193,7 @@ export function AppetiteRadar({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel p-6 rounded-2xl w-[90%] max-w-md border-t-4"
+            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel p-6 rounded-2xl w-[90%] max-w-lg border-t-4 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
             style={{ 
               borderTopColor: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' 
@@ -202,24 +206,76 @@ export function AppetiteRadar({
               <XCircle className="w-5 h-5" />
             </button>
             
-            <div className="flex items-center gap-3 mb-2 pr-8">
-              {hoveredCarrier.status === 'ELIGIBLE' ? <CheckCircle2 className="w-5 h-5 text-emerald-500" /> : <AlertCircle className="w-5 h-5 text-amber-500" />}
-              <h4 className="font-bold text-lg">{hoveredCarrier.carrier_name}</h4>
+            <div className="flex items-center gap-4 mb-4 pr-8">
+              <CarrierLogo carrierName={hoveredCarrier.carrier_name} className="w-12 h-12 bg-white" />
+              <div>
+                <h4 className="font-playfair text-xl font-bold leading-tight">{hoveredCarrier.carrier_name}</h4>
+                <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest mt-1 line-clamp-2">
+                  {hoveredCarrier.product_line}
+                </div>
+              </div>
             </div>
-            <div className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">
-              {hoveredCarrier.product_line}
+
+            <div className="flex items-center gap-2 mb-4 bg-muted/20 p-2 rounded-xl inline-flex">
+               {hoveredCarrier.status === 'ELIGIBLE' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
+               {hoveredCarrier.status === 'RESTRICTED' && <AlertCircle className="w-5 h-5 text-amber-500" />}
+               {hoveredCarrier.status === 'PROHIBITED' && <XCircle className="w-5 h-5 text-red-500" />}
+               
+               <span className="font-bold text-sm tracking-widest uppercase pr-2" style={{ color: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' }}>
+                 {hoveredCarrier.status === 'ELIGIBLE' && (language === 'es' ? 'ELEGIBLE' : 'ELIGIBLE')}
+                 {hoveredCarrier.status === 'RESTRICTED' && (language === 'es' ? 'RESTRINGIDO' : 'RESTRICTED')}
+                 {hoveredCarrier.status === 'PROHIBITED' && (language === 'es' ? 'PROHIBIDO' : 'PROHIBITED')}
+               </span>
             </div>
-            <p className="text-sm text-foreground/80 leading-relaxed mb-4">
-              {hoveredCarrier.conditions || (language === 'es' ? 'Sin condiciones adicionales.' : 'No additional conditions.')}
-            </p>
+
+            <div className="bg-muted/30 p-4 rounded-xl text-sm leading-relaxed mb-4 max-h-[120px] overflow-y-auto custom-scrollbar">
+              <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                {language === 'es' ? 'Condiciones Específicas' : 'Specific Conditions'}
+              </span>
+              {hoveredCarrier.conditions || (language === 'es' ? 'Sin condiciones especiales detalladas.' : 'No detailed special conditions.')}
+            </div>
+
+            {hoveredCarrier.general_prohibited_operations && hoveredCarrier.general_prohibited_operations.length > 0 && (
+              <div className="bg-rose-500/5 border border-rose-500/20 p-4 rounded-xl text-sm leading-relaxed mb-4 max-h-[100px] overflow-y-auto custom-scrollbar">
+                <span className="block text-[10px] font-bold text-rose-600 uppercase tracking-widest mb-2">
+                  {language === 'es' ? 'Operaciones Prohibidas' : 'Prohibited Operations'}
+                </span>
+                <ul className="list-disc pl-4 text-rose-600/80 space-y-1 text-xs">
+                  {hoveredCarrier.general_prohibited_operations.map((op, i) => (
+                    <li key={i}>{op}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="flex gap-4 mb-5">
+              <div className="flex-1 bg-background/50 p-2.5 rounded-xl border border-border/50 text-center">
+                <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                  {language === 'es' ? 'Prima Mínima' : 'Min Premium'}
+                </span>
+                <span className={`font-semibold ${!hoveredCarrier.min_premium ? 'text-muted-foreground/60 text-xs' : 'text-sm'}`}>
+                  {hoveredCarrier.min_premium ? `$${hoveredCarrier.min_premium.toLocaleString()}` : (language === 'es' ? 'Según riesgo' : 'Varies by risk')}
+                </span>
+              </div>
+              <div className="flex-1 bg-background/50 p-2.5 rounded-xl border border-border/50 text-center">
+                <span className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                  {language === 'es' ? 'Límites Max' : 'Max Limits'}
+                </span>
+                <span className={`font-semibold ${!hoveredCarrier.max_limits ? 'text-muted-foreground/60 text-xs' : 'text-sm'}`}>
+                  {hoveredCarrier.max_limits ? `$${hoveredCarrier.max_limits.toLocaleString()}` : (language === 'es' ? 'Sujeto a eval' : 'Subject to eval')}
+                </span>
+              </div>
+            </div>
             
-            <button
-              onClick={() => setQuoteCarrier(hoveredCarrier)}
-              className="w-full py-2 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
-            </button>
+            {hoveredCarrier.status !== 'PROHIBITED' && (
+              <button
+                onClick={() => setQuoteCarrier(hoveredCarrier)}
+                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors shadow-sm flex items-center justify-center gap-2"
+              >
+                <FileText className="w-4 h-4" />
+                {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+              </button>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
