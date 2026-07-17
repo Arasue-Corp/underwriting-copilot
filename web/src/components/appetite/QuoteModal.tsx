@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useTransition } from "react"
-import { X, ChevronRight, ChevronLeft, Upload, Check } from "lucide-react"
+import { useState, useTransition, useEffect, useRef } from 'react'
+import { X, ChevronRight, ChevronLeft, Upload, Check, AlertCircle } from "lucide-react"
 import { submitQuoteRequest } from "@/app/actions/quote"
 import { INSURANCE_PRODUCTS, InsuranceProduct, ProductField } from "@/lib/constants/insuranceProducts"
 
@@ -16,16 +16,20 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
-  const [formData, setFormData] = useState<Record<string, string>>({})
+  const [formData, setFormData] = useState<Record<string, any>>({})
   const [files, setFiles] = useState<Record<string, File>>({})
+  const [error, setError] = useState<string | null>(null)
+  const formRef = useRef<HTMLFormElement>(null)
 
   if (!isOpen || !rule) return null
 
-  const handleInputChange = (id: string, value: string) => {
+  const handleInputChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }))
+    if (error) setError(null)
   }
 
   const handleFileChange = (id: string, file: File | null) => {
+    if (error) setError(null)
     if (file) {
       setFiles(prev => ({ ...prev, [id]: file }))
     } else {
@@ -39,21 +43,67 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
     setSelectedProductIds(prev => 
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     )
+    if (error) setError(null)
   }
 
   const handleBack = () => {
     setStep(prev => prev - 1)
+    setError(null)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setError(null)
     
     if (step === 1) {
+      // Validate step 1 manually
+      const requiredStep1 = [
+        { id: 'general_client_name', label: language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA' },
+        { id: 'general_legal_structure', label: language === 'es' ? 'Estructura Legal' : 'Legal Structure' },
+        { id: 'general_fein', label: 'FEIN' },
+        { id: 'general_contact', label: language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)' },
+        { id: 'general_address', label: language === 'es' ? 'Dirección Física' : 'Physical Address' },
+        { id: 'general_operations', label: language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description' },
+        { id: 'general_experience_years', label: language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience' },
+      ]
+      
+      const missingFields = requiredStep1.filter(f => !formData[f.id] || String(formData[f.id]).trim() === '')
+      if (missingFields.length > 0) {
+        setError(language === 'es' ? `Faltan campos obligatorios:\n${missingFields.map(m => '- ' + m.label).join('\n')}` : `Missing required fields:\n${missingFields.map(m => '- ' + m.label).join('\n')}`)
+        return
+      }
+
       if (selectedProductIds.length === 0) {
-        alert(language === 'es' ? "Por favor selecciona al menos un producto para cotizar." : "Please select at least one product to quote.")
+        setError(language === 'es' ? "Por favor selecciona al menos un producto para cotizar." : "Please select at least one product to quote.")
         return
       }
       setStep(2)
+      // Scroll to top
+      setTimeout(() => { if (formRef.current) formRef.current.scrollTop = 0 }, 10)
+      return
+    }
+
+    // Validate step 2 manually
+    let missingStep2: string[] = []
+    const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
+    selectedProducts.forEach(product => {
+      product.fields.forEach(field => {
+        if (field.required) {
+          if (field.type === 'file') {
+            if (!files[field.id]) missingStep2.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+          } else {
+            if (!formData[field.id] || String(formData[field.id]).trim() === '') {
+              missingStep2.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
+            }
+          }
+        }
+      })
+    })
+
+    if (missingStep2.length > 0) {
+      setError(language === 'es' ? `Faltan campos obligatorios:\n${missingStep2.map(m => '- ' + m).join('\n')}` : `Missing required fields:\n${missingStep2.map(m => '- ' + m).join('\n')}`)
+      // Scroll to top
+      if (formRef.current) formRef.current.scrollTop = 0
       return
     }
 
@@ -176,8 +226,15 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           </button>
         </div>
         
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6">
+        <form ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6" noValidate>
           
+          {error && (
+            <div className="mb-6 p-4 bg-destructive/15 text-destructive rounded-lg flex items-start space-x-3 border border-destructive/30">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="text-sm whitespace-pre-wrap font-medium">{error}</div>
+            </div>
+          )}
+
           {/* Step 1: General Info & Product Selection */}
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
