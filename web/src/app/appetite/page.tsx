@@ -610,6 +610,23 @@ export default function AppetiteBIDashboard() {
                                         <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed mb-5">
                                           {r.conditions || 'Sin condiciones específicas.'}
                                         </p>
+                                        
+                                        {r.general_prohibited_operations && r.general_prohibited_operations.length > 0 && (
+                                          <div className="mb-4 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-2 mb-2 uppercase tracking-wider">
+                                              <AlertCircle className="w-4 h-4" /> {language === 'es' ? 'Operaciones Prohibidas' : 'Prohibited Ops'}
+                                            </div>
+                                            <ul className="text-xs space-y-1 text-foreground/80">
+                                              {r.general_prohibited_operations.map((op: string, idx: number) => (
+                                                <li key={idx} className="flex gap-2">
+                                                  <span className="text-amber-500 mt-0.5">•</span>
+                                                  <span className="leading-tight">{op}</span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
+                                        )}
+
                                         {(r.min_premium || r.max_limits) && (
                                           <div className="flex flex-wrap gap-3 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider pt-4 border-t border-emerald-500/10">
                                             {r.min_premium && <span className="bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/20">Min: ${r.min_premium.toLocaleString()}</span>}
@@ -644,9 +661,24 @@ export default function AppetiteBIDashboard() {
                                           <span className="text-lg">{r.industry_name}</span>
                                         </div>
                                         {r.conditions && (
-                                          <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
+                                          <p className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed mb-4">
                                             {r.conditions}
                                           </p>
+                                        )}
+                                        {r.general_prohibited_operations && r.general_prohibited_operations.length > 0 && (
+                                          <div className="bg-rose-500/10 border border-rose-500/20 rounded-xl p-4">
+                                            <div className="text-xs font-bold text-rose-600 dark:text-rose-400 flex items-center gap-2 mb-2 uppercase tracking-wider">
+                                              <XCircle className="w-4 h-4" /> {language === 'es' ? 'Operaciones Prohibidas' : 'Prohibited Ops'}
+                                            </div>
+                                            <ul className="text-xs space-y-1 text-foreground/80">
+                                              {r.general_prohibited_operations.map((op: string, idx: number) => (
+                                                <li key={idx} className="flex gap-2">
+                                                  <span className="text-rose-500 mt-0.5">•</span>
+                                                  <span className="leading-tight">{op}</span>
+                                                </li>
+                                              ))}
+                                            </ul>
+                                          </div>
                                         )}
                                       </div>
                                     ))}
