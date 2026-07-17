@@ -240,7 +240,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
                   {INSURANCE_PRODUCTS.map(product => (
                     <label key={product.id} className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedProductIds.includes(product.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}>
-                      <input type="checkbox" className="mt-1 shrink-0" checked={selectedProductIds.includes(product.id)} onChange={() => handleProductToggle(product.id)} />
+                      <input type="checkbox" className="mt-1 shrink-0" checked={selectedProductIds.includes(product.id)} onChange={() => toggleProduct(product.id)} />
                       <div>
                         <div className="font-medium text-sm">
                           {language === 'es' ? product.name : product.nameEn}
