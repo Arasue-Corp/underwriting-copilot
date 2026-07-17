@@ -210,10 +210,14 @@ export default function AppetiteBIDashboard() {
 
   // Default selection
   useEffect(() => {
-    if (sortedCarriers.length > 0 && !selectedCarrier) {
-      setSelectedCarrier(sortedCarriers[0])
+    if (sortedCarriers.length > 0) {
+      if (!selectedCarrier || !groupedByCarrier[selectedCarrier]) {
+        setSelectedCarrier(sortedCarriers[0])
+      }
+    } else if (sortedCarriers.length === 0 && selectedCarrier) {
+      setSelectedCarrier(null)
     }
-  }, [sortedCarriers, selectedCarrier])
+  }, [sortedCarriers, selectedCarrier, groupedByCarrier])
 
   // For Market Matrix: rows = Industry, cols = Carrier
   const allCarriers = Array.from(new Set(filteredData.map(r => r.carrier_name))).sort()
@@ -373,9 +377,9 @@ export default function AppetiteBIDashboard() {
         <div className="animate-in fade-in duration-500">
           {/* VIEW A: INDUSTRY FINDER */}
           {activeView === 'industry_finder' && (
-            <div className="space-y-6">
-               {!selectedCategory ? (
-                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="w-full">
+                {!selectedCategory || !industryCategories[selectedCategory] ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                    {sortedCategories.map((category, idx) => (
                      <button
                        key={category}
