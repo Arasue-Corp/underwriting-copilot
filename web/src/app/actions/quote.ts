@@ -70,8 +70,6 @@ export async function submitQuoteRequest(formData: FormData) {
       console.error("Error submitting quote:", error)
       return { success: false, error: error.message || "Failed to submit quote" }
     }
-
-    revalidatePath("/appetite")
     
     return { success: true }
   } catch (error: any) {
