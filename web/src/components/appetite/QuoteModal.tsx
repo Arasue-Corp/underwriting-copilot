@@ -94,6 +94,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
 
     // Validate step 2 manually
     let missingStep2Names: string[] = []
+    let missingStep2Ids: string[] = []
     const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
     selectedProducts.forEach(product => {
       product.fields.forEach(field => {
