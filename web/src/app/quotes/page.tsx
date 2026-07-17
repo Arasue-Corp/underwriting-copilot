@@ -10,6 +10,8 @@ export default function QuotesPage() {
   const [loading, setLoading] = useState(true)
   const [processingId, setProcessingId] = useState<string | null>(null)
   const [premiumAmount, setPremiumAmount] = useState<string>("")
+  const [policyFile, setPolicyFile] = useState<File | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
@@ -27,22 +29,51 @@ export default function QuotesPage() {
 
   const handleProcessQuote = async (quoteId: string) => {
     if (!premiumAmount) return alert("Ingresa la prima final")
+    if (!policyFile) return alert("Sube el PDF de la póliza")
     
-    // Simulate PDF Upload - In real app, upload to supabase storage here
-    const fakePdfPath = `${quoteId}-final.pdf`
+    setIsUploading(true)
     
-    await updateQuoteWithPremium(quoteId, parseFloat(premiumAmount), fakePdfPath)
-    
-    // Refresh
-    const { data } = await supabase
-        .from("quote_requests")
-        .select(`*, profiles(name, agency_id), agencies(name)`)
-        .order("created_at", { ascending: false })
-    if (data) setQuotes(data)
-    
-    setProcessingId(null)
-    setPremiumAmount("")
-    alert("Cotización procesada. La comisión fue calculada automáticamente.")
+    try {
+      // Create a unique file name
+      const fileExt = policyFile.name.split('.').pop()
+      const fileName = `${quoteId}-${Date.now()}.${fileExt}`
+      const filePath = `policies/${fileName}`
+
+      // Upload to Supabase Storage 'quotes-bucket'
+      const { error: uploadError, data: uploadData } = await supabase.storage
+        .from('quotes-bucket')
+        .upload(filePath, policyFile)
+
+      if (uploadError) {
+        console.error("Upload error:", uploadError)
+        throw new Error("Error al subir el archivo PDF")
+      }
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from('quotes-bucket')
+        .getPublicUrl(filePath)
+        
+      const policyUrl = publicUrlData.publicUrl
+
+      await updateQuoteWithPremium(quoteId, parseFloat(premiumAmount), policyUrl)
+      
+      // Refresh
+      const { data } = await supabase
+          .from("quote_requests")
+          .select(`*, profiles(name, agency_id), agencies(name)`)
+          .order("created_at", { ascending: false })
+      if (data) setQuotes(data)
+      
+      setProcessingId(null)
+      setPremiumAmount("")
+      setPolicyFile(null)
+      alert("Cotización procesada exitosamente. La póliza se ha guardado.")
+    } catch (err: any) {
+      alert(err.message || "Ocurrió un error al procesar la cotización")
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   return (
@@ -94,6 +125,12 @@ export default function QuotesPage() {
                       processingId === quote.id ? (
                         <div className="flex items-center justify-end space-x-2">
                           <input 
+                            type="file"
+                            accept=".pdf,application/pdf"
+                            onChange={(e) => setPolicyFile(e.target.files ? e.target.files[0] : null)}
+                            className="w-48 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                          />
+                          <input 
                             type="number" 
                             placeholder="Prima $" 
                             value={premiumAmount}
@@ -102,9 +139,10 @@ export default function QuotesPage() {
                           />
                           <button 
                             onClick={() => handleProcessQuote(quote.id)}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
+                            disabled={isUploading}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50"
                           >
-                            Guardar
+                            {isUploading ? "Subiendo..." : "Guardar"}
                           </button>
                         </div>
                       ) : (

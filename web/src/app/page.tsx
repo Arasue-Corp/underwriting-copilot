@@ -3,6 +3,7 @@ import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
 import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
 import { cookies } from "next/headers"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function Dashboard() {
   const cookieStore = await cookies();
@@ -46,10 +47,42 @@ export default async function Dashboard() {
     }
   }[lang];
 
+  const supabase = await createClient();
+  
+  // Real Data Fetching
+  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount');
+  
+  let totalPremium = 0;
+  let totalCommissions = 0;
+  let pendingQuotes = 0;
+  let pendingManagerQuotes = 0;
+
+  if (quotes) {
+    quotes.forEach((q: any) => {
+      if (q.status === 'QUOTED') {
+        totalPremium += q.premium_amount || 0;
+        totalCommissions += q.commission_amount || 0;
+      } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
+        pendingQuotes++;
+        if (q.status === 'PENDING_MANAGER') pendingManagerQuotes++;
+      }
+    });
+  }
+
+  const { count: agentsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
+  const activeAgents = agentsCount || 0;
+
+  const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
+
   return (
     <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
-        <CrisolPulse title={t.title} desc={t.desc} lang={lang} />
+        <CrisolPulse 
+          title={t.title} 
+          desc={t.desc} 
+          lang={lang} 
+          realData={{ pending: pendingQuotes, premium: totalPremium, agents: activeAgents }} 
+        />
         <div className="flex items-center space-x-2">
           {/* Controls like date picker could go here */}
         </div>
@@ -64,7 +97,7 @@ export default async function Dashboard() {
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold">$45,231.89</div>
+            <div className="font-playfair text-3xl font-bold">{formatCurrency(totalPremium)}</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mr-1" />
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1.5">+20.1%</span> {t.vsMonth}
@@ -80,7 +113,7 @@ export default async function Dashboard() {
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold text-[#8C6D41] dark:text-[#F2D3AC]">+$2,350.00</div>
+            <div className="font-playfair text-3xl font-bold text-[#8C6D41] dark:text-[#F2D3AC]">{formatCurrency(totalCommissions)}</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <TrendingUp className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 mr-1" />
               <span className="text-emerald-600 dark:text-emerald-400 font-semibold mr-1.5">+15.0%</span> {t.vsMonth}
@@ -96,7 +129,7 @@ export default async function Dashboard() {
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold">12</div>
+            <div className="font-playfair text-3xl font-bold">{pendingQuotes}</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <span className="status-dot-copper mr-2"></span>
               <span className="text-[#A65E44] font-semibold mr-1">3</span> {t.requireRev}
@@ -112,7 +145,7 @@ export default async function Dashboard() {
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold">4</div>
+            <div className="font-playfair text-3xl font-bold">{activeAgents}</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <span className="status-dot-navy mr-2"></span>
               <span className="text-foreground font-semibold mr-1">{t.active}</span> {t.inAgency}

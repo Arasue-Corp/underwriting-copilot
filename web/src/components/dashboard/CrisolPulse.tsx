@@ -4,19 +4,29 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState, useEffect } from "react"
 import { Sparkles, Activity } from "lucide-react"
 
-export function CrisolPulse({ title, desc, lang }: { title: string, desc: string, lang: string }) {
+export function CrisolPulse({ 
+  title, 
+  desc, 
+  lang,
+  realData 
+}: { 
+  title: string, 
+  desc: string, 
+  lang: string,
+  realData?: { pending: number, premium: number, agents: number }
+}) {
   const [insightIndex, setInsightIndex] = useState(0)
   
   const insights = lang === 'es' ? [
-    "Analizando apetito de 22 aseguradoras en tiempo real...",
-    "Se detectó un cambio en el apetito de Construcción por parte de Chubb.",
+    realData?.pending ? `¡Atención! Tienes ${realData.pending} solicitudes de cotización pendientes.` : "Analizando apetito de aseguradoras en tiempo real...",
     "Buscando cruces de datos con pólizas activas...",
-    "Tu agencia tiene una tasa de conversión superior al 24% este mes."
+    realData?.premium ? `Excelente trabajo. Han cotizado un total de $${realData.premium.toLocaleString('en-US')} en primas.` : "Calculando comisiones estimadas para este mes...",
+    realData?.agents ? `Tienes ${realData.agents} agentes activos generando negocios en tu agencia.` : "Tu agencia tiene una tasa de conversión estable este mes."
   ] : [
-    "Analyzing appetite from 22 carriers in real-time...",
-    "Detected a shift in Construction appetite by Chubb.",
+    realData?.pending ? `Attention! You have ${realData.pending} pending quote requests.` : "Analyzing appetite from carriers in real-time...",
     "Cross-referencing data with active policies...",
-    "Your agency has a conversion rate above 24% this month."
+    realData?.premium ? `Great job. Your agency has quoted a total of $${realData.premium.toLocaleString('en-US')} in premiums.` : "Calculating estimated commissions for this month...",
+    realData?.agents ? `You have ${realData.agents} active agents generating business.` : "Your agency has a stable conversion rate this month."
   ];
 
   useEffect(() => {
