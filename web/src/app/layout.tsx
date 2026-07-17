@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Database, FileText, Home, Search, Settings, Building2 } from "lucide-react";
+import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2 } from "lucide-react";
 
 const inter = Inter({
   variable: "--font-sans",
