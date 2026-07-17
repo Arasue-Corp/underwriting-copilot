@@ -134,7 +134,7 @@ export default async function Dashboard() {
             <div className="font-playfair text-3xl font-bold">{pendingQuotes}</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <span className="status-dot-copper mr-2"></span>
-              <span className="text-[#A65E44] font-semibold mr-1">3</span> {t.requireRev}
+              <span className="text-[#A65E44] font-semibold mr-1">{pendingManagerQuotes}</span> {t.requireRev}
             </p>
           </div>
         </div>
