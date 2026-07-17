@@ -27,15 +27,30 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // Intercept default Supabase email links (Invites / Password Resets)
+  // that redirect to the Site URL with a ?code= parameter.
+  const code = request.nextUrl.searchParams.get('code')
+  if (code) {
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      // Successfully exchanged code for session, redirect to update password
+      const url = request.nextUrl.clone()
+      url.pathname = '/update-password'
+      url.searchParams.delete('code')
+      return NextResponse.redirect(url)
+    }
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect all routes except login and auth endpoints
+  // Protect all routes except login, auth endpoints, and update-password
   if (
     !user &&
     !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    !request.nextUrl.pathname.startsWith('/auth') &&
+    !request.nextUrl.pathname.startsWith('/update-password')
   ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
