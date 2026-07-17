@@ -10,6 +10,8 @@ type CarrierData = {
   product_line: string
   status: string
   conditions: string | null
+  x?: number
+  y?: number
 }
 
 const CarrierLogo = ({ carrierName, className = "w-6 h-6" }: { carrierName: string, className?: string }) => {
