@@ -41,20 +41,22 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
     )
   }
 
-  const handleNext = () => {
-    if (step === 1 && selectedProductIds.length === 0) {
-      alert("Por favor selecciona al menos un producto para cotizar.")
-      return
-    }
-    setStep(prev => prev + 1)
-  }
-
   const handleBack = () => {
     setStep(prev => prev - 1)
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (step === 1) {
+      if (selectedProductIds.length === 0) {
+        alert(language === 'es' ? "Por favor selecciona al menos un producto para cotizar." : "Please select at least one product to quote.")
+        return
+      }
+      setStep(2)
+      return
+    }
+
     startTransition(async () => {
       try {
         const submitData = new FormData()
@@ -72,11 +74,11 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
         })
 
         await submitQuoteRequest(submitData)
-        alert("Cotización solicitada exitosamente")
+        alert(language === 'es' ? "Cotización solicitada exitosamente" : "Quote requested successfully")
         onClose()
       } catch (error) {
         console.error(error)
-        alert("Hubo un error al solicitar la cotización.")
+        alert(language === 'es' ? "Hubo un error al solicitar la cotización." : "There was an error requesting the quote.")
       }
     })
   }
@@ -224,11 +226,11 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
                     </label>
                     {renderField({ id: 'general_experience_years', type: 'number', required: true })}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 md:col-span-2">
                     <label className="text-sm font-medium">
                       {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
                     </label>
-                    {renderField({ id: 'general_loss_runs', type: 'file' })}
+                    {renderField({ id: 'general_loss_runs', type: 'textarea' })}
                   </div>
                 </div>
               </div>
@@ -320,8 +322,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
           
           {step < 2 ? (
             <button 
-              type="button" 
-              onClick={handleNext}
+              type="submit" 
               className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
             >
               {language === 'es' ? 'Siguiente' : 'Next'} <ChevronRight className="w-4 h-4 ml-2" />

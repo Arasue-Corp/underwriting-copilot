@@ -267,5 +267,13 @@ export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
       { id: 'fid_participants', label: 'Número de Participantes', labelEn: 'Number of Participants', type: 'number' },
       { id: 'fid_audits', label: 'Copia de Auditorías del Plan (Form 5500)', labelEn: 'Copy of Plan Audits (Form 5500)', type: 'file' },
     ]
+  },
+  {
+    id: 'other',
+    name: 'Otro / No Listado',
+    nameEn: 'Other / Not Listed',
+    description: 'Productos no especificados. Usa el campo de notas personalizadas para más detalle.',
+    descriptionEn: 'Unspecified products. Use the custom notes field for details.',
+    fields: []
   }
 ];
