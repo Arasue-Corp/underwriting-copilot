@@ -370,8 +370,14 @@ export default function QuotesPage() {
 
       {/* Details Modal */}
       {detailsQuote && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-2xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setDetailsQuote(null)}
+        >
+          <div 
+            className="bg-card w-full max-w-2xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold">Detalles de la Solicitud</h3>
               <div className="flex items-center space-x-2">
@@ -616,10 +622,16 @@ export default function QuotesPage() {
         </div>
       )}
 
-      {/* Assign Modal */}
+      {/* Accept Modal */}
       {acceptQuote && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-sm rounded-xl shadow-lg border border-border p-6">
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setAcceptQuote(null)}
+        >
+          <div 
+            className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">Aceptar Cotización</h3>
             <p className="text-sm text-muted-foreground mb-4">Ingresa la información final para cerrar esta solicitud.</p>
             <form onSubmit={handleAcceptSubmit} className="space-y-4">
@@ -660,8 +672,14 @@ export default function QuotesPage() {
 
       {/* Assign Modal */}
       {assignQuote && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6">
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setAssignQuote(null)}
+        >
+          <div 
+            className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold mb-4">Reasignar Solicitud</h3>
             <p className="text-sm text-muted-foreground mb-4">Asigna esta cotización a otro miembro de tu agencia.</p>
             <form onSubmit={handleAssign}>
@@ -687,8 +705,14 @@ export default function QuotesPage() {
 
       {/* Process Modal */}
       {processQuote && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-card w-full max-w-3xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setProcessQuote(null)}
+        >
+          <div 
+            className="bg-card w-full max-w-2xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold">Enviar Cotizaciones</h3>
               <button onClick={() => setProcessQuote(null)} className="p-2 hover:bg-muted rounded-full">
