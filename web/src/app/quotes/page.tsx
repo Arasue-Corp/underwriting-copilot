@@ -52,7 +52,7 @@ export default function QuotesPage() {
 
     const { data } = await supabase
       .from("quote_requests")
-      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name)`)
+      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url)`)
       .order("created_at", { ascending: false })
     
     if (data) setQuotes(data)
@@ -388,7 +388,7 @@ export default function QuotesPage() {
                         .maybeSingle();
                         
                       const clientLogoPath = client?.logo_url;
-                      const agencyLogoPath = detailsQuote.profiles?.agencies?.logo_url;
+                      const agencyLogoPath = detailsQuote.agencies?.logo_url;
                       
                       const clientLogoUrl = clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null;
                       const agencyLogoUrl = agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null;

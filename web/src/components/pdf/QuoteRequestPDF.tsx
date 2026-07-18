@@ -1,8 +1,8 @@
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer'
 
-const BRAND_NAVY = '#1A2B4C'
-const BRAND_GOLD = '#8C6D41'
+const BRAND_NAVY = '#0B162C'
+const BRAND_GOLD = '#B4935A'
 const BRAND_GOLD_LIGHT = '#F4F0E8'
 const TEXT_MAIN = '#1E293B'
 const TEXT_MUTED = '#64748B'
@@ -326,7 +326,7 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
               <Text style={styles.sidebarTitle}>Brokerage</Text>
               
               <Text style={styles.sidebarLabel}>Agency</Text>
-              <Text style={styles.sidebarValue}>{quote.profiles?.agencies?.name || 'TBD'}</Text>
+              <Text style={styles.sidebarValue}>{quote.agencies?.name || 'TBD'}</Text>
               
               <Text style={styles.sidebarLabel}>Agent</Text>
               <Text style={styles.sidebarValue}>{quote.profiles?.name || 'Agent'}</Text>
@@ -371,7 +371,7 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
 
             {/* FIRMA DE LA AGENCIA */}
             <View style={styles.signatureSection} wrap={false}>
-              <Text style={styles.signatureText}>{quote.profiles?.agencies?.name || 'Agencia Comercial'}</Text>
+              <Text style={styles.signatureText}>{quote.agencies?.name || 'Agencia Comercial'}</Text>
               <View style={styles.signatureLine} />
               <Text style={styles.signatureRole}>Agencia Comercial Autorizada</Text>
             </View>
