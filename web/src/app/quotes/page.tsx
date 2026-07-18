@@ -48,7 +48,7 @@ export default function QuotesPage() {
 
     const { data } = await supabase
       .from("quote_requests")
-      .select(`*, profiles(name, agency_id), assignee:profiles!quote_requests_assigned_to_fkey(name), agencies(name)`)
+      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name)`)
       .order("created_at", { ascending: false })
     
     if (data) setQuotes(data)
