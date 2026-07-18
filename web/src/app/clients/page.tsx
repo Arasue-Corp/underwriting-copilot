@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from "@/lib/supabase/client"
 import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -10,7 +10,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedClient, setSelectedClient] = useState<any | null>(null)
-  const supabase = createClientComponentClient()
+  const supabase = createClient()
 
   useEffect(() => {
     loadClients()
