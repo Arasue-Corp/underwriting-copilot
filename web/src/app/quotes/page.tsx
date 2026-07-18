@@ -387,8 +387,11 @@ export default function QuotesPage() {
                         .eq('agency_id', detailsQuote.agency_id)
                         .maybeSingle();
                         
-                      const clientLogo = client?.logo_url;
-                      const agencyLogo = detailsQuote.profiles?.agencies?.logo_url;
+                      const clientLogoPath = client?.logo_url;
+                      const agencyLogoPath = detailsQuote.profiles?.agencies?.logo_url;
+                      
+                      const clientLogo = clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null;
+                      const agencyLogo = agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null;
 
                       const { pdf } = await import('@react-pdf/renderer');
                       const { QuoteRequestPDF } = await import('@/components/pdf/QuoteRequestPDF');

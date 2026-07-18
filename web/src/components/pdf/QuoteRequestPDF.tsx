@@ -5,91 +5,121 @@ const styles = StyleSheet.create({
   page: {
     padding: 40,
     fontFamily: 'Helvetica',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#FAFAFA',
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 40,
-    borderBottomWidth: 2,
+    marginBottom: 35,
+    borderBottomWidth: 1.5,
     borderBottomColor: '#1A2B4C',
     paddingBottom: 20,
   },
+  headerLeft: {
+    flex: 1,
+  },
   logoContainer: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 20,
     alignItems: 'center',
   },
   logoImage: {
-    height: 50,
+    height: 55,
     objectFit: 'contain',
   },
   title: {
     fontFamily: 'Times-Roman',
-    fontSize: 24,
+    fontSize: 26,
     color: '#1A2B4C',
+    letterSpacing: 0.5,
+  },
+  subtitle: {
+    fontSize: 10,
+    color: '#64748B',
+    marginTop: 6,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   section: {
     marginBottom: 25,
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   sectionTitle: {
     fontFamily: 'Times-Roman',
-    fontSize: 16,
+    fontSize: 14,
     color: '#8C6D41',
-    marginBottom: 10,
+    marginBottom: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
-    paddingBottom: 5,
+    borderBottomColor: '#F1F5F9',
+    paddingBottom: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   row: {
     flexDirection: 'row',
-    marginBottom: 8,
+    marginBottom: 10,
+    alignItems: 'flex-start',
   },
   label: {
-    width: 150,
-    fontSize: 10,
+    width: 160,
+    fontSize: 9,
     color: '#64748B',
     fontWeight: 'bold',
     textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   value: {
     flex: 1,
     fontSize: 11,
     color: '#0F172A',
+    lineHeight: 1.4,
   },
   table: {
     width: '100%',
-    marginTop: 10,
+    marginTop: 5,
   },
   tableRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingVertical: 8,
+    borderBottomColor: '#F8FAFC',
+    paddingVertical: 10,
+  },
+  tableRowEven: {
+    backgroundColor: '#F8FAFC',
   },
   tableLabel: {
-    width: '40%',
-    fontSize: 10,
+    width: '45%',
+    fontSize: 9,
     color: '#475569',
     fontWeight: 'bold',
+    textTransform: 'uppercase',
+    paddingRight: 10,
   },
   tableValue: {
-    width: '60%',
+    width: '55%',
     fontSize: 10,
     color: '#0F172A',
+    lineHeight: 1.4,
   },
   footer: {
     position: 'absolute',
     bottom: 30,
     left: 40,
     right: 40,
-    textAlign: 'center',
-    fontSize: 8,
-    color: '#94A3B8',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     borderTopWidth: 1,
     borderTopColor: '#E2E8F0',
-    paddingTop: 10,
+    paddingTop: 15,
+  },
+  footerText: {
+    fontSize: 8,
+    color: '#94A3B8',
   }
 })
 
@@ -99,8 +129,16 @@ interface QuoteRequestPDFProps {
   clientLogo?: string | null
 }
 
+function formatKey(key: string) {
+  // Elimina prefijos comunes
+  let formatted = key.replace(/^(general_|property_|cyber_|gl_|auto_|wc_)/, '')
+  // Reemplaza guiones bajos con espacios
+  formatted = formatted.replace(/_/g, ' ')
+  // Capitaliza cada palabra
+  return formatted.replace(/\b\w/g, l => l.toUpperCase())
+}
+
 export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestPDFProps) => {
-  // Parse form_data if it's a string, or use directly if object
   const formData = typeof quote.form_data === 'string' 
     ? JSON.parse(quote.form_data || '{}') 
     : (quote.form_data || {})
@@ -111,10 +149,10 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
         
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.title}>Solicitud de Cotización</Text>
-            <Text style={{ fontSize: 10, color: '#64748B', marginTop: 4 }}>
-              Folio: {quote.id.substring(0, 8).toUpperCase()}
+            <Text style={styles.subtitle}>
+              Folio: {quote.id.substring(0, 8).toUpperCase()} | {new Date(quote.created_at).toLocaleDateString()}
             </Text>
           </View>
           <View style={styles.logoContainer}>
@@ -125,25 +163,25 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
 
         {/* Datos Generales */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Datos Generales</Text>
+          <Text style={styles.sectionTitle}>Resumen Ejecutivo</Text>
           <View style={styles.row}>
-            <Text style={styles.label}>Cliente</Text>
+            <Text style={styles.label}>Cliente Prospecto</Text>
             <Text style={styles.value}>{quote.client_name}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Tipo de Negocio</Text>
+            <Text style={styles.label}>Giro / Industria</Text>
             <Text style={styles.value}>{quote.client_business_type || 'No especificado'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Aseguradora</Text>
+            <Text style={styles.label}>Aseguradora Destino</Text>
             <Text style={styles.value}>{quote.carrier_id || 'Por definir'}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Cobertura Solicitada</Text>
+            <Text style={styles.label}>Línea de Cobertura</Text>
             <Text style={styles.value}>{quote.coverage_requested}</Text>
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Creado por</Text>
+            <Text style={styles.label}>Agente Responsable</Text>
             <Text style={styles.value}>{quote.profiles?.name || 'Agente'}</Text>
           </View>
         </View>
@@ -151,15 +189,14 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
         {/* Detalles del Formulario */}
         {Object.keys(formData).length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Detalles del Cuestionario</Text>
+            <Text style={styles.sectionTitle}>Detalles de Suscripción</Text>
             <View style={styles.table}>
               {Object.entries(formData).map(([key, value], index) => {
-                // Ignore internal fields if any
                 if (key.startsWith('_')) return null
                 
                 return (
-                  <View style={styles.tableRow} key={index}>
-                    <Text style={styles.tableLabel}>{key}</Text>
+                  <View style={[styles.tableRow, index % 2 === 0 ? styles.tableRowEven : {}]} key={index}>
+                    <Text style={styles.tableLabel}>{formatKey(key)}</Text>
                     <Text style={styles.tableValue}>{String(value)}</Text>
                   </View>
                 )
@@ -171,7 +208,7 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
         {/* Productos */}
         {quote.products && quote.products.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Productos Relacionados</Text>
+            <Text style={styles.sectionTitle}>Productos Vinculados</Text>
             <View style={styles.row}>
               <Text style={styles.value}>{quote.products.join(', ')}</Text>
             </View>
@@ -180,8 +217,8 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text>Documento generado el {new Date().toLocaleDateString()} a través de Arasue Underwriting Co-Pilot</Text>
-          <Text>Este documento es una solicitud de cotización, no representa cobertura asegurada.</Text>
+          <Text style={styles.footerText}>Generado por Crisol Underwriting</Text>
+          <Text style={styles.footerText}>Documento Confidencial - No representa cobertura asegurada</Text>
         </View>
       </Page>
     </Document>
