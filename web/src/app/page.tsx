@@ -5,6 +5,8 @@ import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 
+export const dynamic = 'force-dynamic';
+
 export default async function Dashboard() {
   const cookieStore = await cookies();
   const langCookie = cookieStore.get('NEXT_LOCALE')?.value as 'en' | 'es' | undefined;

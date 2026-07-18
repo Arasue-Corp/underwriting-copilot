@@ -382,14 +382,19 @@ export default function QuotesPage() {
                     
                     const toastId = toast.loading("Generando PDF...");
                     try {
-                      const html2canvas = (await import('html2canvas')).default;
+                      const { toPng } = await import('html-to-image');
                       const jsPDF = (await import('jspdf')).default;
                       
-                      const canvas = await html2canvas(element, { scale: 2 });
-                      const imgData = canvas.toDataURL('image/png');
+                      const imgData = await toPng(element, { pixelRatio: 2, backgroundColor: '#ffffff' });
                       const pdf = new jsPDF('p', 'mm', 'a4');
                       const pdfWidth = pdf.internal.pageSize.getWidth();
-                      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                      
+                      // Calculate height based on image ratio
+                      const img = new Image();
+                      img.src = imgData;
+                      await new Promise((resolve) => { img.onload = resolve; });
+                      
+                      const pdfHeight = (img.height * pdfWidth) / img.width;
                       
                       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
                       pdf.save(`Solicitud_${detailsQuote.client_name.replace(/\s+/g, '_')}.pdf`);
