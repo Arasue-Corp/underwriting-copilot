@@ -187,6 +187,34 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
 
+  // CARRIER GRID
+  carrierGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  carrierCard: {
+    width: '31%',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: BORDER_COLOR,
+    borderRadius: 6,
+    padding: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  carrierName: {
+    fontFamily: 'Helvetica-Bold',
+    fontSize: 10,
+    color: BRAND_NAVY,
+    marginBottom: 4,
+  },
+  carrierMatch: {
+    fontSize: 8,
+    color: '#10B981', // Emerald 500
+    fontFamily: 'Helvetica-Bold',
+  },
+
   // SIGNATURE SECTION
   signatureSection: {
     marginTop: 50,
@@ -253,6 +281,12 @@ const IconClipboard = () => (
 const IconShield = () => (
   <Svg viewBox="0 0 24 24" width={16} height={16}>
     <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke={BRAND_NAVY} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </Svg>
+)
+
+const IconStar = () => (
+  <Svg viewBox="0 0 24 24" width={16} height={16}>
+    <Path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" fill="none" stroke={BRAND_NAVY} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 )
 
@@ -368,6 +402,22 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
                 </View>
               </View>
             )}
+
+            {/* RECOMMENDED CARRIERS GRID */}
+            <View style={{ marginBottom: 40 }} wrap={false}>
+              <View style={styles.sectionHeaderContainer}>
+                <IconStar />
+                <Text style={styles.sectionTitle}>Aseguradoras Recomendadas</Text>
+              </View>
+              <View style={styles.carrierGrid}>
+                {['CHUBB', 'ZURICH', 'AIG'].map((carrier, i) => (
+                  <View key={i} style={styles.carrierCard}>
+                    <Text style={styles.carrierName}>{carrier}</Text>
+                    <Text style={styles.carrierMatch}>{95 - (i * 5)}% Match</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
 
             {/* FIRMA DE LA AGENCIA */}
             <View style={styles.signatureSection} wrap={false}>
