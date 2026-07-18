@@ -1,21 +1,10 @@
 import React from 'react'
-import { Page, Text, View, Document, StyleSheet, Image, Font } from '@react-pdf/renderer'
-
-// Registramos fuentes premium
-Font.register({
-  family: 'Playfair Display',
-  src: 'https://fonts.gstatic.com/s/playfairdisplay/v30/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtM.woff2',
-})
-
-Font.register({
-  family: 'Inter',
-  src: 'https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZJhjp-Ek-_EeAmM.woff2',
-})
+import { Page, Text, View, Document, StyleSheet, Image } from '@react-pdf/renderer'
 
 const styles = StyleSheet.create({
   page: {
     padding: 40,
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     backgroundColor: '#FFFFFF',
   },
   header: {
@@ -37,7 +26,7 @@ const styles = StyleSheet.create({
     objectFit: 'contain',
   },
   title: {
-    fontFamily: 'Playfair Display',
+    fontFamily: 'Times-Roman',
     fontSize: 24,
     color: '#1A2B4C',
   },
@@ -45,7 +34,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   sectionTitle: {
-    fontFamily: 'Playfair Display',
+    fontFamily: 'Times-Roman',
     fontSize: 16,
     color: '#8C6D41',
     marginBottom: 10,

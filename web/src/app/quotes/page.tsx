@@ -385,7 +385,7 @@ export default function QuotesPage() {
                         .select('logo_url')
                         .eq('name', detailsQuote.client_name)
                         .eq('agency_id', detailsQuote.agency_id)
-                        .single();
+                        .maybeSingle();
                         
                       const clientLogo = client?.logo_url;
                       const agencyLogo = detailsQuote.profiles?.agencies?.logo_url;
