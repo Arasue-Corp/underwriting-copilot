@@ -1,5 +1,6 @@
 import { getAgencyData } from "@/app/actions/agency"
 import { Users, TrendingUp, DollarSign, Target } from "lucide-react"
+import UploadLogo from "@/components/UploadLogo"
 
 export default async function AgencyPage() {
   const data = await getAgencyData()
@@ -12,7 +13,7 @@ export default async function AgencyPage() {
     )
   }
 
-  const { agencyName, agents } = data
+  const { agencyId, agencyName, agencyLogo, agents } = data
 
   const totalPremiumGlobal = agents.reduce((acc, a) => acc + a.stats.totalPremium, 0)
   const totalCommissionGlobal = agents.reduce((acc, a) => acc + a.stats.totalCommission, 0)
@@ -20,14 +21,19 @@ export default async function AgencyPage() {
 
   return (
     <div className="flex-1 p-8 pt-6 max-w-7xl mx-auto space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
-          <Users className="h-8 w-8 text-primary" />
-          Módulo de Agencia: {agencyName}
-        </h2>
-        <p className="text-muted-foreground mt-2">
-          Supervisa el rendimiento y las operaciones de todos los agentes de tu compañía.
-        </p>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
+            <Users className="h-8 w-8 text-primary" />
+            Módulo de Agencia: {agencyName}
+          </h2>
+          <p className="text-muted-foreground mt-2">
+            Supervisa el rendimiento y las operaciones de todos los agentes de tu compañía.
+          </p>
+        </div>
+        <div className="flex-shrink-0 bg-card rounded-xl border p-4 shadow-sm">
+          <UploadLogo table="agencies" recordId={agencyId} currentLogoUrl={agencyLogo} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

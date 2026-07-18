@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Users, FileText, Search, MapPin, Building, Hash } from "lucide-react"
 import { GenericQuoteModal } from "./GenericQuoteModal"
+import UploadLogo from "../UploadLogo"
 
 interface ClientDirectoryProps {
   clients: any[]
@@ -27,7 +28,7 @@ export function ClientDirectory({ clients }: ClientDirectoryProps) {
             <div key={client.id} className="group bg-card/60 border border-border/60 hover:border-primary/30 rounded-2xl overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,0.04)] backdrop-blur-xl flex flex-col">
               <div className="p-5 flex-1">
                 <div className="flex items-start justify-between mb-4">
-                  <div>
+                  <div className="flex-1">
                     <h3 className="font-bold text-lg leading-tight text-foreground group-hover:text-primary transition-colors">
                       {client.name}
                     </h3>
@@ -37,6 +38,9 @@ export function ClientDirectory({ clients }: ClientDirectoryProps) {
                         {client.legal_structure}
                       </div>
                     )}
+                  </div>
+                  <div className="ml-4">
+                    <UploadLogo table="clients" recordId={client.id} currentLogoUrl={client.logo_url} />
                   </div>
                 </div>
 

@@ -11,7 +11,7 @@ export async function getAgencyData() {
 
   const { data: myProfile } = await supabase
     .from('profiles')
-    .select('agency_id, agencies(name)')
+    .select('agency_id, agencies(name, logo_url)')
     .eq('id', user.id)
     .single()
     
@@ -61,7 +61,9 @@ export async function getAgencyData() {
   })
 
   return {
+    agencyId: myProfile.agency_id,
     agencyName: myProfile.agencies ? (myProfile.agencies as any).name : 'Agencia',
+    agencyLogo: myProfile.agencies ? (myProfile.agencies as any).logo_url : null,
     agents: agentStats
   }
 }

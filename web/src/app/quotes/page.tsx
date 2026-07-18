@@ -377,27 +377,32 @@ export default function QuotesPage() {
               <div className="flex items-center space-x-2">
                 <button 
                   onClick={async () => {
-                    const element = document.getElementById('quote-details-content');
-                    if (!element) return;
-                    
-                    const toastId = toast.loading("Generando PDF...");
+                    const toastId = toast.loading("Generando PDF premium...");
                     try {
-                      const { toPng } = await import('html-to-image');
-                      const jsPDF = (await import('jspdf')).default;
+                      // Fetch client logo
+                      const { data: client } = await supabase
+                        .from('clients')
+                        .select('logo_url')
+                        .eq('name', detailsQuote.client_name)
+                        .eq('agency_id', detailsQuote.agency_id)
+                        .single();
+                        
+                      const clientLogo = client?.logo_url;
+                      const agencyLogo = detailsQuote.profiles?.agencies?.logo_url;
+
+                      const { pdf } = await import('@react-pdf/renderer');
+                      const { QuoteRequestPDF } = await import('@/components/pdf/QuoteRequestPDF');
                       
-                      const imgData = await toPng(element, { pixelRatio: 2, backgroundColor: '#ffffff' });
-                      const pdf = new jsPDF('p', 'mm', 'a4');
-                      const pdfWidth = pdf.internal.pageSize.getWidth();
+                      const blob = await pdf(<QuoteRequestPDF quote={detailsQuote} agencyLogo={agencyLogo} clientLogo={clientLogo} />).toBlob();
                       
-                      // Calculate height based on image ratio
-                      const img = new Image();
-                      img.src = imgData;
-                      await new Promise((resolve) => { img.onload = resolve; });
-                      
-                      const pdfHeight = (img.height * pdfWidth) / img.width;
-                      
-                      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-                      pdf.save(`Solicitud_${detailsQuote.client_name.replace(/\s+/g, '_')}.pdf`);
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement('a');
+                      a.href = url;
+                      a.download = `Solicitud_${detailsQuote.client_name.replace(/\s+/g, '_')}.pdf`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(url);
                       
                       toast.success("PDF descargado exitosamente", { id: toastId });
                     } catch (error) {
