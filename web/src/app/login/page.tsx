@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { ShieldCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { useEffect } from "react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("manager@crisol.app")
@@ -11,6 +12,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
   const supabase = createClient()
+
+  useEffect(() => {
+    // Intercept Supabase implicit flow hash fragments (recovery or invite)
+    // and redirect to /update-password so the client there can consume the session
+    if (typeof window !== "undefined") {
+      const hash = window.location.hash
+      if (hash && (hash.includes("type=recovery") || hash.includes("type=invite"))) {
+        window.location.href = "/update-password" + hash
+      }
+    }
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
