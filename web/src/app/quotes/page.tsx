@@ -1,100 +1,158 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { FileText, CheckCircle2 } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { updateQuoteWithPremium } from "@/app/actions/quote"
+import { processMultipleQuotes, assignQuoteRequest } from "@/app/actions/quote"
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [processingId, setProcessingId] = useState<string | null>(null)
-  const [premiumAmount, setPremiumAmount] = useState<string>("")
-  const [policyFile, setPolicyFile] = useState<File | null>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  const [agencyMembers, setAgencyMembers] = useState<any[]>([])
+  
+  // Modals state
+  const [detailsQuote, setDetailsQuote] = useState<any>(null)
+  const [processQuote, setProcessQuote] = useState<any>(null)
+  const [assignQuote, setAssignQuote] = useState<any>(null)
+  
+  // Process State
+  const [proposals, setProposals] = useState<{product: string, premium: string, file: File | null}[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  
+  // Filter state
+  const [filter, setFilter] = useState<'ALL' | 'ASSIGNED_TO_ME' | 'CREATED_BY_ME'>('ALL')
+  
   const supabase = createClient()
 
-  useEffect(() => {
-    async function loadQuotes() {
-      const { data } = await supabase
-        .from("quote_requests")
-        .select(`*, profiles(name, agency_id), agencies(name)`)
-        .order("created_at", { ascending: false })
+  const loadData = async () => {
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single()
       
-      if (data) setQuotes(data)
-      setLoading(false)
+    setUserProfile(profile)
+
+    if (profile && (profile.role === 'MANAGER' || profile.role === 'ADMIN')) {
+      const { data: members } = await supabase
+        .from("profiles")
+        .select("id, name")
+        .eq("agency_id", profile.agency_id)
+      if (members) setAgencyMembers(members)
     }
-    loadQuotes()
+
+    const { data } = await supabase
+      .from("quote_requests")
+      .select(`*, profiles(name, agency_id), assignee:profiles!quote_requests_assigned_to_fkey(name), agencies(name)`)
+      .order("created_at", { ascending: false })
+    
+    if (data) setQuotes(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    loadData()
   }, [])
 
-  const handleProcessQuote = async (quoteId: string) => {
-    if (!premiumAmount) return alert("Ingresa la prima final")
-    if (!policyFile) return alert("Sube el PDF de la póliza")
+  const handleAssign = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const form = e.target as HTMLFormElement
+    const assigneeId = (form.elements.namedItem("assignee") as HTMLSelectElement).value
+    if (!assigneeId) return
+    
+    setIsUploading(true)
+    const res = await assignQuoteRequest(assignQuote.id, assigneeId)
+    if (res.success) {
+      alert("Solicitud reasignada")
+      setAssignQuote(null)
+      loadData()
+    } else {
+      alert(res.error || "Error al asignar")
+    }
+    setIsUploading(false)
+  }
+
+  const handleProcessSubmit = async () => {
+    if (proposals.length === 0) return alert("Agrega al menos una propuesta")
+    for (const p of proposals) {
+      if (!p.premium || !p.file) return alert("Completa prima y archivo para todas las propuestas")
+    }
     
     setIsUploading(true)
     
     try {
-      // Create a unique file name
-      const fileExt = policyFile.name.split('.').pop()
-      const fileName = `${quoteId}-${Date.now()}.${fileExt}`
-      const filePath = `policies/${fileName}`
+      const uploadedProposals = []
+      for (const p of proposals) {
+        const fileExt = p.file!.name.split('.').pop()
+        const fileName = `${processQuote.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+        const filePath = `policies/${fileName}`
 
-      // Upload to Supabase Storage 'quotes-bucket'
-      const { error: uploadError, data: uploadData } = await supabase.storage
-        .from('quotes-bucket')
-        .upload(filePath, policyFile)
+        const { error: uploadError } = await supabase.storage
+          .from('quotes-bucket')
+          .upload(filePath, p.file!)
 
-      if (uploadError) {
-        console.error("Upload error:", uploadError)
-        throw new Error("Error al subir el archivo PDF")
+        if (uploadError) throw new Error("Error al subir el archivo PDF: " + p.file!.name)
+
+        const { data: publicUrlData } = supabase.storage
+          .from('quotes-bucket')
+          .getPublicUrl(filePath)
+          
+        uploadedProposals.push({
+          product: p.product,
+          premium: parseFloat(p.premium),
+          file_url: publicUrlData.publicUrl
+        })
       }
 
-      // Get public URL
-      const { data: publicUrlData } = supabase.storage
-        .from('quotes-bucket')
-        .getPublicUrl(filePath)
-        
-      const policyUrl = publicUrlData.publicUrl
-
-      await updateQuoteWithPremium(quoteId, parseFloat(premiumAmount), policyUrl)
-      
-      // Refresh
-      const { data } = await supabase
-          .from("quote_requests")
-          .select(`*, profiles(name, agency_id), agencies(name)`)
-          .order("created_at", { ascending: false })
-      if (data) setQuotes(data)
-      
-      setProcessingId(null)
-      setPremiumAmount("")
-      setPolicyFile(null)
-      alert("Cotización procesada exitosamente. La póliza se ha guardado.")
+      const res = await processMultipleQuotes(processQuote.id, uploadedProposals)
+      if (res.success) {
+        alert("Cotización procesada exitosamente")
+        setProcessQuote(null)
+        setProposals([])
+        loadData()
+      } else {
+        throw new Error("Error al guardar en base de datos")
+      }
     } catch (err: any) {
-      alert(err.message || "Ocurrió un error al procesar la cotización")
+      alert(err.message || "Ocurrió un error al procesar")
     } finally {
       setIsUploading(false)
     }
   }
 
+  const filteredQuotes = quotes.filter(q => {
+    if (filter === 'ALL') return true
+    if (filter === 'ASSIGNED_TO_ME') return q.assigned_to === userProfile?.id
+    if (filter === 'CREATED_BY_ME') return q.agent_id === userProfile?.id
+    return true
+  })
+
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
+    <div className="flex-1 space-y-4 p-8 pt-6 relative">
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Bandeja de Solicitudes</h2>
+        <div className="flex space-x-2">
+           <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'ALL' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Todas</button>
+           <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Asignadas a mí</button>
+           <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Creadas por mí</button>
+        </div>
       </div>
 
-      <div className="rounded-xl border bg-card text-card-foreground shadow">
-        <div className="border-b border-border p-4">
-          <h3 className="font-semibold">Solicitudes Pendientes y Procesadas</h3>
-        </div>
-        
-        <div className="p-0">
+      <div className="rounded-xl border bg-card text-card-foreground shadow overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-sm text-left">
             <thead className="bg-muted/50 text-muted-foreground border-b border-border">
               <tr>
                 <th className="px-6 py-3 font-medium">Cliente</th>
                 <th className="px-6 py-3 font-medium">Aseguradora</th>
-                <th className="px-6 py-3 font-medium">Cobertura</th>
-                <th className="px-6 py-3 font-medium">Agente</th>
+                <th className="px-6 py-3 font-medium">Coberturas</th>
+                <th className="px-6 py-3 font-medium">Creador</th>
+                <th className="px-6 py-3 font-medium">Asignado a</th>
                 <th className="px-6 py-3 font-medium">Estado</th>
                 <th className="px-6 py-3 font-medium text-right">Acción</th>
               </tr>
@@ -102,70 +160,64 @@ export default function QuotesPage() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
                     Cargando solicitudes...
                   </td>
                 </tr>
-              ) : quotes.map((quote) => (
+              ) : filteredQuotes.map((quote) => (
                 <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                   <td className="px-6 py-4 font-medium">{quote.client_name}</td>
                   <td className="px-6 py-4">{quote.carrier_id}</td>
                   <td className="px-6 py-4">{quote.coverage_requested}</td>
                   <td className="px-6 py-4 text-muted-foreground">{quote.profiles?.name}</td>
+                  <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || 'Sin asignar'}</td>
                   <td className="px-6 py-4">
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
                       quote.status === 'QUOTED' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' :
                       'bg-amber-500/15 text-amber-500 border border-amber-500/30'
                     }`}>
-                      {quote.status}
+                      {quote.status === 'QUOTED' ? 'COTIZADO' : 'PENDIENTE'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    {quote.status === 'PENDING_MANAGER' ? (
-                      processingId === quote.id ? (
-                        <div className="flex items-center justify-end space-x-2">
-                          <input 
-                            type="file"
-                            accept=".pdf,application/pdf"
-                            onChange={(e) => setPolicyFile(e.target.files ? e.target.files[0] : null)}
-                            className="w-48 text-xs file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                          />
-                          <input 
-                            type="number" 
-                            placeholder="Prima $" 
-                            value={premiumAmount}
-                            onChange={(e) => setPremiumAmount(e.target.value)}
-                            className="w-24 flex h-8 rounded-md border border-input bg-background px-2 py-1 text-xs ring-offset-background"
-                          />
-                          <button 
-                            onClick={() => handleProcessQuote(quote.id)}
-                            disabled={isUploading}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-3 py-1.5 rounded-md text-xs font-medium transition-colors disabled:opacity-50"
-                          >
-                            {isUploading ? "Subiendo..." : "Guardar"}
-                          </button>
-                        </div>
-                      ) : (
-                        <button 
-                          onClick={() => setProcessingId(quote.id)}
-                          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                        >
-                          Procesar
-                        </button>
-                      )
+                  <td className="px-6 py-4 text-right flex justify-end space-x-2">
+                    <button 
+                      onClick={() => setDetailsQuote(quote)}
+                      title="Ver Detalles"
+                      className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    
+                    {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
+                      <button 
+                        onClick={() => setAssignQuote(quote)}
+                        title="Reasignar"
+                        className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </button>
+                    )}
+
+                    {quote.status === 'QUOTED' ? (
+                       <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-emerald-600">Ver Propuestas</button>
                     ) : (
-                      <div className="flex justify-end text-emerald-500 items-center text-sm font-medium">
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Comisión: ${quote.commission_amount}
-                      </div>
+                      <button 
+                        onClick={() => {
+                          setProcessQuote(quote)
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", file: null })) || [])
+                        }}
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                      >
+                        Cotizar
+                      </button>
                     )}
                   </td>
                 </tr>
               ))}
-              {!loading && quotes.length === 0 && (
+              {!loading && filteredQuotes.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-muted-foreground">
-                    No hay solicitudes en la bandeja.
+                  <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">
+                    No hay solicitudes para mostrar.
                   </td>
                 </tr>
               )}
@@ -173,6 +225,195 @@ export default function QuotesPage() {
           </table>
         </div>
       </div>
+
+      {/* Details Modal */}
+      {detailsQuote && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-2xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold">Detalles de la Solicitud</h3>
+              <button onClick={() => setDetailsQuote(null)} className="p-2 hover:bg-muted rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Cliente</p>
+                  <p className="font-semibold">{detailsQuote.client_name}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium">Creado Por</p>
+                  <p className="font-semibold">{detailsQuote.profiles?.name}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-sm text-muted-foreground font-medium mb-2">Formulario Entregado</p>
+                <div className="bg-muted/30 p-4 rounded-lg border border-border">
+                  {Object.entries(detailsQuote.form_data || {}).map(([k, v]) => (
+                    <div key={k} className="mb-2 last:mb-0">
+                      <span className="font-medium capitalize text-sm">{k.replace(/_/g, " ")}:</span> 
+                      <span className="ml-2 text-sm text-muted-foreground">
+                         {typeof v === 'string' && v.includes('/') ? (
+                           <a href={supabase.storage.from('quote-attachments').getPublicUrl(v).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center">
+                             <FileText className="w-3 h-3 mr-1"/> Ver adjunto
+                           </a>
+                         ) : String(v)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {detailsQuote.quotes_provided && detailsQuote.quotes_provided.length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground font-medium mb-2">Propuestas de Cotización</p>
+                  <div className="space-y-2">
+                    {detailsQuote.quotes_provided.map((q: any, i: number) => (
+                      <div key={i} className="flex justify-between items-center p-3 border border-border rounded-lg bg-emerald-500/5">
+                        <div className="flex items-center space-x-3">
+                           <FileText className="w-5 h-5 text-emerald-500" />
+                           <span className="font-medium">{q.product}</span>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                           <span className="font-bold text-emerald-600">${q.premium}</span>
+                           <a href={q.file_url} target="_blank" rel="noreferrer" className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20">
+                             Descargar
+                           </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Modal */}
+      {assignQuote && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6">
+            <h3 className="text-xl font-bold mb-4">Reasignar Solicitud</h3>
+            <p className="text-sm text-muted-foreground mb-4">Asigna esta cotización a otro miembro de tu agencia.</p>
+            <form onSubmit={handleAssign}>
+              <div className="mb-6">
+                <label className="text-sm font-medium mb-2 block">Miembro</label>
+                <select name="assignee" className="w-full h-10 rounded-md border border-input bg-background px-3" required defaultValue={assignQuote.assigned_to || ""}>
+                  <option value="" disabled>Selecciona a alguien...</option>
+                  {agencyMembers.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <button type="button" onClick={() => setAssignQuote(null)} className="px-4 py-2 border rounded-md text-sm">Cancelar</button>
+                <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium disabled:opacity-50">
+                  {isUploading ? "Asignando..." : "Asignar"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Process Modal */}
+      {processQuote && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-3xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-bold">Enviar Cotizaciones</h3>
+              <button onClick={() => setProcessQuote(null)} className="p-2 hover:bg-muted rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {proposals.map((prop, idx) => (
+                <div key={idx} className="flex flex-col md:flex-row gap-4 items-end p-4 border border-border rounded-lg bg-muted/10">
+                  <div className="flex-1 w-full">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / Cobertura</label>
+                    <input 
+                      type="text" 
+                      value={prop.product} 
+                      onChange={e => {
+                        const next = [...proposals]
+                        next[idx].product = e.target.value
+                        setProposals(next)
+                      }}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      placeholder="Ej. Auto Comercial"
+                    />
+                  </div>
+                  <div className="w-full md:w-32">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima ($)</label>
+                    <input 
+                      type="number" 
+                      value={prop.premium} 
+                      onChange={e => {
+                        const next = [...proposals]
+                        next[idx].premium = e.target.value
+                        setProposals(next)
+                      }}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div className="flex-1 w-full">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">PDF de Cotización</label>
+                    <input 
+                      type="file"
+                      accept=".pdf,application/pdf"
+                      onChange={e => {
+                        const next = [...proposals]
+                        next[idx].file = e.target.files ? e.target.files[0] : null
+                        setProposals(next)
+                      }}
+                      className="w-full text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    />
+                  </div>
+                  <button 
+                    onClick={() => setProposals(proposals.filter((_, i) => i !== idx))}
+                    className="h-9 px-3 border border-red-500/20 text-red-500 rounded-md hover:bg-red-500/10"
+                    title="Eliminar"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              
+              <button 
+                onClick={() => setProposals([...proposals, { product: "", premium: "", file: null }])}
+                className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar otra propuesta
+              </button>
+
+            </div>
+
+            <div className="mt-8 flex justify-end space-x-3">
+              <button onClick={() => setProcessQuote(null)} className="px-5 py-2 border border-border rounded-md font-medium">Cancelar</button>
+              <button 
+                onClick={handleProcessSubmit}
+                disabled={isUploading}
+                className="px-5 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center disabled:opacity-50"
+              >
+                {isUploading ? "Guardando y Subiendo..." : (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                    Enviar a Agente
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

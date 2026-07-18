@@ -78,14 +78,16 @@ export async function submitQuoteRequest(formData: FormData) {
   }
 }
 
-export async function updateQuoteWithPremium(quoteId: string, premiumAmount: number, pdfPath: string) {
+export async function processMultipleQuotes(quoteId: string, quotes: { product: string, premium: number, file_url: string }[]) {
   const supabase = await createClient()
   
+  const totalPremium = quotes.reduce((sum, q) => sum + (Number(q.premium) || 0), 0)
+
   const { error } = await supabase
     .from("quote_requests")
     .update({
-      premium_amount: premiumAmount,
-      pdf_url: pdfPath,
+      premium_amount: totalPremium,
+      quotes_provided: quotes,
       status: "QUOTED"
     })
     .eq("id", quoteId)
@@ -93,6 +95,31 @@ export async function updateQuoteWithPremium(quoteId: string, premiumAmount: num
   if (error) {
     console.error("Error updating quote:", error)
     throw new Error("Failed to update quote")
+  }
+
+  revalidatePath("/quotes")
+  return { success: true }
+}
+
+export async function assignQuoteRequest(quoteId: string, assigneeId: string) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
+    return { success: false, error: "Only managers and admins can assign quotes." }
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .update({ assigned_to: assigneeId })
+    .eq("id", quoteId)
+
+  if (error) {
+    console.error("Error assigning quote:", error)
+    return { success: false, error: error.message }
   }
 
   revalidatePath("/quotes")
