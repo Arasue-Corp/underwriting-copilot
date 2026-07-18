@@ -390,13 +390,33 @@ export default function QuotesPage() {
                       const clientLogoPath = client?.logo_url;
                       const agencyLogoPath = detailsQuote.profiles?.agencies?.logo_url;
                       
-                      const clientLogo = clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null;
-                      const agencyLogo = agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null;
+                      const clientLogoUrl = clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null;
+                      const agencyLogoUrl = agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null;
+                      
+                      // Helper to fetch image and convert to base64 for guaranteed rendering in PDF
+                      const getBase64Image = async (url: string | null) => {
+                        if (!url) return null;
+                        try {
+                          const response = await fetch(url);
+                          const blob = await response.blob();
+                          return new Promise<string>((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result as string);
+                            reader.readAsDataURL(blob);
+                          });
+                        } catch (e) {
+                          console.error("Error fetching logo", e);
+                          return null;
+                        }
+                      };
+
+                      const clientLogoBase64 = await getBase64Image(clientLogoUrl);
+                      const agencyLogoBase64 = await getBase64Image(agencyLogoUrl);
 
                       const { pdf } = await import('@react-pdf/renderer');
                       const { QuoteRequestPDF } = await import('@/components/pdf/QuoteRequestPDF');
                       
-                      const blob = await pdf(<QuoteRequestPDF quote={detailsQuote} agencyLogo={agencyLogo} clientLogo={clientLogo} />).toBlob();
+                      const blob = await pdf(<QuoteRequestPDF quote={detailsQuote} agencyLogo={agencyLogoBase64} clientLogo={clientLogoBase64} />).toBlob();
                       
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');

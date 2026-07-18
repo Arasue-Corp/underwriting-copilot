@@ -1,15 +1,15 @@
 import React from 'react'
 import { Page, Text, View, Document, StyleSheet, Image, Svg, Path } from '@react-pdf/renderer'
 
-// Paleta de Colores Cálida y Premium
+// Paleta de Colores Navy & Gold (Crisol / Arasue original pero pulida)
 const COLORS = {
-  bg: '#FDFBF7',         // Blanco hueso muy cálido
-  textDark: '#2C363F',   // Gris carbón cálido (casi negro)
-  textMuted: '#7D7C7A',  // Gris medio cálido
-  gold: '#B88645',       // Dorado cálido
-  goldLight: '#F3EFE9',  // Crema con toque dorado
-  border: '#EAE6DF',     // Borde suave cálido
-  white: '#FFFFFF',
+  bg: '#FFFFFF',         
+  navy: '#1A2B4C',       
+  gold: '#8C6D41',       
+  textMain: '#0F172A',
+  textMuted: '#64748B',
+  border: '#E2E8F0',     
+  bgLight: '#F8FAFC',
 }
 
 const styles = StyleSheet.create({
@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 12,
-    backgroundColor: COLORS.gold,
+    backgroundColor: COLORS.navy,
   },
   
   // HEADER
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 40,
+    marginBottom: 35,
     marginTop: 10,
   },
   titleContainer: {
@@ -44,15 +44,15 @@ const styles = StyleSheet.create({
   },
   documentTitle: {
     fontFamily: 'Times-Roman',
-    fontSize: 28,
-    color: COLORS.textDark,
-    marginBottom: 8,
-    letterSpacing: 1,
+    fontSize: 26,
+    color: COLORS.navy,
+    marginBottom: 6,
+    letterSpacing: 0.5,
   },
   documentSubtitle: {
     fontSize: 10,
     color: COLORS.textMuted,
-    letterSpacing: 1.5,
+    letterSpacing: 1,
     textTransform: 'uppercase',
   },
   logoContainer: {
@@ -73,32 +73,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.navy,
     paddingBottom: 8,
   },
   sectionTitle: {
     fontFamily: 'Times-Roman',
     fontSize: 16,
     color: COLORS.gold,
-    letterSpacing: 1,
+    letterSpacing: 0.5,
     marginLeft: 8,
     textTransform: 'uppercase',
   },
   
-  // SUMMARY GRID
+  // SUMMARY GRID (Estilo Tarjeta pero sin romper el flujo)
   summaryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.bgLight,
     borderRadius: 8,
     padding: 20,
     borderWidth: 1,
     borderColor: COLORS.border,
-    shadowColor: '#000',
-    shadowOpacity: 0.03,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
   },
   summaryItem: {
     width: '50%',
@@ -111,30 +107,29 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
     marginBottom: 4,
+    fontFamily: 'Helvetica-Bold',
   },
   summaryValue: {
     fontSize: 12,
-    color: COLORS.textDark,
+    color: COLORS.navy,
     fontFamily: 'Helvetica-Bold',
   },
 
   // Q&A TABLE
   qaContainer: {
     backgroundColor: COLORS.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    overflow: 'hidden',
+    borderTopWidth: 1,
+    borderTopColor: COLORS.border,
   },
   qaRow: {
     flexDirection: 'row',
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
     paddingVertical: 12,
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
   },
   qaRowEven: {
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.bgLight,
   },
   qaQuestion: {
     width: '45%',
@@ -147,8 +142,8 @@ const styles = StyleSheet.create({
   },
   qaAnswer: {
     width: '55%',
-    fontSize: 11,
-    color: COLORS.textDark,
+    fontSize: 10,
+    color: COLORS.textMain,
     lineHeight: 1.4,
   },
 
@@ -156,18 +151,16 @@ const styles = StyleSheet.create({
   badgeContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   badge: {
-    backgroundColor: COLORS.goldLight,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: COLORS.navy,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 4,
-    borderWidth: 1,
-    borderColor: '#EAE1D1',
   },
   badgeText: {
-    color: COLORS.gold,
+    color: COLORS.bg,
     fontSize: 9,
     fontFamily: 'Helvetica-Bold',
     textTransform: 'uppercase',
@@ -176,16 +169,14 @@ const styles = StyleSheet.create({
 
   // SIGNATURE SECTION
   signatureSection: {
-    marginTop: 50,
+    marginTop: 40,
     alignItems: 'center',
     paddingTop: 30,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.border,
   },
   signatureText: {
     fontFamily: 'Times-Italic',
     fontSize: 24,
-    color: COLORS.textDark,
+    color: COLORS.navy,
     marginBottom: 10,
   },
   signatureLine: {
@@ -222,7 +213,7 @@ const styles = StyleSheet.create({
   footerBrand: {
     fontFamily: 'Times-Roman',
     fontSize: 10,
-    color: COLORS.gold,
+    color: COLORS.navy,
     letterSpacing: 1,
     textTransform: 'uppercase',
   }
@@ -231,21 +222,21 @@ const styles = StyleSheet.create({
 // Iconos SVG
 const IconUser = () => (
   <Svg viewBox="0 0 24 24" width={16} height={16}>
-    <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke={COLORS.navy} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" fill="none" stroke={COLORS.navy} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 )
 
 const IconClipboard = () => (
   <Svg viewBox="0 0 24 24" width={16} height={16}>
-    <Path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    <Path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" fill="none" stroke={COLORS.navy} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M15 2H9a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1z" fill="none" stroke={COLORS.navy} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 )
 
 const IconShield = () => (
   <Svg viewBox="0 0 24 24" width={16} height={16}>
-    <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke={COLORS.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="none" stroke={COLORS.navy} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
   </Svg>
 )
 
@@ -287,8 +278,8 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
           </View>
         </View>
 
-        {/* RESUMEN EJECUTIVO */}
-        <View style={styles.section}>
+        {/* RESUMEN EJECUTIVO TIPO "TARJETA" (Una sola columna, pero contenido dividido) */}
+        <View style={styles.section} wrap={false}>
           <View style={styles.sectionTitleContainer}>
             <IconUser />
             <Text style={styles.sectionTitle}>Resumen Ejecutivo</Text>
@@ -355,9 +346,9 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
 
         {/* FIRMA DE APROBACIÓN */}
         <View style={styles.signatureSection} wrap={false}>
-          <Text style={styles.signatureText}>{quote.profiles?.name || 'Firma Autorizada'}</Text>
+          <Text style={styles.signatureText}>{quote.profiles?.agencies?.name || quote.profiles?.name || 'Agencia Autorizada'}</Text>
           <View style={styles.signatureLine} />
-          <Text style={styles.signatureRole}>Agente Comercial Autorizado</Text>
+          <Text style={styles.signatureRole}>Agencia Comercial Autorizada</Text>
         </View>
 
         {/* FOOTER (Fijo en todas las páginas) */}
