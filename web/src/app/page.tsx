@@ -52,7 +52,11 @@ export default async function Dashboard() {
   const supabase = await createClient();
   
   // Real Data Fetching
-  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at, carriers(name)');
+  const { data: quotes, error: quotesError } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
+  
+  if (quotesError) {
+    console.error("Dashboard error:", quotesError);
+  }
   
   let totalPremium = 0;
   let totalCommissions = 0;
@@ -83,7 +87,7 @@ export default async function Dashboard() {
         totalPremium += q.sold_premium || 0;
         totalCommissions += ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
         
-        const carrierName = q.carriers?.name || q.carrier_id;
+        const carrierName = q.carrier_id;
         if (carrierName) {
           distribution[carrierName] = (distribution[carrierName] || 0) + 1;
         }
@@ -123,7 +127,8 @@ export default async function Dashboard() {
           realData={{ pending: pendingQuotes, premium: totalPremium, agents: activeAgents }} 
         />
         <div className="flex items-center space-x-2">
-          {/* Controls like date picker could go here */}
+          {quotesError && <div className="text-red-500 text-sm">Error loading data: {quotesError.message}</div>}
+          {!quotes && !quotesError && <div className="text-orange-500 text-sm">No quotes returned (null)</div>}
         </div>
       </div>
       
