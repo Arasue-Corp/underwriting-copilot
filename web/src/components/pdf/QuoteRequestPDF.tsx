@@ -10,6 +10,7 @@ const COLORS = {
   textMuted: '#64748B',
   border: '#E2E8F0',     
   bgLight: '#F8FAFC',
+  white: '#FFFFFF',
 }
 
 const styles = StyleSheet.create({
