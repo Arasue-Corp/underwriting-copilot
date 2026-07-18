@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2 } from "lucide-react";
@@ -16,6 +16,23 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: "Crisol",
   description: "Portal premium de cotizaciones y apetito.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Crisol",
+  },
+  formatDetection: {
+    telephone: false,
+  }
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0B1120",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { createClient } from "@/lib/supabase/server";
