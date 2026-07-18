@@ -724,6 +724,7 @@ export default function AppetiteBIDashboard() {
         onClose={() => setQuoteRule(null)} 
         rule={quoteRule}
         language={language}
+        initialClientId={typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('clientId') : null}
       />
     </div>
   )

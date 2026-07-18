@@ -51,6 +51,7 @@ export default async function RootLayout({
       dashboard: 'Dashboard',
       appetite: 'Appetite Finder',
       requests: 'Quotes',
+      clients: 'Clients',
       admin: 'Administration',
       ingestion: 'BI Ingestion',
       agencies: 'Carriers / Agencies',
@@ -62,6 +63,7 @@ export default async function RootLayout({
       dashboard: 'Dashboard',
       appetite: 'Buscador de Apetito',
       requests: 'Solicitudes',
+      clients: 'Prospectos / Clientes',
       admin: 'Administración',
       ingestion: 'BI Ingestion',
       agencies: 'Compañías / Agencias',
@@ -104,6 +106,12 @@ export default async function RootLayout({
                 <a href="/quotes" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
                   <FileText className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
                   {t.requests}
+                </a>
+              </li>
+              <li>
+                <a href="/clients" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                  <Users className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
+                  {t.clients}
                 </a>
               </li>
               {role === 'ADMIN' && (

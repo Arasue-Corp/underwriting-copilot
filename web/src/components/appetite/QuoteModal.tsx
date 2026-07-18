@@ -1,8 +1,9 @@
 "use client"
 
 import { useState, useTransition, useEffect, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, Upload, Check, AlertCircle } from "lucide-react"
+import { X, ChevronRight, ChevronLeft, Upload, Check, AlertCircle, Users } from "lucide-react"
 import { submitQuoteRequest } from "@/app/actions/quote"
+import { getClients } from "@/app/actions/clients"
 import { INSURANCE_PRODUCTS, InsuranceProduct, ProductField } from "@/lib/constants/insuranceProducts"
 
 interface QuoteModalProps {
@@ -10,9 +11,10 @@ interface QuoteModalProps {
   onClose: () => void
   rule: any
   language?: 'en' | 'es'
+  initialClientId?: string | null
 }
 
-export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModalProps) {
+export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClientId = null }: QuoteModalProps) {
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
@@ -20,7 +22,47 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
   const [files, setFiles] = useState<Record<string, File>>({})
   const [error, setError] = useState<string | null>(null)
   const [invalidFields, setInvalidFields] = useState<string[]>([])
+  const [clients, setClients] = useState<any[]>([])
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(initialClientId)
   const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      getClients().then(res => {
+        if (res.success && res.data) {
+          setClients(res.data)
+        }
+      })
+    }
+  }, [isOpen])
+
+  useEffect(() => {
+    if (selectedClientId && clients.length > 0) {
+      const client = clients.find(c => c.id === selectedClientId)
+      if (client) {
+        setFormData(prev => ({
+          ...prev,
+          general_client_name: client.name,
+          general_legal_structure: client.legal_structure || "",
+          general_fein: client.fein || "",
+          general_contact: client.contact || "",
+          general_address: client.address || ""
+        }))
+        // clear errors for these fields
+        setInvalidFields(prev => prev.filter(f => !['general_client_name', 'general_legal_structure', 'general_fein', 'general_contact', 'general_address'].includes(f)))
+      }
+    } else if (selectedClientId === 'new') {
+      // Clear specific fields if "new client" is selected
+      setFormData(prev => ({
+        ...prev,
+        general_client_name: "",
+        general_legal_structure: "",
+        general_fein: "",
+        general_contact: "",
+        general_address: ""
+      }))
+    }
+  }, [selectedClientId, clients])
 
   if (!isOpen || !rule) return null
 
@@ -274,6 +316,25 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es' }: QuoteModa
                 <h3 className="text-lg font-semibold mb-4">
                   {language === 'es' ? 'Información General (Obligatoria)' : 'General Information (Required)'}
                 </h3>
+                
+                {/* Client Selection */}
+                <div className="mb-6 p-4 bg-muted/20 border border-border/40 rounded-xl space-y-3">
+                  <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                    <Users className="w-4 h-4 text-primary" />
+                    {language === 'es' ? 'Cargar cliente existente (Opcional)' : 'Load existing client (Optional)'}
+                  </label>
+                  <select
+                    value={selectedClientId || "new"}
+                    onChange={(e) => setSelectedClientId(e.target.value)}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <option value="new">{language === 'es' ? '-- Nuevo Cliente --' : '-- New Client --'}</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">

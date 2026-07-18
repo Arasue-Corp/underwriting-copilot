@@ -30,6 +30,26 @@ export async function submitQuoteRequest(formData: FormData) {
     const products = JSON.parse((formData.get("products") as string) || "[]")
     const rawFormData = JSON.parse((formData.get("form_data") as string) || "{}")
 
+    // Check if client exists, otherwise create it
+    const clientLegalStructure = rawFormData.general_legal_structure || null;
+    const clientFein = rawFormData.general_fein || null;
+    const clientAddress = rawFormData.general_address || null;
+    const clientContact = rawFormData.general_contact || null;
+    
+    // Upsert client
+    if (clientName) {
+      await supabase
+        .from('clients')
+        .upsert({
+          agency_id: profile.agency_id,
+          name: clientName,
+          legal_structure: clientLegalStructure,
+          fein: clientFein,
+          address: clientAddress,
+          contact: clientContact
+        }, { onConflict: 'agency_id,name', ignoreDuplicates: true });
+    }
+
     // Upload attachments if present
     const attachments: string[] = []
     

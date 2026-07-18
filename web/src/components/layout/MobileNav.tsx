@@ -66,12 +66,18 @@ export default function MobileNav({ role }: { role: string }) {
               </a>
             </li>
             <li>
-              <a href="/quotes" className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
-                <FileText className="h-5 w-5" />
-                Solicitudes
-              </a>
-            </li>
-            {role === 'ADMIN' && (
+                  <a href="/quotes" className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all">
+                    <FileText className="h-5 w-5" />
+                    Solicitudes
+                  </a>
+                </li>
+                <li>
+                  <a href="/clients" className="group flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all">
+                    <Users className="h-5 w-5" />
+                    Clientes
+                  </a>
+                </li>
+                {role === 'ADMIN' && (
               <>
                 <li className="pt-6 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Administración
