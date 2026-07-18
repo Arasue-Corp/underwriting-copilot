@@ -50,18 +50,33 @@ export default async function Dashboard() {
   const supabase = await createClient();
   
   // Real Data Fetching
-  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, carriers(name)');
+  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at, carriers(name)');
   
   let totalPremium = 0;
   let totalCommissions = 0;
+  let potentialCommissions = 0;
   let pendingQuotes = 0;
   let pendingManagerQuotes = 0;
-
+  
   const distribution: Record<string, number> = {};
+  const monthNames = lang === 'es' 
+    ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] 
+    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const monthlyData: Record<string, number> = {};
+  monthNames.forEach(m => monthlyData[m] = 0);
   
   if (quotes) {
     quotes.forEach((q: any) => {
+      // Add to monthly chart (using sold_premium if accepted, else premium_amount)
+      if (q.created_at) {
+        const d = new Date(q.created_at);
+        const mName = monthNames[d.getMonth()];
+        const pAmount = q.status === 'ACCEPTED' ? (q.sold_premium || 0) : (q.premium_amount || 0);
+        if (monthlyData[mName] !== undefined) {
+          monthlyData[mName] += pAmount;
+        }
+      }
+
       if (q.status === 'ACCEPTED') {
         totalPremium += q.sold_premium || 0;
         totalCommissions += ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
@@ -77,7 +92,7 @@ export default async function Dashboard() {
         if (Array.isArray(q.quotes_provided)) {
           q.quotes_provided.forEach((prop: any) => {
             const comm = (parseFloat(prop.premium) * parseFloat(prop.commission_percentage)) / 100;
-            if (!isNaN(comm)) totalCommissions += comm;
+            if (!isNaN(comm)) potentialCommissions += comm;
           });
         }
       } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
@@ -88,6 +103,8 @@ export default async function Dashboard() {
   }
 
   const distData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
+  // Filter out months from the future or empty if desired, but here we just show all 12
+  const overviewData = monthNames.map(name => ({ name, total: monthlyData[name] }));
 
   const { count: agentsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
   const activeAgents = agentsCount || 0;
@@ -130,6 +147,9 @@ export default async function Dashboard() {
           </div>
           <div className="p-6 pt-0">
             <div className="font-playfair text-3xl font-bold text-[#8C6D41] dark:text-[#F2D3AC]">{formatCurrency(totalCommissions)}</div>
+            <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
+              <span className="text-[#8C6D41] dark:text-[#F2D3AC] font-semibold mr-1">+{formatCurrency(potentialCommissions)}</span> {lang === 'es' ? 'potenciales' : 'potential'}
+            </p>
           </div>
         </div>
         
@@ -173,7 +193,7 @@ export default async function Dashboard() {
             <p className="text-sm text-muted-foreground">{t.evoDesc}</p>
           </div>
           <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
-            <OverviewChart data={[]} />
+            <OverviewChart data={overviewData} />
           </div>
         </div>
         <div className="col-span-3 rounded-2xl glass-panel text-card-foreground flex flex-col">
