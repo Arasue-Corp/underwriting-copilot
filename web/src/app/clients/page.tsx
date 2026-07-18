@@ -139,6 +139,7 @@ export default function ClientsPage() {
                       {selectedClient.name.substring(0, 2).toUpperCase()}
                     </div>
                   )}
+                  <div>
                     <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
                     <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
                       <div className="flex gap-4">
