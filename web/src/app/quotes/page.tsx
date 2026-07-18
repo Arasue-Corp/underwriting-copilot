@@ -374,12 +374,44 @@ export default function QuotesPage() {
           <div className="bg-card w-full max-w-2xl rounded-xl shadow-lg border border-border p-6 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold">Detalles de la Solicitud</h3>
-              <button onClick={() => setDetailsQuote(null)} className="p-2 hover:bg-muted rounded-full">
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex items-center space-x-2">
+                <button 
+                  onClick={async () => {
+                    const element = document.getElementById('quote-details-content');
+                    if (!element) return;
+                    
+                    const toastId = toast.loading("Generando PDF...");
+                    try {
+                      const html2canvas = (await import('html2canvas')).default;
+                      const jsPDF = (await import('jspdf')).default;
+                      
+                      const canvas = await html2canvas(element, { scale: 2 });
+                      const imgData = canvas.toDataURL('image/png');
+                      const pdf = new jsPDF('p', 'mm', 'a4');
+                      const pdfWidth = pdf.internal.pageSize.getWidth();
+                      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                      
+                      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                      pdf.save(`Solicitud_${detailsQuote.client_name.replace(/\s+/g, '_')}.pdf`);
+                      
+                      toast.success("PDF descargado exitosamente", { id: toastId });
+                    } catch (error) {
+                      console.error(error);
+                      toast.error("Error al generar el PDF", { id: toastId });
+                    }
+                  }}
+                  className="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Descargar (PDF)
+                </button>
+                <button onClick={() => setDetailsQuote(null)} className="p-2 hover:bg-muted rounded-full">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
             
-            <div className="space-y-6">
+            <div id="quote-details-content" className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground font-medium">Cliente</p>
