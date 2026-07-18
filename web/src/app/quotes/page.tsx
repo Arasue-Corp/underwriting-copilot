@@ -413,11 +413,29 @@ export default function QuotesPage() {
 
                       const clientLogoBase64 = await getBase64Image(clientLogoUrl);
                       const agencyLogoBase64 = await getBase64Image(agencyLogoUrl);
+                      
+                      // Fetch actual carriers from appetite matrix
+                      let query = supabase.from('appetite_matrix').select('carrier_name').eq('status', 'ELIGIBLE');
+                      if (detailsQuote.products && detailsQuote.products.length > 0) {
+                        query = query.in('product_line', detailsQuote.products);
+                      }
+                      const { data: matchedCarriers } = await query.limit(100);
+                      
+                      let uniqueCarriers = Array.from(new Set(matchedCarriers?.map(c => c.carrier_name)));
+                      if (uniqueCarriers.length === 0) {
+                        const { data: anyCarriers } = await supabase.from('appetite_matrix').select('carrier_name').eq('status', 'ELIGIBLE').limit(50);
+                        uniqueCarriers = Array.from(new Set(anyCarriers?.map(c => c.carrier_name)));
+                      }
+                      const recommendedCarriers = uniqueCarriers.slice(0, 3);
+                      if (recommendedCarriers.length === 0) {
+                        recommendedCarriers.push('Cornerstone Insurance', 'Alchemy Solutions');
+                      }
 
+                      // Dynamic import of PDF components
                       const { pdf } = await import('@react-pdf/renderer');
                       const { QuoteRequestPDF } = await import('@/components/pdf/QuoteRequestPDF');
                       
-                      const blob = await pdf(<QuoteRequestPDF quote={detailsQuote} agencyLogo={agencyLogoBase64} clientLogo={clientLogoBase64} />).toBlob();
+                      const blob = await pdf(<QuoteRequestPDF quote={detailsQuote} clientLogo={clientLogoBase64} agencyLogo={agencyLogoBase64} recommendedCarriers={recommendedCarriers} />).toBlob();
                       
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement('a');

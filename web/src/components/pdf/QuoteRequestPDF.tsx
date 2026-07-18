@@ -294,6 +294,7 @@ interface QuoteRequestPDFProps {
   quote: any
   agencyLogo?: string | null
   clientLogo?: string | null
+  recommendedCarriers?: string[]
 }
 
 function formatKey(key: string) {
@@ -302,7 +303,7 @@ function formatKey(key: string) {
   return formatted.replace(/\b\w/g, l => l.toUpperCase())
 }
 
-export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestPDFProps) => {
+export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo, recommendedCarriers = [] }: QuoteRequestPDFProps) => {
   const formData = typeof quote.form_data === 'string' 
     ? JSON.parse(quote.form_data || '{}') 
     : (quote.form_data || {})
@@ -410,7 +411,7 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
                 <Text style={styles.sectionTitle}>Aseguradoras Recomendadas</Text>
               </View>
               <View style={styles.carrierGrid}>
-                {['CHUBB', 'ZURICH', 'AIG'].map((carrier, i) => (
+                {recommendedCarriers.map((carrier, i) => (
                   <View key={i} style={styles.carrierCard}>
                     <Text style={styles.carrierName}>{carrier}</Text>
                     <Text style={styles.carrierMatch}>{95 - (i * 5)}% Match</Text>
