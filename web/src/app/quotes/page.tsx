@@ -390,14 +390,15 @@ export default function QuotesPage() {
                       const clientLogoPath = client?.logo_url;
                       const agencyLogoPath = detailsQuote.agencies?.logo_url;
                       
-                      const clientLogoUrl = clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null;
-                      const agencyLogoUrl = agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null;
+                      const clientLogoUrl = clientLogoPath?.startsWith('http') ? clientLogoPath : (clientLogoPath ? supabase.storage.from('logos').getPublicUrl(clientLogoPath).data.publicUrl : null);
+                      const agencyLogoUrl = agencyLogoPath?.startsWith('http') ? agencyLogoPath : (agencyLogoPath ? supabase.storage.from('logos').getPublicUrl(agencyLogoPath).data.publicUrl : null);
                       
                       // Helper to fetch image and convert to base64 for guaranteed rendering in PDF
                       const getBase64Image = async (url: string | null) => {
                         if (!url) return null;
                         try {
                           const response = await fetch(url);
+                          if (!response.ok) return null;
                           const blob = await response.blob();
                           return new Promise<string>((resolve) => {
                             const reader = new FileReader();
