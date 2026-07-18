@@ -145,3 +145,32 @@ export async function assignQuoteRequest(quoteId: string, assigneeId: string) {
   revalidatePath("/quotes")
   return { success: true }
 }
+
+export async function updateQuoteStatus(quoteId: string, status: string, soldPremium?: number, commissionPercentage?: number) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
+    return { success: false, error: "Only managers and admins can update quote status." }
+  }
+
+  const updates: any = { status }
+  if (soldPremium !== undefined) updates.sold_premium = soldPremium
+  if (commissionPercentage !== undefined) updates.commission_percentage = commissionPercentage
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .update(updates)
+    .eq("id", quoteId)
+
+  if (error) {
+    console.error("Error updating quote status:", error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath("/quotes")
+  return { success: true }
+}

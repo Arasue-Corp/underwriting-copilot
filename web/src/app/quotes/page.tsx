@@ -1,9 +1,9 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
-import { processMultipleQuotes, assignQuoteRequest } from "@/app/actions/quote"
+import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus } from "@/app/actions/quote"
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([])
@@ -15,10 +15,13 @@ export default function QuotesPage() {
   const [detailsQuote, setDetailsQuote] = useState<any>(null)
   const [processQuote, setProcessQuote] = useState<any>(null)
   const [assignQuote, setAssignQuote] = useState<any>(null)
+  const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
   const [proposals, setProposals] = useState<{product: string, premium: string, file: File | null}[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [soldPremium, setSoldPremium] = useState("")
+  const [commissionPercentage, setCommissionPercentage] = useState("")
   
   // Filter state
   const [filter, setFilter] = useState<'ALL' | 'ASSIGNED_TO_ME' | 'CREATED_BY_ME'>('ALL')
@@ -125,6 +128,42 @@ export default function QuotesPage() {
     }
   }
 
+  const handleStatusChange = async (quote: any, newStatus: string) => {
+    if (newStatus === 'ACCEPTED') {
+      setAcceptQuote(quote)
+      return
+    }
+
+    setIsUploading(true)
+    const res = await updateQuoteStatus(quote.id, newStatus)
+    if (res.success) {
+      loadData()
+    } else {
+      alert("Error al actualizar estatus")
+    }
+    setIsUploading(false)
+  }
+
+  const handleAcceptSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsUploading(true)
+    const res = await updateQuoteStatus(
+      acceptQuote.id, 
+      'ACCEPTED', 
+      parseFloat(soldPremium), 
+      parseFloat(commissionPercentage)
+    )
+    if (res.success) {
+      setAcceptQuote(null)
+      setSoldPremium("")
+      setCommissionPercentage("")
+      loadData()
+    } else {
+      alert("Error al actualizar estatus")
+    }
+    setIsUploading(false)
+  }
+
   const filteredQuotes = quotes.filter(q => {
     if (filter === 'ALL') return true
     if (filter === 'ASSIGNED_TO_ME') return q.assigned_to === userProfile?.id
@@ -160,12 +199,25 @@ export default function QuotesPage() {
 
                   <div className="flex justify-between items-start pl-2">
                     <div>
-                      <span className={`inline-flex mb-2 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
-                        quote.status === 'QUOTED' ? 'bg-emerald-500/10 text-emerald-500' :
-                        'bg-amber-500/10 text-amber-500'
-                      }`}>
-                        {quote.status === 'QUOTED' ? 'Cotizado' : 'Pendiente'}
-                      </span>
+                      <select 
+                        value={quote.status}
+                        onChange={(e) => handleStatusChange(quote, e.target.value)}
+                        disabled={isUploading}
+                        className={`mb-2 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
+                          quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                          quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                          quote.status === 'QUOTED' ? 'bg-blue-500/10 text-blue-600 border-blue-500/30' :
+                          quote.status === 'SUBMITTED_TO_CARRIER' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30' :
+                          'bg-amber-500/10 text-amber-600 border-amber-500/30'
+                        }`}
+                      >
+                        <option value="PENDING_MANAGER">Pendiente Manager</option>
+                        <option value="PENDING_AGENT">Pendiente Agente</option>
+                        <option value="SUBMITTED_TO_CARRIER">Enviada a Carrier</option>
+                        <option value="QUOTED">Cotizado</option>
+                        <option value="REJECTED">Rechazada</option>
+                        <option value="ACCEPTED">Aceptada</option>
+                      </select>
                       <h4 className="font-bold text-lg leading-tight text-foreground">{quote.client_name}</h4>
                     </div>
                   </div>
@@ -252,12 +304,25 @@ export default function QuotesPage() {
                       <td className="px-6 py-4 text-muted-foreground">{quote.profiles?.name}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || 'Sin asignar'}</td>
                       <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          quote.status === 'QUOTED' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' :
-                          'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                        }`}>
-                          {quote.status === 'QUOTED' ? 'COTIZADO' : 'PENDIENTE'}
-                        </span>
+                        <select 
+                          value={quote.status}
+                          onChange={(e) => handleStatusChange(quote, e.target.value)}
+                          disabled={isUploading}
+                          className={`text-xs font-semibold px-2 py-1 rounded-md border ${
+                            quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                            quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                            quote.status === 'QUOTED' ? 'bg-blue-500/10 text-blue-600 border-blue-500/30' :
+                            quote.status === 'SUBMITTED_TO_CARRIER' ? 'bg-indigo-500/10 text-indigo-600 border-indigo-500/30' :
+                            'bg-amber-500/10 text-amber-600 border-amber-500/30'
+                          }`}
+                        >
+                          <option value="PENDING_MANAGER">Pendiente Manager</option>
+                          <option value="PENDING_AGENT">Pendiente Agente</option>
+                          <option value="SUBMITTED_TO_CARRIER">Enviada a Carrier</option>
+                          <option value="QUOTED">Cotizado</option>
+                          <option value="REJECTED">Rechazada</option>
+                          <option value="ACCEPTED">Aceptada</option>
+                        </select>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end space-x-2">
                         <button 
@@ -372,23 +437,41 @@ export default function QuotesPage() {
                                 <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
                                   {(parsedV as any[]).map((item, idx) => (
                                     <div key={idx} className="bg-background rounded-md p-3 text-xs border border-border space-y-1">
-                                      {typeof item === 'object' && item !== null ? Object.entries(item).map(([subK, subV]) => (
+                                      {typeof item === 'object' && item !== null ? Object.entries(item).map(([subK, subV]) => {
+                                        const subIsFile = typeof subV === 'string' && subV.includes('/') && (subV.endsWith('.pdf') || subV.endsWith('.png') || subV.endsWith('.jpg') || subV.endsWith('.jpeg'));
+                                        const subFileUrl = subIsFile ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quote-attachments/${subV}` : null;
+                                        return (
                                         <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
                                           <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
-                                          <span className="font-medium">{String(subV)}</span>
+                                          {subFileUrl ? (
+                                            <a href={subFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium flex items-center">
+                                              Ver Documento
+                                            </a>
+                                          ) : (
+                                            <span className="font-medium">{String(subV)}</span>
+                                          )}
                                         </div>
-                                      )) : <span className="font-medium">{String(item)}</span>}
+                                      )}) : <span className="font-medium">{String(item)}</span>}
                                     </div>
                                   ))}
                                 </div>
                               ) : isObject ? (
                                 <div className="mt-1 bg-background rounded-md p-3 text-xs border border-border space-y-1">
-                                  {Object.entries(parsedV).map(([subK, subV]) => (
+                                  {Object.entries(parsedV).map(([subK, subV]) => {
+                                    const subIsFile = typeof subV === 'string' && subV.includes('/') && (subV.endsWith('.pdf') || subV.endsWith('.png') || subV.endsWith('.jpg') || subV.endsWith('.jpeg'));
+                                    const subFileUrl = subIsFile ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/quote-attachments/${subV}` : null;
+                                    return (
                                     <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
                                       <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
-                                      <span className="font-medium">{String(subV)}</span>
+                                      {subFileUrl ? (
+                                        <a href={subFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium flex items-center">
+                                          Ver Documento
+                                        </a>
+                                      ) : (
+                                        <span className="font-medium">{String(subV)}</span>
+                                      )}
                                     </div>
-                                  ))}
+                                  )})}
                                 </div>
                               ) : isSimpleArray ? (
                                 <div className="mt-1 flex flex-wrap gap-2">
@@ -438,6 +521,48 @@ export default function QuotesPage() {
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assign Modal */}
+      {acceptQuote && (
+        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-sm rounded-xl shadow-lg border border-border p-6">
+            <h3 className="text-xl font-bold mb-4">Aceptar Cotización</h3>
+            <p className="text-sm text-muted-foreground mb-4">Ingresa la información final para cerrar esta solicitud.</p>
+            <form onSubmit={handleAcceptSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Prima Vendida ($)</label>
+                <input 
+                  type="number" 
+                  required
+                  step="0.01"
+                  value={soldPremium}
+                  onChange={(e) => setSoldPremium(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">% de Comisión</label>
+                <input 
+                  type="number" 
+                  required
+                  step="0.01"
+                  value={commissionPercentage}
+                  onChange={(e) => setCommissionPercentage(e.target.value)}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-4">
+                <button type="button" onClick={() => setAcceptQuote(null)} className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md" disabled={isUploading}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
+                  {isUploading ? "Guardando..." : "Aceptar Cotización"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
