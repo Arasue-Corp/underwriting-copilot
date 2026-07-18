@@ -153,8 +153,8 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
-    return { success: false, error: "Only managers and admins can update quote status." }
+  if (!profile || !['MANAGER', 'ADMIN', 'AGENT'].includes(profile.role)) {
+    return { success: false, error: "Unauthorized role." }
   }
 
   const updates: any = { status }
