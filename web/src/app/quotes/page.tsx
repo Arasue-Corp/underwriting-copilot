@@ -19,7 +19,7 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, premium: string, file: File | null}[]>([])
+  const [proposals, setProposals] = useState<{product: string, premium: string, commission_percentage: string, file: File | null}[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
   const [commissionPercentage, setCommissionPercentage] = useState("")
@@ -84,7 +84,7 @@ export default function QuotesPage() {
   const handleProcessSubmit = async () => {
     if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
-      if (!p.premium || !p.file) return toast.error("Completa prima y archivo para todas las propuestas")
+      if (!p.premium || !p.commission_percentage || !p.file) return toast.error("Completa prima, % de comisión y archivo para todas las propuestas")
     }
     
     setIsUploading(true)
@@ -109,6 +109,7 @@ export default function QuotesPage() {
         uploadedProposals.push({
           product: p.product,
           premium: parseFloat(p.premium),
+          commission_percentage: parseFloat(p.commission_percentage),
           file_url: publicUrlData.publicUrl
         })
       }
@@ -270,7 +271,7 @@ export default function QuotesPage() {
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
-                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", file: null })) || [])
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", commission_percentage: "", file: null })) || [])
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
@@ -350,7 +351,7 @@ export default function QuotesPage() {
                           <button 
                             onClick={() => {
                               setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", file: null })) || [])
+                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", commission_percentage: "", file: null })) || [])
                             }}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                           >
@@ -510,8 +511,13 @@ export default function QuotesPage() {
                            <FileText className="w-5 h-5 text-emerald-500" />
                            <span className="font-medium">{q.product}</span>
                         </div>
-                        <div className="flex items-center space-x-4">
-                           <span className="font-bold text-emerald-600">${q.premium}</span>
+                        <div className="flex items-center space-x-4 text-right">
+                           <div>
+                             <div className="font-bold text-emerald-600">${q.premium}</div>
+                             {userProfile?.role !== 'AGENT' && (
+                               <div className="text-xs text-muted-foreground font-medium">Comisión: {q.commission_percentage}%</div>
+                             )}
+                           </div>
                            <a href={q.file_url} target="_blank" rel="noreferrer" className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20">
                              Descargar
                            </a>
@@ -637,6 +643,20 @@ export default function QuotesPage() {
                       placeholder="0.00"
                     />
                   </div>
+                  <div className="w-full md:w-28">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">% Comisión</label>
+                    <input 
+                      type="number" 
+                      value={prop.commission_percentage} 
+                      onChange={e => {
+                        const next = [...proposals]
+                        next[idx].commission_percentage = e.target.value
+                        setProposals(next)
+                      }}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                      placeholder="0.00"
+                    />
+                  </div>
                   <div className="flex-1 w-full">
                     <label className="text-xs font-medium text-muted-foreground mb-1 block">PDF de Cotización</label>
                     <input 
@@ -661,7 +681,7 @@ export default function QuotesPage() {
               ))}
               
               <button 
-                onClick={() => setProposals([...proposals, { product: "", premium: "", file: null }])}
+                onClick={() => setProposals([...proposals, { product: "", premium: "", commission_percentage: "", file: null }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />

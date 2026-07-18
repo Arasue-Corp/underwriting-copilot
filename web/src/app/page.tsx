@@ -50,7 +50,7 @@ export default async function Dashboard() {
   const supabase = await createClient();
   
   // Real Data Fetching
-  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, carrier_id, carriers(name)');
+  const { data: quotes } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, carriers(name)');
   
   let totalPremium = 0;
   let totalCommissions = 0;
@@ -62,13 +62,23 @@ export default async function Dashboard() {
   
   if (quotes) {
     quotes.forEach((q: any) => {
-      if (q.status === 'QUOTED') {
-        totalPremium += q.premium_amount || 0;
-        totalCommissions += q.commission_amount || 0;
+      if (q.status === 'ACCEPTED') {
+        totalPremium += q.sold_premium || 0;
+        totalCommissions += ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
         
         const carrierName = q.carriers?.name || q.carrier_id;
         if (carrierName) {
           distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+        }
+      } else if (q.status === 'QUOTED') {
+        totalPremium += q.premium_amount || 0;
+        
+        // Sum potential commissions from proposals
+        if (Array.isArray(q.quotes_provided)) {
+          q.quotes_provided.forEach((prop: any) => {
+            const comm = (parseFloat(prop.premium) * parseFloat(prop.commission_percentage)) / 100;
+            if (!isNaN(comm)) totalCommissions += comm;
+          });
         }
       } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
         pendingQuotes++;
