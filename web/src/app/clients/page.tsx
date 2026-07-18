@@ -35,6 +35,8 @@ export default function ClientsPage() {
           legal_structure,
           fein,
           logo_url,
+          address,
+          contact,
           created_at
         `)
         .eq('agency_id', userProfile.agency_id)
@@ -137,11 +139,16 @@ export default function ClientsPage() {
                       {selectedClient.name.substring(0, 2).toUpperCase()}
                     </div>
                   )}
-                  <div>
                     <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
-                    <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
-                      <span>FEIN: {selectedClient.fein || 'No registrado'}</span>
-                      <span>Estructura: {selectedClient.legal_structure || 'No registrado'}</span>
+                    <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
+                      <div className="flex gap-4">
+                        <span><strong className="text-foreground/70 font-medium">FEIN:</strong> {selectedClient.fein || 'No registrado'}</span>
+                        <span><strong className="text-foreground/70 font-medium">Estructura:</strong> {selectedClient.legal_structure || 'No registrado'}</span>
+                      </div>
+                      <div className="flex gap-4 mt-1">
+                        <span><strong className="text-foreground/70 font-medium">Dirección:</strong> {selectedClient.address || 'No registrada'}</span>
+                        <span><strong className="text-foreground/70 font-medium">Contacto:</strong> {selectedClient.contact || 'No registrado'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
