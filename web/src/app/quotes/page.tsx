@@ -325,64 +325,94 @@ export default function QuotesPage() {
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground font-medium mb-2">Formulario Entregado</p>
-                <div className="bg-muted/30 p-4 rounded-lg border border-border grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {Object.entries(detailsQuote.form_data || {}).map(([k, v]) => {
-                    let parsedV: any = v;
-                    if (typeof v === 'string' && (v.trim().startsWith('[') || v.trim().startsWith('{'))) {
-                      try { parsedV = JSON.parse(v); } catch(e) {}
-                    }
+                <p className="text-sm text-muted-foreground font-medium mb-4">Formulario Entregado</p>
+                <div className="space-y-6">
+                  {(() => {
+                    const groupedData: Record<string, any> = {};
+                    Object.entries(detailsQuote.form_data || {}).forEach(([k, v]) => {
+                      const prefix = k.split('_')[0];
+                      const group = ['general', 'bop', 'cyber', 'eo'].includes(prefix) ? prefix : 'otros';
+                      if (!groupedData[group]) groupedData[group] = {};
+                      groupedData[group][k] = v;
+                    });
                     
-                    const isArray = Array.isArray(parsedV);
-                    const isArrayOfObjects = isArray && (parsedV as any[]).length > 0 && typeof (parsedV as any[])[0] === 'object' && (parsedV as any[])[0] !== null;
-                    const isSimpleArray = isArray && !isArrayOfObjects;
-                    const isObject = typeof parsedV === 'object' && parsedV !== null && !isArray;
-                    
-                    return (
-                    <div key={k} className={`flex flex-col ${isArrayOfObjects || isObject || isSimpleArray ? 'md:col-span-2' : ''}`}>
-                      <span className="font-medium capitalize text-xs text-muted-foreground mb-1">{k.replace(/_/g, " ")}:</span> 
-                      
-                      {isArrayOfObjects ? (
-                        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {(parsedV as any[]).map((item, idx) => (
-                            <div key={idx} className="bg-background rounded-md p-3 text-xs border border-border space-y-1">
-                              {typeof item === 'object' && item !== null ? Object.entries(item).map(([subK, subV]) => (
-                                <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
-                                  <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
-                                  <span className="font-medium">{String(subV)}</span>
+                    const groupTitles: Record<string, string> = {
+                      'general': 'Información General',
+                      'bop': 'BOP (Business Owner Policy)',
+                      'cyber': 'Cyber Liability',
+                      'eo': 'Errors & Omissions (E&O)',
+                      'otros': 'Otros Detalles'
+                    };
+
+                    return Object.entries(groupedData).map(([groupName, groupFields]) => (
+                      <div key={groupName} className="bg-muted/10 p-4 md:p-5 rounded-xl border border-border">
+                        <h4 className="text-sm font-bold text-foreground mb-4 uppercase tracking-wider border-b border-border/50 pb-2">
+                          {groupTitles[groupName] || groupName}
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Object.entries(groupFields).map(([k, v]) => {
+                            let parsedV: any = v;
+                            if (typeof v === 'string' && (v.trim().startsWith('[') || v.trim().startsWith('{'))) {
+                              try { parsedV = JSON.parse(v); } catch(e) {}
+                            }
+                            
+                            const isArray = Array.isArray(parsedV);
+                            const isArrayOfObjects = isArray && (parsedV as any[]).length > 0 && typeof (parsedV as any[])[0] === 'object' && (parsedV as any[])[0] !== null;
+                            const isSimpleArray = isArray && !isArrayOfObjects;
+                            const isObject = typeof parsedV === 'object' && parsedV !== null && !isArray;
+                            
+                            // Remove the group prefix from the key for display, e.g. "general_client_name" -> "client name"
+                            const displayKey = k.startsWith(groupName + '_') ? k.substring(groupName.length + 1) : k;
+
+                            return (
+                            <div key={k} className={`flex flex-col ${isArrayOfObjects || isObject || isSimpleArray ? 'md:col-span-2' : ''}`}>
+                              <span className="font-medium capitalize text-xs text-muted-foreground mb-1">{displayKey.replace(/_/g, " ")}:</span> 
+                              
+                              {isArrayOfObjects ? (
+                                <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                  {(parsedV as any[]).map((item, idx) => (
+                                    <div key={idx} className="bg-background rounded-md p-3 text-xs border border-border space-y-1">
+                                      {typeof item === 'object' && item !== null ? Object.entries(item).map(([subK, subV]) => (
+                                        <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                                          <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
+                                          <span className="font-medium">{String(subV)}</span>
+                                        </div>
+                                      )) : <span className="font-medium">{String(item)}</span>}
+                                    </div>
+                                  ))}
                                 </div>
-                              )) : <span className="font-medium">{String(item)}</span>}
+                              ) : isObject ? (
+                                <div className="mt-1 bg-background rounded-md p-3 text-xs border border-border space-y-1">
+                                  {Object.entries(parsedV).map(([subK, subV]) => (
+                                    <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                                      <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
+                                      <span className="font-medium">{String(subV)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : isSimpleArray ? (
+                                <div className="mt-1 flex flex-wrap gap-2">
+                                  {(parsedV as any[]).map((item, idx) => (
+                                    <span key={idx} className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-medium">
+                                      {String(item)}
+                                    </span>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-sm font-medium text-foreground">
+                                   {typeof parsedV === 'string' && parsedV.includes('/') && !parsedV.includes(' ') ? (
+                                     <a href={supabase.storage.from('quote-attachments').getPublicUrl(parsedV).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center bg-primary/10 px-2 py-1 rounded-md">
+                                       <FileText className="w-4 h-4 mr-1"/> Abrir adjunto
+                                     </a>
+                                   ) : String(parsedV)}
+                                </span>
+                              )}
                             </div>
-                          ))}
+                          )})}
                         </div>
-                      ) : isObject ? (
-                        <div className="mt-1 bg-background rounded-md p-3 text-xs border border-border space-y-1">
-                          {Object.entries(parsedV).map(([subK, subV]) => (
-                            <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
-                              <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
-                              <span className="font-medium">{String(subV)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : isSimpleArray ? (
-                        <div className="mt-1 flex flex-wrap gap-2">
-                          {(parsedV as any[]).map((item, idx) => (
-                            <span key={idx} className="bg-primary/10 text-primary px-2 py-1 rounded-md text-xs font-medium">
-                              {String(item)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-sm font-medium text-foreground">
-                           {typeof parsedV === 'string' && parsedV.includes('/') && !parsedV.includes(' ') ? (
-                             <a href={supabase.storage.from('quote-attachments').getPublicUrl(parsedV).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center bg-primary/10 px-2 py-1 rounded-md">
-                               <FileText className="w-4 h-4 mr-1"/> Abrir adjunto
-                             </a>
-                           ) : String(parsedV)}
-                        </span>
-                      )}
-                    </div>
-                  )})}
+                      </div>
+                    ));
+                  })()}
                 </div>
               </div>
 
