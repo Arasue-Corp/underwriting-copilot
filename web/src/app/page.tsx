@@ -19,6 +19,7 @@ export default async function Dashboard() {
       totalPrem: 'Total Quoted Premium',
       commissions: 'Commissions Generated',
       pending: 'Pending Quotes',
+      hitRatio: 'Hit Ratio',
       agents: 'Active Agents',
       vsMonth: 'vs last month',
       attention: 'Attention',
@@ -36,6 +37,7 @@ export default async function Dashboard() {
       totalPrem: 'Total Primas Cotizadas',
       commissions: 'Comisiones Generadas',
       pending: 'Solicitudes Pendientes',
+      hitRatio: 'Hit Ratio',
       agents: 'Agentes Activos',
       vsMonth: 'vs mes anterior',
       attention: 'Atención',
@@ -63,6 +65,8 @@ export default async function Dashboard() {
   let potentialCommissions = 0;
   let pendingQuotes = 0;
   let pendingManagerQuotes = 0;
+  let totalAcceptedQuotes = 0;
+  let totalResolvedQuotes = 0;
   
   const distribution: Record<string, number> = {};
   const quotedDistribution: Record<string, number> = {};
@@ -87,6 +91,8 @@ export default async function Dashboard() {
       if (q.status === 'ACCEPTED') {
         totalPremium += q.sold_premium || 0;
         totalCommissions += ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
+        totalAcceptedQuotes++;
+        totalResolvedQuotes++;
         
         const carrierName = q.carrier_id;
         if (carrierName) {
@@ -107,6 +113,8 @@ export default async function Dashboard() {
             if (!isNaN(comm)) potentialCommissions += comm;
           });
         }
+      } else if (q.status === 'REJECTED') {
+        totalResolvedQuotes++;
       } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
         pendingQuotes++;
         if (q.status === 'PENDING_MANAGER') pendingManagerQuotes++;
@@ -118,6 +126,8 @@ export default async function Dashboard() {
   const quotedDistData = Object.entries(quotedDistribution).map(([name, value]) => ({ name, value }));
   // Filter out months from the future or empty if desired, but here we just show all 12
   const overviewData = monthNames.map(name => ({ name, total: monthlyData[name] }));
+  
+  const hitRatio = totalResolvedQuotes > 0 ? Math.round((totalAcceptedQuotes / totalResolvedQuotes) * 100) : 0;
 
   const { count: agentsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
   const activeAgents = agentsCount || 0;
@@ -185,16 +195,16 @@ export default async function Dashboard() {
         
         <div className="rounded-2xl glass-panel text-card-foreground group accent-left-navy hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 delay-400 fill-mode-both">
           <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium text-muted-foreground">{t.agents}</h3>
+            <h3 className="tracking-tight text-sm font-medium text-muted-foreground">{t.hitRatio}</h3>
             <div className="p-2 bg-primary/5 rounded-full group-hover:bg-primary/10 transition-colors group-hover:scale-110 duration-300">
-              <Users className="h-5 w-5 text-primary" />
+              <TrendingUp className="h-5 w-5 text-primary" />
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold">{activeAgents}</div>
+            <div className="font-playfair text-3xl font-bold">{hitRatio}%</div>
             <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
               <span className="status-dot-navy mr-2"></span>
-              <span className="text-foreground font-semibold mr-1">{t.active}</span> {t.inAgency}
+              <span className="text-foreground font-semibold mr-1">{totalAcceptedQuotes}</span> ganadas de {totalResolvedQuotes}
             </p>
           </div>
         </div>

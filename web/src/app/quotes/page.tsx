@@ -14,6 +14,7 @@ export default function QuotesPage() {
   
   // Modals state
   const [detailsQuote, setDetailsQuote] = useState<any>(null)
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false)
   const [processQuote, setProcessQuote] = useState<any>(null)
   const [assignQuote, setAssignQuote] = useState<any>(null)
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
@@ -52,7 +53,7 @@ export default function QuotesPage() {
 
     const { data } = await supabase
       .from("quote_requests")
-      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url)`)
+      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
       .order("created_at", { ascending: false })
     
     if (data) setQuotes(data)
@@ -164,6 +165,55 @@ export default function QuotesPage() {
       toast.error("Error al actualizar estatus")
     }
     setIsUploading(false)
+  }
+
+  const handleUploadDocument = async (e: React.ChangeEvent<HTMLInputElement>, quoteId: string) => {
+    if (!e.target.files || e.target.files.length === 0) return
+    const file = e.target.files[0]
+    setIsUploadingDoc(true)
+    const toastId = toast.loading("Subiendo documento...")
+
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${quoteId}/${Math.random()}.${fileExt}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('quote-attachments')
+        .upload(fileName, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: publicUrlData } = supabase.storage
+        .from('quote-attachments')
+        .getPublicUrl(fileName)
+
+      const { error: dbError } = await supabase
+        .from('quote_documents')
+        .insert({
+          quote_id: quoteId,
+          file_name: file.name,
+          file_url: publicUrlData.publicUrl,
+          uploaded_by: userProfile?.id
+        })
+
+      if (dbError) throw dbError
+      
+      toast.success("Documento subido correctamente", { id: toastId })
+      
+      const newDoc = {
+        id: Math.random().toString(),
+        file_name: file.name,
+        file_url: publicUrlData.publicUrl,
+        created_at: new Date().toISOString()
+      }
+      setDetailsQuote((prev: any) => prev ? {...prev, quote_documents: [...(prev.quote_documents || []), newDoc]} : null)
+      loadData()
+    } catch (error: any) {
+      toast.error(error.message || "Error al subir documento", { id: toastId })
+    } finally {
+      setIsUploadingDoc(false)
+      e.target.value = ''
+    }
   }
 
   const filteredQuotes = quotes.filter(q => {
@@ -592,7 +642,7 @@ export default function QuotesPage() {
               </div>
 
               {detailsQuote.quotes_provided && detailsQuote.quotes_provided.length > 0 && (
-                <div>
+                <div className="mb-6">
                   <p className="text-sm text-muted-foreground font-medium mb-2">Propuestas de Cotización</p>
                   <div className="space-y-2">
                     {detailsQuote.quotes_provided.map((q: any, i: number) => (
@@ -617,6 +667,43 @@ export default function QuotesPage() {
                   </div>
                 </div>
               )}
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-muted-foreground font-medium">Documentos de Respaldo</p>
+                  <label className="cursor-pointer">
+                    <input 
+                      type="file" 
+                      className="hidden" 
+                      onChange={(e) => handleUploadDocument(e, detailsQuote.id)} 
+                      disabled={isUploadingDoc}
+                    />
+                    <span className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20 transition-colors">
+                      {isUploadingDoc ? 'Subiendo...' : '+ Subir Documento'}
+                    </span>
+                  </label>
+                </div>
+                
+                {(!detailsQuote.quote_documents || detailsQuote.quote_documents.length === 0) ? (
+                  <div className="p-4 border border-dashed border-border rounded-lg text-center text-sm text-muted-foreground bg-muted/20">
+                    No hay documentos de respaldo adjuntos a esta solicitud.
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {detailsQuote.quote_documents.map((doc: any, i: number) => (
+                      <div key={i} className="flex justify-between items-center p-3 border border-border rounded-lg hover:bg-muted/30 transition-colors">
+                        <div className="flex items-center space-x-3 overflow-hidden">
+                           <FileText className="w-4 h-4 text-muted-foreground shrink-0" />
+                           <span className="font-medium text-sm truncate">{doc.file_name}</span>
+                        </div>
+                        <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary hover:underline shrink-0 ml-4">
+                           Ver Archivo
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

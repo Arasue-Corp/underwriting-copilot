@@ -162,6 +162,9 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   const updates: any = { status }
   if (soldPremium !== undefined) updates.sold_premium = soldPremium
   if (commissionPercentage !== undefined) updates.commission_percentage = commissionPercentage
+  if (status === 'ACCEPTED') {
+    updates.accepted_at = new Date().toISOString()
+  }
 
   const { error } = await supabase
     .from("quote_requests")
