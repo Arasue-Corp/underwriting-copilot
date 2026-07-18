@@ -27,7 +27,7 @@ export default function ClientsPage() {
     
     if (userProfile?.agency_id) {
       // Fetch clients and their recent quotes
-      const { data: clientsData, error } = await supabase
+      const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select(`
           id,
@@ -35,25 +35,35 @@ export default function ClientsPage() {
           legal_structure,
           fein,
           logo_url,
-          created_at,
-          quote_requests (
-            id,
-            status,
-            created_at,
-            accepted_at,
-            sold_premium,
-            carrier_id,
-            coverage_requested
-          )
+          created_at
         `)
         .eq('agency_id', userProfile.agency_id)
         .order('name')
 
-      if (error) {
+      const { data: quotesData, error: quotesError } = await supabase
+        .from('quote_requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          accepted_at,
+          sold_premium,
+          carrier_id,
+          coverage_requested,
+          client_name
+        `)
+        .eq('agency_id', userProfile.agency_id)
+
+      if (clientsError || quotesError) {
         toast.error("Error al cargar clientes")
-        console.error(error)
+        console.error(clientsError || quotesError)
       } else {
-        setClients(clientsData || [])
+        // Merge quotes into clients manually based on client_name
+        const mergedClients = clientsData.map(client => ({
+          ...client,
+          quote_requests: quotesData.filter((q: any) => q.client_name === client.name)
+        }))
+        setClients(mergedClients)
       }
     }
     setLoading(false)
