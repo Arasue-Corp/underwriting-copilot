@@ -326,7 +326,6 @@ export const QuoteRequestPDF = ({ quote, agencyLogo, clientLogo }: QuoteRequestP
               {Object.entries(formData).map(([key, value], index) => {
                 if (key.startsWith('_')) return null
                 return (
-                  {/* WRAP={FALSE} EVITA QUE LA FILA SE CORTE A LA MITAD ENTRE PÁGINAS */}
                   <View wrap={false} style={[styles.qaRow, index % 2 === 0 ? styles.qaRowEven : {}]} key={index}>
                     <Text style={styles.qaQuestion}>{formatKey(key)}</Text>
                     <Text style={styles.qaAnswer}>{String(value)}</Text>
