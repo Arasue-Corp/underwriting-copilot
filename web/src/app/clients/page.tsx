@@ -18,7 +18,12 @@ export default function ClientsPage() {
 
   const loadClients = async () => {
     setLoading(true)
-    const { data: userProfile } = await supabase.from('profiles').select('agency_id').single()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      setLoading(false)
+      return
+    }
+    const { data: userProfile } = await supabase.from('profiles').select('agency_id').eq('id', user.id).single()
     
     if (userProfile?.agency_id) {
       // Fetch clients and their recent quotes
