@@ -326,19 +326,38 @@ export default function QuotesPage() {
 
               <div>
                 <p className="text-sm text-muted-foreground font-medium mb-2">Formulario Entregado</p>
-                <div className="bg-muted/30 p-4 rounded-lg border border-border">
-                  {Object.entries(detailsQuote.form_data || {}).map(([k, v]) => (
-                    <div key={k} className="mb-2 last:mb-0">
-                      <span className="font-medium capitalize text-sm">{k.replace(/_/g, " ")}:</span> 
-                      <span className="ml-2 text-sm text-muted-foreground">
-                         {typeof v === 'string' && v.includes('/') ? (
-                           <a href={supabase.storage.from('quote-attachments').getPublicUrl(v).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center">
-                             <FileText className="w-3 h-3 mr-1"/> Ver adjunto
-                           </a>
-                         ) : String(v)}
-                      </span>
+                <div className="bg-muted/30 p-4 rounded-lg border border-border grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {Object.entries(detailsQuote.form_data || {}).map(([k, v]) => {
+                    const isArrayOfObjects = Array.isArray(v) && v.length > 0 && typeof v[0] === 'object';
+                    
+                    return (
+                    <div key={k} className={`flex flex-col ${isArrayOfObjects ? 'md:col-span-2' : ''}`}>
+                      <span className="font-medium capitalize text-xs text-muted-foreground mb-1">{k.replace(/_/g, " ")}:</span> 
+                      
+                      {isArrayOfObjects ? (
+                        <div className="mt-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {(v as any[]).map((item, idx) => (
+                            <div key={idx} className="bg-background rounded-md p-3 text-xs border border-border space-y-1">
+                              {Object.entries(item).map(([subK, subV]) => (
+                                <div key={subK} className="flex justify-between border-b border-border/50 last:border-0 pb-1 last:pb-0">
+                                  <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
+                                  <span className="font-medium">{String(subV)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-sm font-medium text-foreground">
+                           {typeof v === 'string' && v.includes('/') ? (
+                             <a href={supabase.storage.from('quote-attachments').getPublicUrl(v).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center bg-primary/10 px-2 py-1 rounded-md">
+                               <FileText className="w-4 h-4 mr-1"/> Abrir adjunto
+                             </a>
+                           ) : typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v)}
+                        </span>
+                      )}
                     </div>
-                  ))}
+                  )})}
                 </div>
               </div>
 
