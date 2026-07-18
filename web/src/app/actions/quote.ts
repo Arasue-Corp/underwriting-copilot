@@ -118,6 +118,7 @@ export async function processMultipleQuotes(quoteId: string, quotes: { product: 
   }
 
   revalidatePath("/quotes")
+  revalidatePath("/")
   return { success: true }
 }
 
@@ -143,6 +144,7 @@ export async function assignQuoteRequest(quoteId: string, assigneeId: string) {
   }
 
   revalidatePath("/quotes")
+  revalidatePath("/")
   return { success: true }
 }
 
@@ -172,5 +174,6 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   }
 
   revalidatePath("/quotes")
+  revalidatePath("/")
   return { success: true }
 }
