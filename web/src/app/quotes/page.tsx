@@ -133,17 +133,17 @@ export default function QuotesPage() {
   })
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6 relative">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">Bandeja de Solicitudes</h2>
-        <div className="flex space-x-2">
-           <button onClick={() => setFilter('ALL')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'ALL' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Todas</button>
-           <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Asignadas a mí</button>
-           <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-3 py-1.5 rounded-md text-sm ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>Creadas por mí</button>
+        <div className="flex flex-wrap gap-2">
+           <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Todas</button>
+           <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Asignadas a mí</button>
+           <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Creadas por mí</button>
         </div>
       </div>
 
-      <div className="rounded-xl border bg-card text-card-foreground shadow overflow-hidden">
+      <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-8 text-center text-muted-foreground">Cargando solicitudes...</div>
         ) : filteredQuotes.length === 0 ? (
@@ -153,51 +153,73 @@ export default function QuotesPage() {
             {/* Mobile View */}
             <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
               {filteredQuotes.map((quote) => (
-                <div key={quote.id} className="border border-border rounded-lg p-4 space-y-3 bg-muted/5">
-                  <div className="flex justify-between items-start">
+                <div key={quote.id} className="border border-border/50 rounded-xl p-5 space-y-4 bg-gradient-to-b from-muted/10 to-transparent shadow-sm relative overflow-hidden">
+                  
+                  {/* Decorator line */}
+                  <div className={`absolute top-0 left-0 w-1 h-full ${quote.status === 'QUOTED' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+
+                  <div className="flex justify-between items-start pl-2">
                     <div>
-                      <h4 className="font-bold text-base">{quote.client_name}</h4>
-                      <p className="text-xs text-muted-foreground mt-1">{quote.carrier_id} • {quote.coverage_requested}</p>
+                      <span className={`inline-flex mb-2 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase ${
+                        quote.status === 'QUOTED' ? 'bg-emerald-500/10 text-emerald-500' :
+                        'bg-amber-500/10 text-amber-500'
+                      }`}>
+                        {quote.status === 'QUOTED' ? 'Cotizado' : 'Pendiente'}
+                      </span>
+                      <h4 className="font-bold text-lg leading-tight text-foreground">{quote.client_name}</h4>
                     </div>
-                    <span className={`px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap ${
-                      quote.status === 'QUOTED' ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30' :
-                      'bg-amber-500/15 text-amber-500 border border-amber-500/30'
-                    }`}>
-                      {quote.status === 'QUOTED' ? 'COTIZADO' : 'PENDIENTE'}
-                    </span>
                   </div>
-                  <div className="text-xs grid grid-cols-2 gap-2 text-muted-foreground bg-muted/20 p-2 rounded-md">
-                    <div><span className="block font-medium text-foreground">Creador:</span> {quote.profiles?.name}</div>
-                    <div><span className="block font-medium text-foreground">Asignado:</span> {quote.assignee?.name || 'Sin asignar'}</div>
+
+                  <div className="grid grid-cols-2 gap-3 pl-2">
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Aseguradora</div>
+                      <div className="text-sm font-medium text-foreground">{quote.carrier_id}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Cobertura</div>
+                      <div className="text-sm font-medium text-foreground">{quote.coverage_requested}</div>
+                    </div>
                   </div>
-                  <div className="pt-3 border-t border-border flex justify-end space-x-2">
+
+                  <div className="bg-muted/30 rounded-lg p-3 grid grid-cols-2 gap-2 text-xs border border-border/50 ml-2">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-muted-foreground font-medium">CREADOR</span> 
+                      <span className="font-medium text-foreground truncate">{quote.profiles?.name}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] text-muted-foreground font-medium">ASIGNADO A</span> 
+                      <span className="font-medium text-foreground truncate">{quote.assignee?.name || 'Sin asignar'}</span>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 pl-2 flex gap-2">
                     <button 
                       onClick={() => setDetailsQuote(quote)}
                       title="Ver Detalles"
-                      className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 flex justify-center items-center"
+                      className="p-2.5 bg-secondary/50 text-secondary-foreground rounded-lg hover:bg-secondary transition-colors"
                     >
-                      <Eye className="w-4 h-4" />
+                      <Eye className="w-5 h-5" />
                     </button>
                     
                     {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
                       <button 
                         onClick={() => setAssignQuote(quote)}
                         title="Reasignar"
-                        className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 flex justify-center items-center"
+                        className="p-2.5 bg-secondary/50 text-secondary-foreground rounded-lg hover:bg-secondary transition-colors"
                       >
-                        <UserPlus className="w-4 h-4" />
+                        <UserPlus className="w-5 h-5" />
                       </button>
                     )}
 
                     {quote.status === 'QUOTED' ? (
-                       <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-2 rounded-md text-xs font-medium hover:bg-emerald-600 flex-1">Ver Propuestas</button>
+                       <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-600 flex-1 transition-colors shadow-sm">Ver Propuestas</button>
                     ) : (
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
                           setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", file: null })) || [])
                         }}
-                        className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-xs font-medium transition-colors flex-1"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
                         Cotizar
                       </button>
