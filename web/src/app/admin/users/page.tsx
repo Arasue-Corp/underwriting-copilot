@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { toast } from "sonner"
 import { Users, Shield, Building2, Loader2, CheckCircle2 } from "lucide-react"
 import { getUsers, getAgencies, updateUserAdmin } from "@/app/actions/admin"
 
@@ -44,7 +45,7 @@ export default function UsersPage() {
       setSuccessId(userId)
       setTimeout(() => setSuccessId(null), 2000)
     } else {
-      alert("Error al actualizar usuario: " + res.error)
+      toast.error("Error al actualizar usuario: " + res.error)
     }
     setUpdatingId(null)
   }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check } from "lucide-react"
+import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus } from "@/app/actions/quote"
 
@@ -71,19 +72,19 @@ export default function QuotesPage() {
     setIsUploading(true)
     const res = await assignQuoteRequest(assignQuote.id, assigneeId)
     if (res.success) {
-      alert("Solicitud reasignada")
+      toast.success("Solicitud reasignada")
       setAssignQuote(null)
       loadData()
     } else {
-      alert(res.error || "Error al asignar")
+      toast.error(res.error || "Error al asignar")
     }
     setIsUploading(false)
   }
 
   const handleProcessSubmit = async () => {
-    if (proposals.length === 0) return alert("Agrega al menos una propuesta")
+    if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
-      if (!p.premium || !p.file) return alert("Completa prima y archivo para todas las propuestas")
+      if (!p.premium || !p.file) return toast.error("Completa prima y archivo para todas las propuestas")
     }
     
     setIsUploading(true)
@@ -114,7 +115,7 @@ export default function QuotesPage() {
 
       const res = await processMultipleQuotes(processQuote.id, uploadedProposals)
       if (res.success) {
-        alert("Cotización procesada exitosamente")
+        toast.success("Cotización procesada exitosamente")
         setProcessQuote(null)
         setProposals([])
         loadData()
@@ -122,7 +123,7 @@ export default function QuotesPage() {
         throw new Error("Error al guardar en base de datos")
       }
     } catch (err: any) {
-      alert(err.message || "Ocurrió un error al procesar")
+      toast.error(err.message || "Ocurrió un error al procesar")
     } finally {
       setIsUploading(false)
     }
@@ -139,7 +140,7 @@ export default function QuotesPage() {
     if (res.success) {
       loadData()
     } else {
-      alert("Error al actualizar estatus")
+      toast.error("Error al actualizar estatus")
     }
     setIsUploading(false)
   }
@@ -159,7 +160,7 @@ export default function QuotesPage() {
       setCommissionPercentage("")
       loadData()
     } else {
-      alert("Error al actualizar estatus")
+      toast.error("Error al actualizar estatus")
     }
     setIsUploading(false)
   }

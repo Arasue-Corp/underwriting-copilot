@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect, useRef } from 'react'
 import { X, ChevronRight, ChevronLeft, Upload, Check, AlertCircle, Users } from "lucide-react"
+import { toast } from "sonner"
 import { submitQuoteRequest } from "@/app/actions/quote"
 import { getClients } from "@/app/actions/clients"
 import { INSURANCE_PRODUCTS, InsuranceProduct, ProductField } from "@/lib/constants/insuranceProducts"
@@ -187,7 +188,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
           if (formRef.current) formRef.current.scrollTop = 0
           return
         }
-        alert(language === 'es' ? "Cotización solicitada exitosamente" : "Quote requested successfully")
+        toast.success(language === 'es' ? "Cotización solicitada exitosamente" : "Quote requested successfully")
         onClose()
       } catch (error: any) {
         console.error(error)

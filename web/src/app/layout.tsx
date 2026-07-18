@@ -27,6 +27,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageProvider } from "@/components/language-provider";
 import { LanguageToggle } from "@/components/language-toggle";
 import { cookies } from "next/headers";
+import { Toaster } from "sonner";
 
 export default async function RootLayout({
   children,
@@ -175,6 +176,7 @@ export default async function RootLayout({
             {children}
           </div>
         </main>
+          <Toaster position="top-right" richColors />
           </LanguageProvider>
         </ThemeProvider>
       </body>
