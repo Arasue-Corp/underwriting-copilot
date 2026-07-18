@@ -65,6 +65,7 @@ export default async function Dashboard() {
   let pendingManagerQuotes = 0;
   
   const distribution: Record<string, number> = {};
+  const quotedDistribution: Record<string, number> = {};
   const monthNames = lang === 'es' 
     ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] 
     : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -94,6 +95,11 @@ export default async function Dashboard() {
       } else if (q.status === 'QUOTED') {
         totalPremium += q.premium_amount || 0;
         
+        const carrierName = q.carrier_id;
+        if (carrierName) {
+          quotedDistribution[carrierName] = (quotedDistribution[carrierName] || 0) + 1;
+        }
+        
         // Sum potential commissions from proposals
         if (Array.isArray(q.quotes_provided)) {
           q.quotes_provided.forEach((prop: any) => {
@@ -109,6 +115,7 @@ export default async function Dashboard() {
   }
 
   const distData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
+  const quotedDistData = Object.entries(quotedDistribution).map(([name, value]) => ({ name, value }));
   // Filter out months from the future or empty if desired, but here we just show all 12
   const overviewData = monthNames.map(name => ({ name, total: monthlyData[name] }));
 
@@ -193,8 +200,8 @@ export default async function Dashboard() {
         </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7 animate-in fade-in slide-in-from-bottom-8 delay-500 duration-700 fill-mode-both">
-        <div className="col-span-4 rounded-2xl glass-panel text-card-foreground flex flex-col">
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 animate-in fade-in slide-in-from-bottom-8 delay-500 duration-700 fill-mode-both">
+        <div className="lg:col-span-2 rounded-2xl glass-panel text-card-foreground flex flex-col">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.evoTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.evoDesc}</p>
@@ -203,13 +210,24 @@ export default async function Dashboard() {
             <OverviewChart data={overviewData} />
           </div>
         </div>
-        <div className="col-span-3 rounded-2xl glass-panel text-card-foreground flex flex-col">
+        
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.distTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.distDesc}</p>
           </div>
           <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
             <DistributionChart data={distData} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
+          <div className="flex flex-col space-y-1.5 p-6 pb-2">
+            <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{lang === 'es' ? 'Aseguradoras Cotizadas' : 'Quoted Carriers'}</h3>
+            <p className="text-sm text-muted-foreground">{lang === 'es' ? 'Distribución de solicitudes cotizadas por aseguradora.' : 'Distribution of quoted requests by carrier.'}</p>
+          </div>
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
+            <DistributionChart data={quotedDistData} />
           </div>
         </div>
       </div>
