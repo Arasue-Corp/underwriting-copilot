@@ -17,6 +17,10 @@ export const metadata: Metadata = {
   title: "Crisol",
   description: "Portal premium de cotizaciones y apetito.",
   manifest: "/manifest.json",
+  icons: {
+    icon: '/icono-crisol-cuadrado.png',
+    apple: '/icono-crisol-cuadrado.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
