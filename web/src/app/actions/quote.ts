@@ -98,7 +98,22 @@ export async function submitQuoteRequest(formData: FormData) {
   }
 }
 
-export async function processMultipleQuotes(quoteId: string, quotes: { product: string, premium: number, commission_percentage: number, file_url: string }[]) {
+export async function processMultipleQuotes(
+  quoteId: string, 
+  quotes: { 
+    product: string, 
+    carrier: string,
+    premium: number, 
+    commission_percentage: number, 
+    file_url?: string,
+    monthly_payment?: number,
+    payment_options?: string,
+    coverages?: string,
+    included?: string,
+    excluded?: string,
+    notes?: string
+  }[]
+) {
   const supabase = await createClient()
   
   const totalPremium = quotes.reduce((sum, q) => sum + (Number(q.premium) || 0), 0)

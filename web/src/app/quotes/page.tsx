@@ -20,7 +20,7 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, premium: string, commission_percentage: string, file: File | null}[]>([])
+  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null}[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
   const [commissionPercentage, setCommissionPercentage] = useState("")
@@ -56,7 +56,9 @@ export default function QuotesPage() {
       .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
       .order("created_at", { ascending: false })
     
-    if (data) setQuotes(data)
+    if (data) {
+      setQuotes(data.filter((q: any) => !['QUOTED', 'ACCEPTED', 'REJECTED'].includes(q.status)))
+    }
     setLoading(false)
   }
 
@@ -85,7 +87,7 @@ export default function QuotesPage() {
   const handleProcessSubmit = async () => {
     if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
-      if (!p.premium || !p.commission_percentage || !p.file) return toast.error("Completa prima, % de comisión y archivo para todas las propuestas")
+      if (!p.premium || !p.commission_percentage || !p.carrier) return toast.error("Completa Aseguradora, prima y % de comisión para todas las propuestas")
     }
     
     setIsUploading(true)
@@ -93,25 +95,37 @@ export default function QuotesPage() {
     try {
       const uploadedProposals = []
       for (const p of proposals) {
-        const fileExt = p.file!.name.split('.').pop()
-        const fileName = `${processQuote.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-        const filePath = `policies/${fileName}`
+        let fileUrl = undefined
+        if (p.file) {
+          const fileExt = p.file.name.split('.').pop()
+          const fileName = `${processQuote.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+          const filePath = `policies/${fileName}`
 
-        const { error: uploadError } = await supabase.storage
-          .from('quotes-bucket')
-          .upload(filePath, p.file!)
+          const { error: uploadError } = await supabase.storage
+            .from('quotes-bucket')
+            .upload(filePath, p.file)
 
-        if (uploadError) throw new Error("Error al subir el archivo PDF: " + p.file!.name)
+          if (uploadError) throw new Error("Error al subir el archivo PDF: " + p.file.name)
 
-        const { data: publicUrlData } = supabase.storage
-          .from('quotes-bucket')
-          .getPublicUrl(filePath)
-          
+          const { data: publicUrlData } = supabase.storage
+            .from('quotes-bucket')
+            .getPublicUrl(filePath)
+            
+          fileUrl = publicUrlData.publicUrl
+        }
+
         uploadedProposals.push({
           product: p.product,
+          carrier: p.carrier,
           premium: parseFloat(p.premium),
           commission_percentage: parseFloat(p.commission_percentage),
-          file_url: publicUrlData.publicUrl
+          monthly_payment: p.monthly_payment ? parseFloat(p.monthly_payment) : undefined,
+          payment_options: p.payment_options,
+          coverages: p.coverages,
+          included: p.included,
+          excluded: p.excluded,
+          notes: p.notes,
+          file_url: fileUrl
         })
       }
 
@@ -321,7 +335,7 @@ export default function QuotesPage() {
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
-                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", commission_percentage: "", file: null })) || [])
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null })) || [])
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
@@ -401,7 +415,7 @@ export default function QuotesPage() {
                           <button 
                             onClick={() => {
                               setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, premium: "", commission_percentage: "", file: null })) || [])
+                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null })) || [])
                             }}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                           >
@@ -809,74 +823,183 @@ export default function QuotesPage() {
             
             <div className="space-y-6">
               {proposals.map((prop, idx) => (
-                <div key={idx} className="flex flex-col md:flex-row gap-4 items-end p-4 border border-border rounded-lg bg-muted/10">
-                  <div className="flex-1 w-full">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / Cobertura</label>
-                    <input 
-                      type="text" 
-                      value={prop.product} 
-                      onChange={e => {
-                        const next = [...proposals]
-                        next[idx].product = e.target.value
-                        setProposals(next)
-                      }}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                      placeholder="Ej. Auto Comercial"
-                    />
+                <div key={idx} className="flex flex-col gap-4 p-5 border border-border rounded-lg bg-muted/10 relative">
+                  <div className="absolute right-2 top-2">
+                    <button 
+                      onClick={() => setProposals(proposals.filter((_, i) => i !== idx))}
+                      className="p-1.5 border border-red-500/20 text-red-500 rounded-md hover:bg-red-500/10"
+                      title="Eliminar"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                  <div className="w-full md:w-32">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima ($)</label>
-                    <input 
-                      type="number" 
-                      value={prop.premium} 
-                      onChange={e => {
-                        const next = [...proposals]
-                        next[idx].premium = e.target.value
-                        setProposals(next)
-                      }}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                      placeholder="0.00"
-                    />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / Cobertura</label>
+                      <input 
+                        type="text" 
+                        value={prop.product} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].product = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="Ej. Auto Comercial"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Aseguradora</label>
+                      <input 
+                        type="text" 
+                        value={prop.carrier} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].carrier = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="Ej. Progressive"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima Total ($)</label>
+                      <input 
+                        type="number" 
+                        value={prop.premium} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].premium = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">% Comisión (Interno)</label>
+                      <input 
+                        type="number" 
+                        value={prop.commission_percentage} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].commission_percentage = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="0.00"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Pago Mensual ($) (Opcional)</label>
+                      <input 
+                        type="number" 
+                        value={prop.monthly_payment} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].monthly_payment = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Opciones de Pago</label>
+                      <input 
+                        type="text" 
+                        value={prop.payment_options} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].payment_options = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                        placeholder="Ej. Pago Anual o 12 Mensualidades"
+                      />
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Coberturas / Límites (Separadas por comas)</label>
+                      <textarea 
+                        value={prop.coverages} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].coverages = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="$1M/$2M General Liability, $100k Property..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-medium text-emerald-600 mb-1 block">Qué INCLUYE (Separado por comas)</label>
+                      <textarea 
+                        value={prop.included} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].included = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm"
+                        placeholder="Ej. Daños a terceros, Gastos médicos..."
+                        rows={2}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-red-600 mb-1 block">Qué EXCLUYE (Separado por comas)</label>
+                      <textarea 
+                        value={prop.excluded} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].excluded = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-red-500/30 bg-red-500/5 px-3 py-2 text-sm"
+                        placeholder="Ej. Cyber, Inundación, Terremoto..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Notas de Underwriting / Condiciones</label>
+                      <textarea 
+                        value={prop.notes} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].notes = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Condiciones o notas importantes para el cliente..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">PDF de Cotización (Opcional - Interno)</label>
+                      <input 
+                        type="file"
+                        accept=".pdf,application/pdf"
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].file = e.target.files ? e.target.files[0] : null
+                          setProposals(next)
+                        }}
+                        className="w-full text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      />
+                    </div>
                   </div>
-                  <div className="w-full md:w-28">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">% Comisión</label>
-                    <input 
-                      type="number" 
-                      value={prop.commission_percentage} 
-                      onChange={e => {
-                        const next = [...proposals]
-                        next[idx].commission_percentage = e.target.value
-                        setProposals(next)
-                      }}
-                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                      placeholder="0.00"
-                    />
-                  </div>
-                  <div className="flex-1 w-full">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">PDF de Cotización</label>
-                    <input 
-                      type="file"
-                      accept=".pdf,application/pdf"
-                      onChange={e => {
-                        const next = [...proposals]
-                        next[idx].file = e.target.files ? e.target.files[0] : null
-                        setProposals(next)
-                      }}
-                      className="w-full text-sm file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
-                    />
-                  </div>
-                  <button 
-                    onClick={() => setProposals(proposals.filter((_, i) => i !== idx))}
-                    className="h-9 px-3 border border-red-500/20 text-red-500 rounded-md hover:bg-red-500/10"
-                    title="Eliminar"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
                 </div>
               ))}
               
               <button 
-                onClick={() => setProposals([...proposals, { product: "", premium: "", commission_percentage: "", file: null }])}
+                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />

@@ -1,0 +1,210 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Eye, FileText, CheckCircle2, XCircle, RefreshCw } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import Link from "next/link"
+import { updateQuoteStatus } from "@/app/actions/quote"
+import { toast } from "sonner"
+
+export default function ProposalsPage() {
+  const [proposals, setProposals] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [userProfile, setUserProfile] = useState<any>(null)
+  
+  const supabase = createClient()
+
+  const loadData = async () => {
+    setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .single()
+      
+    setUserProfile(profile)
+
+    // Solo traemos las solicitudes que ya fueron cotizadas o posterior
+    let query = supabase
+      .from("quote_requests")
+      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url)`)
+      .in('status', ['QUOTED', 'ACCEPTED', 'REJECTED'])
+      .order("created_at", { ascending: false })
+      
+    // Si no es admin/manager, solo ve las suyas
+    if (profile && profile.role === 'AGENT') {
+        query = query.eq('agent_id', user.id)
+    } else if (profile && profile.role === 'MANAGER') {
+        query = query.eq('agency_id', profile.agency_id)
+    }
+    
+    const { data } = await query
+    
+    if (data) setProposals(data)
+    setLoading(false)
+  }
+
+  const handleStatusChange = async (quoteId: string, newStatus: string) => {
+    const prevProposals = [...proposals]
+    setProposals(proposals.map(p => p.id === quoteId ? { ...p, status: newStatus } : p))
+    
+    const toastId = toast.loading("Actualizando etiqueta...")
+    try {
+      const res = await updateQuoteStatus(quoteId, newStatus)
+      if (res.success) {
+        toast.success("Etiqueta actualizada correctamente", { id: toastId })
+      } else {
+        throw new Error(res.error || "Error al actualizar")
+      }
+    } catch (e: any) {
+      toast.error(e.message, { id: toastId })
+      setProposals(prevProposals)
+    }
+  }
+
+  useEffect(() => {
+    loadData()
+  }, [])
+
+  return (
+    <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h2 className="text-3xl font-bold tracking-tight">Propuestas Listas</h2>
+            <p className="text-muted-foreground text-sm mt-1">Propuestas generadas por Underwriting listas para ser presentadas a tu cliente.</p>
+        </div>
+      </div>
+
+      <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="p-8 text-center text-muted-foreground">Cargando propuestas...</div>
+        ) : proposals.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground">Aún no tienes propuestas generadas.</div>
+        ) : (
+          <>
+            {/* Mobile View */}
+            <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
+              {proposals.map((quote) => (
+                <div key={quote.id} className="border border-border/50 rounded-xl p-5 space-y-4 bg-gradient-to-b from-muted/10 to-transparent shadow-sm relative overflow-hidden">
+                  
+                  <div className={`absolute top-0 left-0 w-1 h-full ${
+                    quote.status === 'ACCEPTED' ? 'bg-emerald-500' :
+                    quote.status === 'REJECTED' ? 'bg-red-500' :
+                    'bg-blue-500'
+                  }`} />
+
+                  <div className="flex justify-between items-start pl-2">
+                    <div>
+                      <select 
+                        value={quote.status}
+                        onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                        className={`mb-2 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border outline-none appearance-none cursor-pointer ${
+                          quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                          quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                          quote.status === 'PROCESSING' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                          'bg-blue-500/10 text-blue-600 border-blue-500/30'
+                        }`}
+                      >
+                          <option value="QUOTED">Pendiente Presentar</option>
+                          <option value="PROCESSING">Cambiar / Revisar</option>
+                          <option value="ACCEPTED">Aceptada</option>
+                          <option value="REJECTED">Rechazada</option>
+                      </select>
+                      <h4 className="font-bold text-lg leading-tight text-foreground">{quote.client_name}</h4>
+                      <p className="text-xs text-muted-foreground mt-1">{quote.client_business_type}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 pl-2">
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Línea de Negocio</div>
+                      <div className="text-sm font-medium text-foreground">{quote.coverage_requested}</div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Prima Estimada</div>
+                      <div className="text-sm font-bold text-emerald-600">
+                        ${quote.premium_amount ? quote.premium_amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 pl-2">
+                    <Link 
+                        href={`/proposals/${quote.id}`}
+                        className="w-full text-center bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center shadow-sm"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Presentación
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Desktop View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+                  <tr>
+                    <th className="px-6 py-3 font-medium">Cliente</th>
+                    <th className="px-6 py-3 font-medium">Negocio</th>
+                    <th className="px-6 py-3 font-medium">Coberturas</th>
+                    <th className="px-6 py-3 font-medium">Prima Total</th>
+                    <th className="px-6 py-3 font-medium">Estado</th>
+                    <th className="px-6 py-3 font-medium text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {proposals.map((quote) => (
+                    <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-6 py-4 font-bold">{quote.client_name}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{quote.client_business_type}</td>
+                      <td className="px-6 py-4">{quote.coverage_requested}</td>
+                      <td className="px-6 py-4 font-bold text-emerald-600">
+                        ${quote.premium_amount ? quote.premium_amount.toLocaleString('en-US', {minimumFractionDigits: 2}) : '0.00'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="relative inline-block">
+                          <select 
+                            value={quote.status}
+                            onChange={(e) => handleStatusChange(quote.id, e.target.value)}
+                            className={`text-xs font-semibold px-2 py-1.5 rounded-md border outline-none appearance-none cursor-pointer pr-6 ${
+                              quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                              quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                              quote.status === 'PROCESSING' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                              'bg-blue-500/10 text-blue-600 border-blue-500/30'
+                            }`}
+                          >
+                            <option value="QUOTED">Pendiente Presentar</option>
+                            <option value="PROCESSING">Cambiar / Revisar</option>
+                            <option value="ACCEPTED">Aceptada</option>
+                            <option value="REJECTED">Rechazada</option>
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-1.5 pointer-events-none text-current opacity-70">
+                            <svg className="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" fillRule="evenodd"></path></svg>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <Link 
+                            href={`/proposals/${quote.id}`}
+                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center"
+                        >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Presentación
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  )
+}

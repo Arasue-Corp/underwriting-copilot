@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
-import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2 } from "lucide-react";
+import { Database, FileText, Home, Search, Settings, ShieldCheck, Building2, Layers } from "lucide-react";
 
 const inter = Inter({
   variable: "--font-sans",
@@ -38,6 +38,8 @@ export const viewport: Viewport = {
 import { createClient } from "@/lib/supabase/server";
 import HeaderAuth from "@/components/layout/HeaderAuth";
 import MobileNav from "@/components/layout/MobileNav";
+import SidebarNav from "@/components/layout/SidebarNav";
+import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { Users } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -69,6 +71,7 @@ export default async function RootLayout({
       dashboard: 'Dashboard',
       appetite: 'Appetite Finder',
       requests: 'Quotes',
+      proposals: 'Proposals',
       clients: 'Clients',
       admin: 'Administration',
       ingestion: 'BI Ingestion',
@@ -81,6 +84,7 @@ export default async function RootLayout({
       dashboard: 'Dashboard',
       appetite: 'Buscador de Apetito',
       requests: 'Solicitudes',
+      proposals: 'Propuestas',
       clients: 'Prospectos / Clientes',
       admin: 'Administración',
       ingestion: 'BI Ingestion',
@@ -98,101 +102,45 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
           <LanguageProvider lang={lang}>
-        {/* Sidebar (Desktop Only) */}
-        <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
-          <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
-            <div className="flex items-center gap-3">
-              <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-10 h-10 object-contain rounded-xl shadow-sm" />
-              <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
-            </div>
-          </div>
-          <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
-            <ul className="space-y-1.5 px-4">
-              <li>
-                <a href="/" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold bg-primary/10 text-primary transition-all border border-primary/10 shadow-sm">
-                  <Home className="h-4 w-4" />
-                  {t.dashboard}
-                </a>
-              </li>
-              <li>
-                <a href="/appetite" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                  <Search className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                  {t.appetite}
-                </a>
-              </li>
-              <li>
-                <a href="/quotes" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                  <FileText className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                  {t.requests}
-                </a>
-              </li>
-              <li>
-                <a href="/clients" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                  <Users className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                  {t.clients}
-                </a>
-              </li>
-              {role === 'ADMIN' && (
-                <>
-                  <li className="pt-6 pb-2 px-3 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest">
-                    {t.admin}
-                  </li>
-                  <li>
-                    <a href="/admin/upload-appetite" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                      <Database className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                      {t.ingestion}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/admin/agencies" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                      <Building2 className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                      {t.agencies}
-                    </a>
-                  </li>
-                  <li>
-                    <a href="/admin/users" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                      <ShieldCheck className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                      {t.users}
-                    </a>
-                  </li>
-                </>
-              )}
-              {(role === 'MANAGER' || role === 'ADMIN') && (
-                <li>
-                  <a href="/agency" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                    <Users className="h-4 w-4 transition-transform group-hover:scale-110 group-hover:text-primary" />
-                    {t.myAgency}
+        <div className="flex flex-col md:flex-row min-h-screen flex-1 w-full">
+          <LayoutWrapper
+            sidebar={
+              <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+                <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
+                  <div className="flex items-center gap-3">
+                    <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-10 h-10 object-contain rounded-xl shadow-sm" />
+                    <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
+                  </div>
+                </div>
+                <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
+                  <SidebarNav role={role} t={t} />
+                </nav>
+                <div className="p-4 border-t border-border/40 bg-card/20 space-y-2">
+                  <ThemeToggle />
+                  <LanguageToggle />
+                  <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                    <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
+                    {t.settings}
                   </a>
-                </li>
-              )}
-            </ul>
-          </nav>
-          <div className="p-4 border-t border-border/40 bg-card/20 space-y-2">
-            <ThemeToggle />
-            <LanguageToggle />
-            <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-              <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
-              {t.settings}
-            </a>
-          </div>
-          <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
-            Desarrollado por <br/>
-            <span className="text-primary font-bold">Arasue Forge</span>
-          </div>
-        </aside>
-        
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
-          <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-            <MobileNav role={role} />
-            <div className="flex items-center gap-6">
-              <HeaderAuth />
-            </div>
-          </header>
-          <div className="flex-1 overflow-auto">
+                </div>
+                <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
+                  Desarrollado por <br/>
+                  <span className="text-primary font-bold">Arasue Forge</span>
+                </div>
+              </aside>
+            }
+            header={
+              <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+                <MobileNav role={role} t={t} />
+                <div className="flex items-center gap-6">
+                  <HeaderAuth />
+                </div>
+              </header>
+            }
+          >
             {children}
-          </div>
-        </main>
+          </LayoutWrapper>
+        </div>
           <Toaster position="top-right" richColors />
           </LanguageProvider>
         </ThemeProvider>
