@@ -17,6 +17,13 @@ Font.register({
   ]
 });
 
+const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+
+Font.register({
+  family: 'Signature',
+  src: `${baseUrl}/fonts/Caveat.ttf`
+});
+
 const styles = StyleSheet.create({
   page: {
     padding: 40,
@@ -26,7 +33,7 @@ const styles = StyleSheet.create({
   },
   coverPage: {
     fontFamily: 'Inter',
-    backgroundColor: '#009CFF',
+    backgroundColor: '#0B1120',
     color: '#ffffff',
     display: 'flex',
     flexDirection: 'column',
@@ -102,6 +109,13 @@ const styles = StyleSheet.create({
   section: {
     marginBottom: 20,
   },
+  page: {
+    paddingTop: 110,
+    paddingBottom: 90,
+    paddingHorizontal: 40,
+    fontFamily: 'Inter',
+    backgroundColor: '#ffffff',
+  },
   header: {
     fontSize: 20,
     fontWeight: 'bold',
@@ -122,23 +136,23 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     borderRadius: 8,
     padding: 15,
-    marginBottom: 15,
+    backgroundColor: '#ffffff',
   },
   tableRow: {
-    display: 'flex',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    paddingVertical: 8,
   },
   tableColLeft: {
     width: '60%',
     fontSize: 10,
-    color: '#475569',
+    color: '#334155',
+    fontWeight: 'bold',
   },
   tableColRight: {
     width: '40%',
     fontSize: 10,
-    fontWeight: 'bold',
+    color: '#64748b',
     textAlign: 'right',
   },
   priceText: {
@@ -150,15 +164,6 @@ const styles = StyleSheet.create({
     width: 120,
     marginBottom: 40,
   },
-  footer: {
-    position: 'absolute',
-    bottom: 30,
-    left: 40,
-    right: 40,
-    fontSize: 8,
-    color: '#94a3b8',
-    textAlign: 'center',
-  },
   badge: {
     backgroundColor: '#D94F90',
     color: 'white',
@@ -169,15 +174,126 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
   },
+  pageHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+    backgroundColor: '#0B1120',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingTop: 20,
+    borderBottomWidth: 4,
+    borderBottomColor: '#009CFF', // Primary Blue
+  },
+  headerAccent: {
+    position: 'absolute',
+    bottom: -4,
+    left: 0,
+    height: 4,
+    width: '35%',
+    backgroundColor: '#514690', // Indigo
+  },
+  headerAccentSecondary: {
+    position: 'absolute',
+    bottom: -4,
+    right: 0,
+    height: 4,
+    width: '15%',
+    backgroundColor: '#D94F90', // Magenta
+  },
+  headerLogo: {
+    height: 35,
+    objectFit: 'contain',
+  },
+  headerTextContainer: {
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  headerSubtitle: {
+    fontSize: 8,
+    color: '#94a3b8',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 2,
+  },
+  headerText: {
+    fontSize: 11,
+    color: '#ffffff',
+    textTransform: 'uppercase',
+    letterSpacing: 2,
+    fontWeight: 'bold',
+  },
+  pageFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 60,
+    backgroundColor: '#514690',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    borderTopWidth: 4,
+    borderTopColor: '#D94F90',
+    overflow: 'hidden',
+  },
+  footerDecoration: {
+    position: 'absolute',
+    left: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    opacity: 0.1,
+    zIndex: 0,
+  },
+  footerText: {
+    fontSize: 8,
+    color: '#ffffff',
+    fontWeight: 'bold',
+    letterSpacing: 1,
+    zIndex: 1,
+  },
+  bgImage: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
+    zIndex: -2,
+  },
+  bgOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(11, 17, 32, 0.75)',
+    zIndex: -1,
+  },
+  contentContainer: {
+    // Padding moved to Page component for global pagination support
+  },
 });
 
 interface FormalProposalPDFProps {
   quote: any;
   selectedModules: boolean[];
+  disclaimer: string;
 }
 
-export const FormalProposalPDF = ({ quote, selectedModules }: FormalProposalPDFProps) => {
+export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: FormalProposalPDFProps) => {
   const proposals = quote?.quotes_provided || [];
+  const lastSelectedIdx = proposals.reduce((last: number, _p: any, idx: number) => selectedModules[idx] ? idx : last, -1);
   
   const packageTotal = proposals.reduce((acc: any, prop: any, idx: number) => {
     if (selectedModules[idx] && !prop.is_bundled) {
@@ -190,72 +306,104 @@ export const FormalProposalPDF = ({ quote, selectedModules }: FormalProposalPDFP
   return (
     <Document>
       {/* 1. COVER PAGE */}
-      <Page size="LETTER" style={styles.coverPage}>
-        <View style={styles.glowCircle} />
-        <Image src="/alex-assets/Image-13.png" style={styles.catDecoration} />
-        <Image src="/alex-assets/Image-12.png" style={styles.dogDecoration} />
-        
-        <Image src="/alex-assets/logo-blanco.png" style={styles.whiteLogo} />
-        
-        <Text style={styles.coverSubtitle}>PREPARED EXCLUSIVELY FOR</Text>
-        <Text style={styles.coverTitle}>{quote.client_name}</Text>
-        <Text style={styles.coverSubtitle}>
-          Executive Summary & Insurance Program Proposal
-        </Text>
+      <Page size="LETTER" style={{ fontFamily: 'Inter', color: '#ffffff' }}>
+        {/* Background Layer */}
+        <Image src="/alex-assets/Wallpaper-1.jpeg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#009CFF', opacity: 0.45 }} />
 
+        {/* Foreground Content */}
+        <View style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative', width: '100%', height: '100%' }}>
+          <View style={styles.glowCircle} />
+          <Image src="/alex-assets/logo-blanco.png" style={styles.whiteLogo} />
+          
+          <Text style={styles.coverSubtitle}>PREPARED EXCLUSIVELY FOR</Text>
+          <Text style={styles.coverTitle}>{quote.client_name || 'CLIENT'}</Text>
+          <Text style={styles.coverSubtitle}>
+            Executive Summary & Insurance Program Proposal
+          </Text>
+        </View>
       </Page>
 
       {/* 2. EXECUTIVE SUMMARY */}
       <Page size="LETTER" style={styles.page}>
-        <View style={styles.section}>
-          <Text style={styles.header}>Executive Summary</Text>
-          <Text style={{ fontSize: 10, color: '#64748b', marginBottom: 20, lineHeight: 1.5 }}>
-            This document outlines the structured insurance program designed for {quote.client_name}. 
-            Below is the total financial commitment for the selected policies, followed by a detailed breakdown 
-            of the coverages, limits, inclusions, and exclusions.
-          </Text>
+        {/* HEADER */}
+        <View style={styles.pageHeader} fixed>
+          <View style={styles.headerAccent} />
+          <View style={styles.headerAccentSecondary} />
+          <Image src="/alex-assets/logo-blanco.png" style={styles.headerLogo} />
+          <Text style={styles.headerText}>Executive Summary</Text>
         </View>
 
-        <View style={{ ...styles.policyBox, backgroundColor: '#f8fafc' }}>
-          <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#514690', marginBottom: 10 }}>Total Program Investment</Text>
-          <View style={styles.tableRow}>
-            <Text style={styles.tableColLeft}>Pay in Full Premium</Text>
-            <Text style={styles.priceText}>${packageTotal.premium.toLocaleString('en-US')}</Text>
+        <View style={styles.contentContainer}>
+          <View style={styles.section}>
+            <Text style={styles.header}>Executive Summary</Text>
+            <Text style={{ fontSize: 10, color: '#64748b', marginBottom: 20, lineHeight: 1.5 }}>
+              This document outlines the structured insurance program designed for {quote.client_name}. 
+              Below is the total financial commitment for the selected policies, followed by a detailed breakdown 
+              of the coverages, limits, inclusions, and exclusions.
+            </Text>
           </View>
-          {packageTotal.monthly > 0 && (
-            <View style={styles.tableRow}>
-              <Text style={styles.tableColLeft}>Monthly Financing Option</Text>
-              <Text style={{ ...styles.priceText, color: '#009CFF', fontSize: 14 }}>${packageTotal.monthly.toLocaleString('en-US')} / mo</Text>
-            </View>
-          )}
-        </View>
 
-        <Text style={styles.header}>Selected Policies Breakdown</Text>
-        {proposals.map((prop: any, idx: number) => {
-          if (!selectedModules[idx]) return null;
-          return (
-            <View key={idx} style={styles.policyBox}>
-              {prop.is_bundled && <Text style={styles.badge}>INTEGRATED BUNDLE</Text>}
+          <View style={{ backgroundColor: '#f0f9ff', padding: 12, borderRadius: 6, marginBottom: 20, alignItems: 'center' }}>
+            <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#009CFF', textTransform: 'uppercase', letterSpacing: 1 }}>
+              PREPARED EXCLUSIVELY FOR {quote.client_name}
+            </Text>
+          </View>
+
+          <View style={{ ...styles.policyBox, backgroundColor: '#f8fafc' }}>
+            <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#514690', marginBottom: 10 }}>Total Program Investment</Text>
+            <View style={styles.tableRow}>
+              <Text style={styles.tableColLeft}>Pay in Full Premium</Text>
+              <Text style={styles.priceText}>${packageTotal.premium.toLocaleString('en-US')}</Text>
+            </View>
+            {packageTotal.monthly > 0 && (
               <View style={styles.tableRow}>
-                <View style={{ width: '70%' }}>
-                  <Text style={styles.policyTitle}>{prop.product}</Text>
-                  {prop.carrier && <Text style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>{prop.carrier}</Text>}
-                </View>
-                <View style={{ width: '30%', textAlign: 'right' }}>
-                  {!prop.is_bundled && (
-                    <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#334155' }}>
-                      ${Number(prop.premium).toLocaleString('en-US')}
-                    </Text>
-                  )}
+                <Text style={styles.tableColLeft}>Monthly Financing Option</Text>
+                <Text style={{ ...styles.priceText, color: '#009CFF', fontSize: 14 }}>${packageTotal.monthly.toLocaleString('en-US')} / mo</Text>
+              </View>
+            )}
+          </View>
+
+          <Text style={styles.header}>Selected Policies Breakdown</Text>
+          {proposals.map((prop: any, idx: number) => {
+            if (!selectedModules[idx]) return null;
+            return (
+              <View key={idx} style={styles.policyBox} wrap={false}>
+                {prop.is_bundled && <Text style={styles.badge}>INTEGRATED BUNDLE</Text>}
+                <View style={styles.tableRow}>
+                  <View style={{ width: '70%' }}>
+                    <Text style={styles.policyTitle}>{prop.product}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                      {prop.carrierLogo && <Image src={prop.carrierLogo} style={{ height: 12, objectFit: 'contain', marginRight: 4 }} />}
+                      {prop.carrier && <Text style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>{prop.carrier}</Text>}
+                    </View>
+                  </View>
+                  <View style={{ width: '30%', textAlign: 'right' }}>
+                    {!prop.is_bundled && (
+                      <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#334155' }}>
+                        ${Number(prop.premium).toLocaleString('en-US')}
+                      </Text>
+                    )}
+                  </View>
                 </View>
               </View>
-            </View>
-          );
-        })}
-        
-        <Text style={styles.footer}>
-          Generated on {new Date().toLocaleDateString()} | Alex AI Insurtech | Confidential
-        </Text>
+            );
+          })}
+          
+          <View style={{ marginTop: 20, padding: 10, backgroundColor: '#f8fafc', borderRadius: 4, borderLeftWidth: 3, borderLeftColor: '#94a3b8' }}>
+            <Text style={{ fontSize: 8, color: '#64748b', lineHeight: 1.4 }}>
+              {disclaimer}
+            </Text>
+          </View>
+        </View>
+
+        {/* FOOTER */}
+        <View style={styles.pageFooter} fixed>
+          <Image src="/alex-assets/brand-011.png" style={styles.footerDecoration} />
+          <Text style={styles.footerText}>GENERATED ON {new Date().toLocaleDateString()}</Text>
+          <Text style={styles.footerText}>ALEX AI INSURTECH | CONFIDENTIAL</Text>
+          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `PAGE ${pageNumber} OF ${totalPages}`} />
+        </View>
       </Page>
 
       {/* 3. POLICY DETAILS (COVERAGES, INCLUSIONS, EXCLUSIONS) */}
@@ -264,56 +412,89 @@ export const FormalProposalPDF = ({ quote, selectedModules }: FormalProposalPDFP
         
         return (
           <Page key={idx} size="LETTER" style={styles.page}>
-            <Text style={styles.header}>{prop.product}</Text>
-            {prop.carrier && <Text style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', marginBottom: 20 }}>CARRIER: {prop.carrier}</Text>}
+            {/* HEADER */}
+            <View style={styles.pageHeader} fixed>
+              <View style={styles.headerAccent} />
+              <View style={styles.headerAccentSecondary} />
+              <Image src="/alex-assets/logo-blanco.png" style={styles.headerLogo} />
+              <Text style={styles.headerText}>Coverage Details</Text>
+            </View>
 
-            {/* Coverages / Limits */}
-            {prop.coverages && (
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#D94F90', marginBottom: 10 }}>LIMITS STRUCTURE</Text>
-                <View style={styles.policyBox}>
-                  {prop.coverages.split(',').map((cov: string, i: number) => {
-                    const parts = cov.split(':');
-                    const name = parts[0];
-                    const value = parts.slice(1).join(':').trim();
-                    return (
-                      <View key={i} style={{ ...styles.tableRow, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, marginBottom: 5 }}>
-                        <Text style={styles.tableColLeft}>{name.trim()}</Text>
-                        <Text style={styles.tableColRight}>{value || 'Included'}</Text>
-                      </View>
-                    );
-                  })}
-                </View>
+            <View style={styles.contentContainer}>
+              <Text style={styles.header}>{prop.product}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
+                {prop.carrierLogo && <Image src={prop.carrierLogo.startsWith('http') ? prop.carrierLogo : `${baseUrl}${prop.carrierLogo}`} style={{ height: 16, objectFit: 'contain', marginRight: 6 }} />}
+                {prop.carrier && <Text style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>CARRIER: {prop.carrier}</Text>}
               </View>
-            )}
 
-            {/* Included */}
-            {prop.included && (
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#009CFF', marginBottom: 10 }}>INCLUDED BENEFITS</Text>
-                <View style={styles.policyBox}>
-                  {prop.included.split(',').map((inc: string, i: number) => (
-                    <Text key={i} style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>• {inc.trim()}</Text>
-                  ))}
-                </View>
+              <View style={{ backgroundColor: '#f0f9ff', padding: 12, borderRadius: 6, marginBottom: 20, alignItems: 'center' }}>
+                <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#009CFF', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  PREPARED EXCLUSIVELY FOR {quote.client_name}
+                </Text>
               </View>
-            )}
 
-            {/* Excluded */}
-            {prop.excluded && (
-              <View style={{ marginBottom: 20 }}>
-                <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#ef4444', marginBottom: 10 }}>PRIMARY EXCLUSIONS</Text>
-                <View style={styles.policyBox}>
-                  {prop.excluded.split(',').map((exc: string, i: number) => (
-                    <Text key={i} style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>• {exc.trim()}</Text>
-                  ))}
+              {/* Coverages / Limits */}
+              {prop.coverages && (
+                <View wrap={false} style={{ marginBottom: 20 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#009CFF', marginBottom: 10 }}>LIMITS STRUCTURE</Text>
+                  <View style={styles.policyBox}>
+                    {prop.coverages.split('|').map((cov: string, i: number) => {
+                      const parts = cov.split(':');
+                      const name = parts[0];
+                      const value = parts.slice(1).join(':').trim();
+                      return (
+                        <View key={i} style={{ ...styles.tableRow, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, marginBottom: 5 }}>
+                          <Text style={styles.tableColLeft}>{name.trim()}</Text>
+                          <Text style={styles.tableColRight}>{value || 'Included'}</Text>
+                        </View>
+                      );
+                    })}
+                  </View>
                 </View>
-              </View>
-            )}
-            
-            <Text style={styles.footer}>
-              Generated on {new Date().toLocaleDateString()} | Alex AI Insurtech | Confidential
-            </Text>
+              )}
+
+              {/* Included */}
+              {prop.included && (
+                <View wrap={false} style={{ marginBottom: 20 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#10b981', marginBottom: 10 }}>INCLUDED BENEFITS</Text>
+                  <View style={styles.policyBox}>
+                    {prop.included.split('|').map((inc: string, i: number) => (
+                      <Text key={i} style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>• {inc.trim()}</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              {/* Excluded */}
+              {prop.excluded && (
+                <View wrap={false} style={{ marginBottom: 20 }}>
+                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', marginBottom: 10 }}>PRIMARY EXCLUSIONS</Text>
+                  <View style={styles.policyBox}>
+                    {prop.excluded.split('|').map((exc: string, i: number) => (
+                      <Text key={i} style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>• {exc.trim()}</Text>
+                    ))}
+                  </View>
+                </View>
+              )}
+              
+              {/* Final Signature on the Last Page */}
+              {idx === lastSelectedIdx && (
+                <View wrap={false} style={{ marginTop: 40, alignItems: 'flex-start' }}>
+                  <Text style={{ fontSize: 10, color: '#64748b', marginBottom: 5 }}>Sincerely,</Text>
+                  <Text style={{ fontFamily: 'Signature', fontSize: 24, color: '#009CFF', transform: 'rotate(-5deg)' }}>
+                    Alex AI Insurtech Team
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* FOOTER */}
+            <View style={styles.pageFooter} fixed>
+              <Image src="/alex-assets/brand-011.png" style={styles.footerDecoration} />
+              <Text style={styles.footerText}>GENERATED ON {new Date().toLocaleDateString()}</Text>
+              <Text style={styles.footerText}>ALEX AI INSURTECH | CONFIDENTIAL</Text>
+              <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `PAGE ${pageNumber} OF ${totalPages}`} />
+            </View>
           </Page>
         );
       })}

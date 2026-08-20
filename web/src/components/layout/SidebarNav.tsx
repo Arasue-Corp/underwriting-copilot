@@ -82,6 +82,12 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
               {t.users}
             </Link>
           </li>
+          <li>
+            <Link href="/admin/carriers" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/admin/carriers")}`}>
+              <ShieldCheck className={`h-4 w-4 ${getIconClasses("/admin/carriers")}`} />
+              {t.carriers}
+            </Link>
+          </li>
         </>
       )}
       {(role === 'MANAGER' || role === 'ADMIN') && (

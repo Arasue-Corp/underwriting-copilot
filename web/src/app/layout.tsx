@@ -75,7 +75,8 @@ export default async function RootLayout({
       clients: 'Clients',
       admin: 'Administration',
       ingestion: 'BI Ingestion',
-      agencies: 'Carriers / Agencies',
+      agencies: 'Agencies',
+      carriers: 'Carriers',
       users: 'User Management',
       myAgency: 'My Agency',
       settings: 'Settings'
@@ -88,7 +89,8 @@ export default async function RootLayout({
       clients: 'Prospectos / Clientes',
       admin: 'Administración',
       ingestion: 'BI Ingestion',
-      agencies: 'Compañías / Agencias',
+      agencies: 'Agencias',
+      carriers: 'Aseguradoras',
       users: 'Gestión de Usuarios',
       myAgency: 'Mi Agencia',
       settings: 'Configuración'

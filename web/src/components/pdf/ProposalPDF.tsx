@@ -378,7 +378,7 @@ export const ProposalPDF = ({ quote }: ProposalPDFProps) => {
               {prop.coverages && (
                 <View>
                   <Text style={styles.sectionTitle}>Límites de Cobertura</Text>
-                  {prop.coverages.split(',').map((c: string, i: number) => (
+                  {prop.coverages.split('|').map((c: string, i: number) => (
                     <View key={i} style={styles.coverageItem}>
                       <View style={styles.coverageBullet}></View>
                       <Text style={styles.coverageText}>{c.trim()}</Text>
@@ -392,7 +392,7 @@ export const ProposalPDF = ({ quote }: ProposalPDFProps) => {
                   {prop.included && (
                     <View style={[styles.colHalf, styles.bgGreen]}>
                       <Text style={styles.incTitle}>QUÉ INCLUYE</Text>
-                      {prop.included.split(',').map((inc: string, i: number) => (
+                      {prop.included.split('|').map((inc: string, i: number) => (
                         <Text key={i} style={styles.incItem}>• {inc.trim()}</Text>
                       ))}
                     </View>
@@ -400,7 +400,7 @@ export const ProposalPDF = ({ quote }: ProposalPDFProps) => {
                   {prop.excluded && (
                     <View style={[styles.colHalf, styles.bgRed]}>
                       <Text style={styles.excTitle}>QUÉ NO CUBRE</Text>
-                      {prop.excluded.split(',').map((exc: string, i: number) => (
+                      {prop.excluded.split('|').map((exc: string, i: number) => (
                         <Text key={i} style={styles.excItem}>• {exc.trim()}</Text>
                       ))}
                     </View>

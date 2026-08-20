@@ -1,18 +1,22 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus } from "@/app/actions/quote"
+import { QuoteModal } from "@/components/appetite/QuoteModal"
+import { useLanguage } from "@/components/language-provider"
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [agencyMembers, setAgencyMembers] = useState<any[]>([])
+  const lang = useLanguage()
   
   // Modals state
+  const [isNewQuoteModalOpen, setIsNewQuoteModalOpen] = useState(false)
   const [detailsQuote, setDetailsQuote] = useState<any>(null)
   const [isUploadingDoc, setIsUploadingDoc] = useState(false)
   const [processQuote, setProcessQuote] = useState<any>(null)
@@ -57,11 +61,10 @@ export default function QuotesPage() {
       .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
       .order("created_at", { ascending: false })
       
-    const { data: carriersData } = await supabase.from('appetite_matrix').select('carrier_name').eq('status', 'ELIGIBLE').limit(500)
+    const { data: carriersData } = await supabase.from('carriers').select('name').order('name')
     if (carriersData) {
-      setAvailableCarriers(Array.from(new Set(carriersData.map(c => c.carrier_name))).sort())
+      setAvailableCarriers(Array.from(new Set(carriersData.map(c => c.name))).sort())
     }
-    
     if (data) {
       setQuotes(data.filter((q: any) => !['ACCEPTED', 'REJECTED'].includes(q.status)))
     }
@@ -106,7 +109,7 @@ export default function QuotesPage() {
     try {
       const uploadedProposals = []
       for (const p of proposals) {
-        let fileUrl = undefined
+        let fileUrl = p.file_url
         if (p.file) {
           const fileExt = p.file.name.split('.').pop()
           const fileName = `${processQuote.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
@@ -253,11 +256,21 @@ export default function QuotesPage() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">Bandeja de Solicitudes</h2>
-        <div className="flex flex-wrap gap-2">
-           <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Todas</button>
-           <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Asignadas a mí</button>
-           <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>Creadas por mí</button>
+        <h2 className="text-3xl font-bold tracking-tight">{lang === 'es' ? 'Bandeja de Solicitudes' : 'Requests Inbox'}</h2>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Todas' : 'All'}</button>
+            <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Asignadas a mí' : 'Assigned to me'}</button>
+            <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Creadas por mí' : 'Created by me'}</button>
+          </div>
+          
+          <button 
+            onClick={() => setIsNewQuoteModalOpen(true)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus className="w-4 h-4" />
+            {lang === 'es' ? 'Nueva Cotización' : 'New Quote'}
+          </button>
         </div>
       </div>
 
@@ -343,7 +356,20 @@ export default function QuotesPage() {
                     )}
 
                     {quote.status === 'QUOTED' ? (
-                       <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-600 flex-1 transition-colors shadow-sm">Ver Propuestas</button>
+                       <div className="flex gap-2 w-full">
+                         <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-600 flex-1 transition-colors shadow-sm">Ver Propuestas</button>
+                         <button 
+                           onClick={() => {
+                             setProcessQuote(quote)
+                             const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
+                             setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                           }}
+                           title="Editar Cotización"
+                           className="p-2.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors shadow-sm"
+                         >
+                           <Pencil className="w-5 h-5" />
+                         </button>
+                       </div>
                     ) : (
                       <button 
                         onClick={() => {
@@ -423,7 +449,20 @@ export default function QuotesPage() {
                         )}
 
                         {quote.status === 'QUOTED' ? (
-                           <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-emerald-600">Ver Propuestas</button>
+                           <div className="flex justify-end gap-2">
+                             <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-emerald-600">Ver Propuestas</button>
+                             <button 
+                               onClick={() => {
+                                 setProcessQuote(quote)
+                                 const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
+                                 setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                               }}
+                               title="Editar Cotización"
+                               className="p-1.5 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors shadow-sm"
+                             >
+                               <Pencil className="w-4 h-4" />
+                             </button>
+                           </div>
                         ) : (
                           <button 
                             onClick={() => {
@@ -799,23 +838,41 @@ export default function QuotesPage() {
             <form onSubmit={handleAssign}>
               <div className="mb-6">
                 <label className="text-sm font-medium mb-2 block">Miembro</label>
-                <select name="assignee" className="w-full h-10 rounded-md border border-input bg-background px-3" required defaultValue={assignQuote.assigned_to || ""}>
-                  <option value="" disabled>Selecciona a alguien...</option>
+                <select 
+                  name="assignee"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  required
+                  disabled={isUploading}
+                >
+                  <option value="">Seleccionar...</option>
                   {agencyMembers.map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end space-x-2">
-                <button type="button" onClick={() => setAssignQuote(null)} className="px-4 py-2 border rounded-md text-sm">Cancelar</button>
-                <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium disabled:opacity-50">
-                  {isUploading ? "Asignando..." : "Asignar"}
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setAssignQuote(null)} className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md" disabled={isUploading}>
+                  Cancelar
+                </button>
+                <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
+                  {isUploading ? "Guardando..." : "Asignar"}
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
+
+      {/* New Quote Modal */}
+      <QuoteModal 
+        isOpen={isNewQuoteModalOpen} 
+        onClose={() => {
+          setIsNewQuoteModalOpen(false)
+          loadData() // Refresh quotes list if a new quote was created
+        }} 
+        rule={null}
+        language={lang}
+      />
 
       {/* Process Modal */}
       {processQuote && (
@@ -874,7 +931,7 @@ export default function QuotesPage() {
                         className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                       >
                         <option value="">Seleccionar Aseguradora...</option>
-                        {availableCarriers.map(c => <option key={c} value={c}>{c}</option>)}
+                        {Array.from(new Set([...availableCarriers, prop.carrier].filter(Boolean))).map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     
@@ -1017,7 +1074,7 @@ export default function QuotesPage() {
                     </div>
                     
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Coberturas / Límites (Separadas por comas)</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Coberturas / Límites (Separadas por el símbolo |)</label>
                       <textarea 
                         value={prop.coverages} 
                         onChange={e => {
@@ -1026,13 +1083,13 @@ export default function QuotesPage() {
                           setProposals(next)
                         }}
                         className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                        placeholder="$1M/$2M General Liability, $100k Property..."
+                        placeholder="$1M/$2M General Liability | $100k Property..."
                         rows={2}
                       />
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-emerald-600 mb-1 block">Qué INCLUYE (Separado por comas)</label>
+                      <label className="text-xs font-medium text-emerald-600 mb-1 block">Qué INCLUYE (Separado por |)</label>
                       <textarea 
                         value={prop.included} 
                         onChange={e => {
@@ -1041,12 +1098,12 @@ export default function QuotesPage() {
                           setProposals(next)
                         }}
                         className="w-full rounded-md border border-emerald-500/30 bg-emerald-500/5 px-3 py-2 text-sm"
-                        placeholder="Ej. Daños a terceros, Gastos médicos..."
+                        placeholder="Ej. Daños a terceros | Gastos médicos..."
                         rows={2}
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-red-600 mb-1 block">Qué EXCLUYE (Separado por comas)</label>
+                      <label className="text-xs font-medium text-red-600 mb-1 block">Qué EXCLUYE (Separado por |)</label>
                       <textarea 
                         value={prop.excluded} 
                         onChange={e => {

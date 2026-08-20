@@ -65,7 +65,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
     }
   }, [selectedClientId, clients])
 
-  if (!isOpen || !rule) return null
+  if (!isOpen) return null
 
   const handleInputChange = (id: string, value: any) => {
     setFormData(prev => ({ ...prev, [id]: value }))
@@ -169,7 +169,7 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
       try {
         const submitData = new FormData()
         submitData.append("client_name", formData.general_client_name || "")
-        submitData.append("carrier_name", rule.carrier_name)
+        submitData.append("carrier_name", rule?.carrier_name || "TBD")
         submitData.append("products", JSON.stringify(selectedProductIds.map(id => {
           const p = INSURANCE_PRODUCTS.find(x => x.id === id)
           return p ? p.name : id
@@ -293,7 +293,11 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
               {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
             </h2>
             <p className="text-sm text-muted-foreground mt-2">
-              {language === 'es' ? 'Para' : 'For'} {rule.carrier_name} - {rule.business_class || rule.industry_name}
+              {rule ? (
+                <>{language === 'es' ? 'Para' : 'For'} {rule.carrier_name} - {rule.business_class || rule.industry_name}</>
+              ) : (
+                <>{language === 'es' ? 'Nueva Solicitud' : 'New Request'}</>
+              )}
             </p>
           </div>
           <button onClick={onClose} className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring shrink-0">

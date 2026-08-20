@@ -7,21 +7,83 @@ import { Check, X, ChevronLeft, ChevronRight, CheckCircle2, Shield, Info, ArrowR
 import { toast } from "sonner"
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useLanguage } from "@/components/language-provider"
+import { Caveat } from 'next/font/google'
 import { acceptClientQuote } from "@/app/actions/quote"
 import { pdf } from "@react-pdf/renderer"
 import { FormalProposalPDF } from "@/components/pdf/FormalProposalPDF"
 import { PDFDocument } from "pdf-lib"
 
+const caveat = Caveat({ subsets: ['latin'], weight: '700' })
+
 const getCarrierLogo = (carrierName: string) => {
   if (!carrierName) return null
   const name = carrierName.toLowerCase().replace(/[^a-z0-9]/g, '')
-  if (name.includes('chubb')) return '/logos/logo-chubb.png'
-  if (name.includes('hiscox')) return '/logos/logo-hiscox.png'
-  if (name.includes('attune')) return '/logos/logo-attune.png'
-  if (name.includes('clearcover')) return '/logos/Carrier-clearcover.png'
-  if (name.includes('kemper')) return '/logos/Carrier-kemper.jpg'
-  if (name.includes('just')) return '/logos/Carrier-just.jpg'
-  return `/logos/logo-${name}.png`
+  
+  const matches = (key: string) => name.includes(key.replace(/[^a-z0-9]/g, ''))
+  
+  if (matches('coterie')) return `/logos/logo-coterie.png`
+  if (matches('chubb')) return `/logos/logo-chubb.png`
+  if (matches('hiscox')) return `/logos/logo-hiscox.png`
+  if (matches('attune')) return `/logos/logo-attune.png`
+  if (matches('clearcover')) return `/logos/Carrier-clearcover.png`
+  if (matches('kemper')) return `/logos/Carrier-kemper.jpg`
+  if (matches('just')) return `/logos/Carrier-just.jpg`
+  if (matches('aegis')) return `/logos/carrier-aegis.png`
+  if (matches('annex')) return `/logos/carrier-annex.png`
+  if (matches('aspire')) return `/logos/Carrier-aspire.jpg`
+  if (matches('assurance america')) return `/logos/Carrier-assurance-america.png`
+  if (matches('commonwealth')) return `/logos/Carrier-commonwealth.jpg`
+  if (matches('covercube')) return `/logos/Carrier-covercube.jpg`
+  if (matches('epremium')) return `/logos/carrier-epremium.png`
+  if (matches('foremost')) return `/logos/carrier-foremost.png`
+  if (matches('hippo')) return `/logos/carrier-hippo.png`
+  if (matches('homeowners')) return `/logos/carrier-homeowners.png`
+  if (matches('kanguro')) return `/logos/carrier-kanguro.png`
+  if (matches('warrior')) return `/logos/Carrier-warrior.png`
+  if (matches('alchemy')) return `/logos/logo-alchemy.png`
+  if (matches('amtrust')) return `/logos/logo-amtrust.png`
+  if (matches('berxi')) return `/logos/logo-berxi.png`
+  if (matches('biberk')) return `/logos/logo-biberk.png`
+  if (matches('blitz')) return `/logos/logo-blitz.png`
+  if (matches('bristol')) return `/logos/logo-bristol-west.png`
+  if (matches('colonial')) return `/logos/logo-colonial.png`
+  if (matches('coverwhale')) return `/logos/logo-coverwhale.png`
+  if (matches('cowbell')) return `/logos/logo-cowbell.png`
+  if (matches('crosscover')) return `/logos/logo-crosscover.png`
+  if (matches('employers')) return `/logos/logo-employers.png`
+  if (matches('ergo')) return `/logos/logo-ergo-next.png`
+  if (matches('first')) return `/logos/logo-first.png`
+  if (matches('foxquilt')) return `/logos/logo-foxquilt.png`
+  if (matches('great american')) return `/logos/logo-great-american.png`
+  if (matches('greenshield')) return `/logos/logo-greenshield.png`
+  if (matches('hanover')) return `/logos/logo-hanover.png`
+  if (matches('insur-fi')) return `/logos/logo-insur-fi.png`
+  if (matches('isc')) return `/logos/logo-isc.png`
+  if (matches('kelly')) return `/logos/logo-kelly.png`
+  if (matches('lio')) return `/logos/logo-lio.png`
+  if (matches('mgt')) return `/logos/logo-mgt.png`
+  if (matches('neptune')) return `/logos/logo-neptune.png`
+  if (matches('nirvana')) return `/logos/logo-nirvana.png`
+  if (matches('novo')) return `/logos/logo-novo.png`
+  if (matches('palomar')) return `/logos/logo-palomar.png`
+  if (matches('pathpoint')) return `/logos/logo-pathpoint.png`
+  if (matches('pouch')) return `/logos/logo-pouch.png`
+  if (matches('propeller')) return `/logos/logo-propeller.png`
+  if (matches('rainbow')) return `/logos/logo-rainbow.png`
+  if (matches('rli surety')) return `/logos/logo-rli-surety.png`
+  if (matches('rli')) return `/logos/logo-rli.png`
+  if (matches('ses')) return `/logos/logo-ses.png`
+  if (matches('simply')) return `/logos/logo-simply.png`
+  if (matches('skywatch')) return `/logos/logo-skywatch.png`
+  if (matches('slice')) return `/logos/logo-slice.png`
+  if (matches('steadily')) return `/logos/logo-steadily.png`
+  if (matches('stonegate')) return `/logos/logo-stonegate.png`
+  if (matches('thimble')) return `/logos/logo-thimble.png`
+  if (matches('three')) return `/logos/logo-three.png`
+  if (matches('tokio')) return `/logos/logo-tokiomarine.png`
+  if (matches('vacant')) return `/logos/logo-vacant-express.png`
+
+  return null
 }
 
 const getFeatureIcon = (text: string) => {
@@ -46,6 +108,7 @@ export default function ProposalCarouselPage() {
   const [loading, setLoading] = useState(true)
   const [isAccepting, setIsAccepting] = useState(false)
   const [selectedModules, setSelectedModules] = useState<boolean[]>([])
+  const [carriersMap, setCarriersMap] = useState<Record<string, string>>({})
   const [currentIndex, setCurrentIndex] = useState(0)
   const [hasOpened, setHasOpened] = useState(false) 
   const carouselRef = useRef<HTMLDivElement>(null)
@@ -93,7 +156,12 @@ export default function ProposalCarouselPage() {
       slide: 'Póliza',
       of: 'de',
       swipeText: 'Desliza para explorar',
-      downloadPdf: 'Descargar PDF'
+      downloadPdf: 'Descargar propuesta',
+      toastGeneratingPdf: 'Compilando propuesta...',
+      toastGeneratedPdfSuccess: '¡Propuesta generada con éxito!',
+      toastGeneratedPdfError: 'Hubo un error al generar el PDF',
+      pdfFilenamePrefix: 'Propuesta-Oficial-',
+      disclaimer: 'El presente documento es una cotización estimada basada en la información proporcionada y no constituye una póliza de seguro, un contrato vinculante ni un compromiso de cobertura por ninguna de las partes. Los términos, condiciones, primas y coberturas finales están sujetos a la revisión y aprobación definitiva por parte de la aseguradora correspondiente.'
     },
     en: {
       loading: 'Preparing your experience...',
@@ -129,7 +197,12 @@ export default function ProposalCarouselPage() {
       slide: 'Policy',
       of: 'of',
       swipeText: 'Swipe to explore',
-      downloadPdf: 'Download PDF'
+      downloadPdf: 'Download proposal',
+      toastGeneratingPdf: 'Compiling proposal...',
+      toastGeneratedPdfSuccess: 'Proposal generated successfully!',
+      toastGeneratedPdfError: 'An error occurred while generating the PDF',
+      pdfFilenamePrefix: 'Official-Proposal-',
+      disclaimer: 'This document is an estimated quote based on the provided information and does not constitute an insurance policy, a binding contract, or a commitment of coverage by any party. Final terms, conditions, premiums, and coverages are subject to final review and approval by the respective insurance carrier.'
     }
   }[lang]
 
@@ -145,6 +218,22 @@ export default function ProposalCarouselPage() {
         setQuote(data)
         setSelectedModules(new Array(data.quotes_provided?.length || 0).fill(true))
       }
+
+      const { data: carriersData } = await supabase.from('carriers').select('name, logo_url')
+      if (carriersData) {
+        const cmap: Record<string, string> = {}
+        carriersData.forEach(c => {
+          if (c.logo_url && c.logo_url.trim() !== '') {
+            if (c.logo_url.startsWith('http') || c.logo_url.startsWith('/')) {
+              cmap[c.name] = c.logo_url
+            } else {
+              cmap[c.name] = supabase.storage.from('logos').getPublicUrl(c.logo_url).data.publicUrl
+            }
+          }
+        })
+        setCarriersMap(cmap)
+      }
+
       setLoading(false)
     }
     fetchQuote()
@@ -186,46 +275,46 @@ export default function ProposalCarouselPage() {
   }
 
   const generateAndDownloadPDF = async () => {
-    const toastId = toast.loading('Generando documento oficial premium...');
+    const toastId = toast.loading(t.toastGeneratingPdf);
     try {
       // 1. Generate Formal PDF Blob
-      const blob = await pdf(<FormalProposalPDF quote={quote} selectedModules={selectedModules} />).toBlob();
-      const arrayBuffer = await blob.arrayBuffer();
+      const quoteWithLogos = {
+        ...quote,
+        quotes_provided: quote.quotes_provided?.map((q: any) => ({
+          ...q,
+          carrier: q.carrier || 'N/A',
+          carrierLogo: carriersMap[q.carrier]?.trim() ? carriersMap[q.carrier] : getCarrierLogo(q.carrier),
+          product: q.product || 'Unknown Product'
+        }))
+      }
+      const blob = await pdf(<FormalProposalPDF quote={quoteWithLogos} selectedModules={selectedModules} disclaimer={t.disclaimer} />).toBlob();
       
-      // 2. Load it into pdf-lib
-      const pdfDoc = await PDFDocument.load(arrayBuffer);
-      
-      // 3. Search for attachments in quote.raw_data
+      // 2. Load it into pdf-lib to allow appending
+      const pdfArrayBuffer = await blob.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+
+      // 3. Search for attachments in quote.quotes_provided based on selectedModules
       const attachments: string[] = [];
-      const searchForPdfs = (obj: any) => {
-        if (!obj) return;
-        if (typeof obj === 'string') {
-          if (obj.includes('/') && obj.toLowerCase().endsWith('.pdf')) {
-            attachments.push(obj);
+      if (Array.isArray(quote.quotes_provided)) {
+        quote.quotes_provided.forEach((q: any, idx: number) => {
+          if (selectedModules[idx] && q.file_url && q.file_url.toLowerCase().endsWith('.pdf')) {
+            attachments.push(q.file_url);
           }
-        } else if (Array.isArray(obj)) {
-          obj.forEach(searchForPdfs);
-        } else if (typeof obj === 'object') {
-          Object.values(obj).forEach(searchForPdfs);
-        }
-      };
-      
-      if (quote.raw_data) {
-        searchForPdfs(quote.raw_data);
+        });
       }
       
       // 4. Fetch and append each PDF
-      for (const filePath of attachments) {
+      for (const url of attachments) {
         try {
-          const { data } = await supabase.storage.from('quote-attachments').download(filePath);
-          if (data) {
-            const attachmentBuffer = await data.arrayBuffer();
+          const response = await fetch(url);
+          if (response.ok) {
+            const attachmentBuffer = await response.arrayBuffer();
             const attachmentPdf = await PDFDocument.load(attachmentBuffer);
             const copiedPages = await pdfDoc.copyPages(attachmentPdf, attachmentPdf.getPageIndices());
             copiedPages.forEach((page) => pdfDoc.addPage(page));
           }
         } catch (err) {
-          console.error("Failed to append PDF:", filePath, err);
+          console.error("Failed to append PDF:", url, err);
         }
       }
       
@@ -236,16 +325,16 @@ export default function ProposalCarouselPage() {
       
       const a = document.createElement('a');
       a.href = url;
-      a.download = `AlexAI_Propuesta_${quote.client_name?.replace(/\s+/g, '_') || 'Oficial'}.pdf`;
+      a.download = `${t.pdfFilenamePrefix}${quote.client_name?.replace(/\s+/g, '_') || 'Oficial'}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       
-      toast.success('¡PDF Oficial generado exitosamente!', { id: toastId });
+      toast.success(t.toastGeneratedPdfSuccess, { id: toastId });
     } catch (e) {
       console.error(e);
-      toast.error('Error generando PDF', { id: toastId });
+      toast.error(t.toastGeneratedPdfError, { id: toastId });
     }
   }
 
@@ -385,7 +474,7 @@ export default function ProposalCarouselPage() {
                         {prop.carrier ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img 
-                            src={getCarrierLogo(prop.carrier) || ""} 
+                            src={(carriersMap[prop.carrier]?.trim() ? carriersMap[prop.carrier] : getCarrierLogo(prop.carrier)) || ""} 
                             alt={prop.carrier}
                             className="h-10 md:h-12 object-contain mix-blend-multiply opacity-80 print:opacity-100"
                             onError={(e) => {
@@ -395,7 +484,7 @@ export default function ProposalCarouselPage() {
                           />
                         ) : null}
                         {prop.carrier && (
-                          <span className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                          <span className="hidden text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
                             {prop.carrier}
                           </span>
                         )}
@@ -436,22 +525,27 @@ export default function ProposalCarouselPage() {
 
                   {/* 2. Structured Features Grid with Alex AI Colors */}
                   <div className="p-8 md:p-12">
+                  
+                    {/* Centered Legend */}
+                    <div className="text-center mb-10 text-sm md:text-base font-bold text-[#009CFF] uppercase tracking-widest bg-[#009CFF]/5 py-4 rounded-xl border border-[#009CFF]/10">
+                      PREPARED EXCLUSIVELY FOR {quote.client_name}
+                    </div>
 
-                    {/* Coverages: Rosado Alex AI (#D94F90) */}
+                    {/* Coverages: Azul Alex AI (#009CFF) */}
                     {prop.coverages && (
                       <div className="mb-12">
-                        <h4 className="text-xs font-bold text-[#D94F90] uppercase tracking-widest mb-6 flex items-center">
+                        <h4 className="text-xs font-bold text-[#009CFF] uppercase tracking-widest mb-6 flex items-center">
                           <Shield className="w-4 h-4 mr-2" /> {t.coveragesTitle}
                         </h4>
                         
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#D94F90] via-[#c64481] to-[#a32b62] rounded-[2rem] p-6 md:p-8 shadow-2xl text-white print:bg-[#D94F90] print:text-white print:break-inside-avoid print:shadow-none">
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#009CFF] via-[#008AE6] to-[#005B99] rounded-[2rem] p-6 md:p-8 shadow-2xl text-white print:bg-[#009CFF] print:text-white print:break-inside-avoid print:shadow-none">
                           {/* Decorative Inner Backgrounds */}
                           <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl pointer-events-none"></div>
                           <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-black opacity-15 blur-2xl pointer-events-none"></div>
                           <Shield className="absolute -right-12 -bottom-12 w-72 h-72 text-white opacity-5 pointer-events-none rotate-12" />
 
                           <div className="relative z-10 flex flex-col gap-3 md:gap-4">
-                            {prop.coverages.split(',').map((cov: string, i: number) => {
+                            {prop.coverages.split('|').map((cov: string, i: number) => {
                               const parts = cov.split(':');
                               const name = parts[0];
                               const value = parts.slice(1).join(':').trim();
@@ -486,15 +580,15 @@ export default function ProposalCarouselPage() {
                       </div>
                     )}
                     
-                    {/* Included: Azul Alex AI (#009CFF) */}
+                    {/* Included: Verde (emerald-500) */}
                     {prop.included && (
                       <div className="mb-12">
-                        <h4 className="text-xs font-bold text-[#009CFF] uppercase tracking-widest mb-6 flex items-center">
+                        <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-6 flex items-center">
                           <CheckCircle2 className="w-4 h-4 mr-2" /> {t.includedTitle}
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {prop.included.split(',').map((inc: string, i: number) => (
-                            <div key={i} className="flex items-start bg-[#009CFF] border border-[#009CFF] rounded-xl p-5 shadow-sm print:shadow-none print:bg-[#009CFF] print:border-[#009CFF]">
+                          {prop.included.split('|').map((inc: string, i: number) => (
+                            <div key={i} className="flex items-start bg-emerald-500 border border-emerald-500 rounded-xl p-5 shadow-sm print:shadow-none print:bg-emerald-500 print:border-emerald-500">
                               <div className="text-white mt-0.5 mr-4">
                                 {getFeatureIcon(inc)}
                               </div>
@@ -505,16 +599,16 @@ export default function ProposalCarouselPage() {
                       </div>
                     )}
                     
-                    {/* Excluded: Rojo (red-500) */}
+                    {/* Excluded: Gris (slate-400 / slate-100) */}
                     {prop.excluded && (
                       <div className="mb-12">
-                        <h4 className="text-xs font-bold text-red-500 uppercase tracking-widest mb-6 flex items-center">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
                           <X className="w-4 h-4 mr-1" /> {t.excludedTitle}
                         </h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {prop.excluded.split(',').map((exc: string, i: number) => (
-                            <div key={i} className="flex items-center text-white font-bold text-sm bg-red-500 border border-red-500 rounded-lg px-4 py-2 shadow-sm print:bg-red-500 print:border-red-500">
-                              <X className="w-4 h-4 mr-2 text-white shrink-0" />
+                          {prop.excluded.split('|').map((exc: string, i: number) => (
+                            <div key={i} className="flex items-center text-slate-500 font-medium text-sm bg-slate-100 border border-slate-200 rounded-lg px-4 py-2 shadow-sm print:bg-slate-100 print:border-slate-200 opacity-90">
+                              <X className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
                               {exc.trim()}
                             </div>
                           ))}
@@ -550,14 +644,29 @@ export default function ProposalCarouselPage() {
           
           {/* ======================= THE SUMMARY SLIDE ======================= */}
           <div className="min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:page-break-before-always">
-             <div 
+              <div 
                className="w-full max-w-5xl bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200 flex flex-col p-8 md:p-14 print:shadow-none print:border-0 print:p-0"
              >
-                <div className="text-left mb-12 border-b border-slate-100 pb-8 print:border-slate-300">
-                  <h2 className="text-4xl font-bold text-slate-800 tracking-tight mb-4 flex items-center">
-                    <ListChecks className="w-8 h-8 mr-4 text-[#514690]" /> {t.summaryTitle}
-                  </h2>
-                  <p className="text-lg font-medium text-slate-500">{t.summaryDesc}</p>
+                <div className="flex flex-col md:flex-row items-center justify-between gap-8 mb-12 border-b border-slate-100 pb-8 print:border-slate-300">
+                  <div className="flex-1 text-left">
+                    <h2 className="text-4xl font-bold text-slate-800 tracking-tight mb-4 flex items-center">
+                      <ListChecks className="w-8 h-8 mr-4 text-[#514690]" /> {t.summaryTitle}
+                    </h2>
+                    <p className="text-lg font-medium text-slate-500 max-w-xl">{t.summaryDesc}</p>
+                  </div>
+                  <div className="hidden md:block w-48 h-48 lg:w-64 lg:h-64 relative shrink-0 print:hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src="/alex-assets/Image-5.png" 
+                      alt="Agent and Client Connection" 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                </div>
+
+                {/* Centered Legend */}
+                <div className="text-center mb-10 text-sm md:text-base font-bold text-[#009CFF] uppercase tracking-widest bg-[#009CFF]/5 py-4 rounded-xl border border-[#009CFF]/10">
+                  PREPARED EXCLUSIVELY FOR {quote.client_name}
                 </div>
 
                 {quote.status === 'ACCEPTED' ? (
@@ -639,6 +748,19 @@ export default function ProposalCarouselPage() {
                           >
                             {isAccepting ? t.processing : t.acceptProposal}
                           </button>
+                          
+                          <div className="mt-8 pt-6 border-t border-slate-100 print:mt-12">
+                            <p className="text-xs text-slate-400 text-justify leading-relaxed">
+                              {t.disclaimer}
+                            </p>
+                          </div>
+                          
+                          <div className="mt-8 flex flex-col items-start print:hidden">
+                            <p className="text-sm text-slate-500 mb-1">{lang === 'es' ? 'Atentamente,' : 'Sincerely,'}</p>
+                            <p className={`${caveat.className} text-4xl text-[#009CFF] -rotate-2 transform`}>
+                              Alex AI Insurtech Team
+                            </p>
+                          </div>
                           
                           <button 
                             onClick={generateAndDownloadPDF}
