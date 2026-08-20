@@ -161,7 +161,10 @@ export default function ProposalCarouselPage() {
       toastGeneratedPdfSuccess: '¡Propuesta generada con éxito!',
       toastGeneratedPdfError: 'Hubo un error al generar el PDF',
       pdfFilenamePrefix: 'Propuesta-Oficial-',
-      disclaimer: 'El presente documento es una cotización estimada basada en la información proporcionada y no constituye una póliza de seguro, un contrato vinculante ni un compromiso de cobertura por ninguna de las partes. Los términos, condiciones, primas y coberturas finales están sujetos a la revisión y aprobación definitiva por parte de la aseguradora correspondiente.'
+      disclaimer: 'El presente documento es una cotización estimada basada en la información proporcionada y no constituye una póliza de seguro, un contrato vinculante ni un compromiso de cobertura por ninguna de las partes. Los términos, condiciones, primas y coberturas finales están sujetos a la revisión y aprobación definitiva por parte de la aseguradora correspondiente.',
+      preparedExclusivelyFor: 'PREPARADO EXCLUSIVAMENTE PARA',
+      noPoliciesSelected: 'No has seleccionado ninguna póliza',
+      official: 'Oficial'
     },
     en: {
       loading: 'Preparing your experience...',
@@ -202,7 +205,10 @@ export default function ProposalCarouselPage() {
       toastGeneratedPdfSuccess: 'Proposal generated successfully!',
       toastGeneratedPdfError: 'An error occurred while generating the PDF',
       pdfFilenamePrefix: 'Official-Proposal-',
-      disclaimer: 'This document is an estimated quote based on the provided information and does not constitute an insurance policy, a binding contract, or a commitment of coverage by any party. Final terms, conditions, premiums, and coverages are subject to final review and approval by the respective insurance carrier.'
+      disclaimer: 'This document is an estimated quote based on the provided information and does not constitute an insurance policy, a binding contract, or a commitment of coverage by any party. Final terms, conditions, premiums, and coverages are subject to final review and approval by the respective insurance carrier.',
+      preparedExclusivelyFor: 'PREPARED EXCLUSIVELY FOR',
+      noPoliciesSelected: 'You have not selected any policy',
+      official: 'Official'
     }
   }[lang]
 
@@ -325,7 +331,7 @@ export default function ProposalCarouselPage() {
       
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${t.pdfFilenamePrefix}${quote.client_name?.replace(/\s+/g, '_') || 'Oficial'}.pdf`;
+      a.download = `${t.pdfFilenamePrefix}${quote.client_name?.replace(/\s+/g, '_') || t.official}.pdf`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -528,7 +534,7 @@ export default function ProposalCarouselPage() {
                   
                     {/* Centered Legend */}
                     <div className="text-center mb-10 text-sm md:text-base font-bold text-[#009CFF] uppercase tracking-widest bg-[#009CFF]/5 py-4 rounded-xl border border-[#009CFF]/10">
-                      PREPARED EXCLUSIVELY FOR {quote.client_name}
+                      {t.preparedExclusivelyFor} {quote.client_name}
                     </div>
 
                     {/* Coverages: Azul Alex AI (#009CFF) */}
@@ -666,7 +672,7 @@ export default function ProposalCarouselPage() {
 
                 {/* Centered Legend */}
                 <div className="text-center mb-10 text-sm md:text-base font-bold text-[#009CFF] uppercase tracking-widest bg-[#009CFF]/5 py-4 rounded-xl border border-[#009CFF]/10">
-                  PREPARED EXCLUSIVELY FOR {quote.client_name}
+                  {t.preparedExclusivelyFor} {quote.client_name}
                 </div>
 
                 {quote.status === 'ACCEPTED' ? (
@@ -707,7 +713,7 @@ export default function ProposalCarouselPage() {
                         })}
                         {selectedModules.every(v => !v) && (
                           <div className="text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-semibold text-sm">
-                            No has seleccionado ninguna póliza
+                            {t.noPoliciesSelected}
                           </div>
                         )}
                       </div>

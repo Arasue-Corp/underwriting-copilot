@@ -102,7 +102,7 @@ export default async function RootLayout({
       <body
         className={`${inter.variable} ${playfair.variable} antialiased min-h-screen text-foreground premium-bg font-sans flex flex-col md:flex-row selection:bg-primary/20 selection:text-primary`}
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <LanguageProvider lang={lang}>
         <div className="flex flex-col md:flex-row min-h-screen flex-1 w-full">
           <LayoutWrapper

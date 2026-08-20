@@ -5,7 +5,8 @@ import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { Menu, X, Home, Search, FileText, Database, Building2, ShieldCheck, Users, Settings, Layers } from "lucide-react"
-
+import { ThemeToggle } from "@/components/theme-toggle"
+import { LanguageToggle } from "@/components/language-toggle"
 export default function MobileNav({ role, t }: { role: string, t: any }) {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -133,10 +134,16 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
           </ul>
         </nav>
         
-          <div className="p-4 border-t border-sidebar-border">
-            <a href="#" className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors">
+          <div className="p-4 border-t border-sidebar-border space-y-2">
+            <div onClick={() => setIsOpen(false)}>
+              <ThemeToggle />
+            </div>
+            <div onClick={() => setIsOpen(false)}>
+              <LanguageToggle />
+            </div>
+            <a href="#" className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors" onClick={() => setIsOpen(false)}>
               <Settings className="h-5 w-5" />
-              Configuración
+              {t.settings || "Configuración"}
             </a>
           </div>
         </div>
