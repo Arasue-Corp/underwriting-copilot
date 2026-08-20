@@ -1,79 +1,135 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useParams, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
-import { Check, X, ShieldCheck, ChevronLeft, Download, FileText, CheckCircle2, ChevronDown } from "lucide-react"
+import { Check, X, ChevronLeft, ChevronRight, CheckCircle2, Shield, Info, ArrowRight, Zap, Users, Lock, FileText, Activity, AlertCircle, Heart, Star, CloudRain, Briefcase, ListChecks, ArrowLeft, Gift, Download } from "lucide-react"
 import { toast } from "sonner"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion"
 import { useLanguage } from "@/components/language-provider"
+import { acceptClientQuote } from "@/app/actions/quote"
+import { pdf } from "@react-pdf/renderer"
+import { FormalProposalPDF } from "@/components/pdf/FormalProposalPDF"
+import { PDFDocument } from "pdf-lib"
 
-export default function ProposalPresentationPage() {
+const getCarrierLogo = (carrierName: string) => {
+  if (!carrierName) return null
+  const name = carrierName.toLowerCase().replace(/[^a-z0-9]/g, '')
+  if (name.includes('chubb')) return '/logos/logo-chubb.png'
+  if (name.includes('hiscox')) return '/logos/logo-hiscox.png'
+  if (name.includes('attune')) return '/logos/logo-attune.png'
+  if (name.includes('clearcover')) return '/logos/Carrier-clearcover.png'
+  if (name.includes('kemper')) return '/logos/Carrier-kemper.jpg'
+  if (name.includes('just')) return '/logos/Carrier-just.jpg'
+  return `/logos/logo-${name}.png`
+}
+
+const getFeatureIcon = (text: string) => {
+  const lower = text.toLowerCase()
+  if (lower.includes('ciber') || lower.includes('datos') || lower.includes('cyber') || lower.includes('data')) return <Lock className="w-5 h-5" />
+  if (lower.includes('vida') || lower.includes('salud') || lower.includes('médic') || lower.includes('life') || lower.includes('health')) return <Heart className="w-5 h-5" />
+  if (lower.includes('terceros') || lower.includes('empleados') || lower.includes('público') || lower.includes('third party') || lower.includes('employees')) return <Users className="w-5 h-5" />
+  if (lower.includes('legal') || lower.includes('demanda') || lower.includes('abogado') || lower.includes('lawsuit')) return <Briefcase className="w-5 h-5" />
+  if (lower.includes('daños') || lower.includes('propiedad') || lower.includes('equipo') || lower.includes('damage') || lower.includes('property')) return <AlertCircle className="w-5 h-5" />
+  if (lower.includes('interrupción') || lower.includes('negocio') || lower.includes('interruption') || lower.includes('business')) return <Activity className="w-5 h-5" />
+  if (lower.includes('clima') || lower.includes('inundación') || lower.includes('weather') || lower.includes('flood')) return <CloudRain className="w-5 h-5" />
+  return <CheckCircle2 className="w-5 h-5" />
+}
+
+export default function ProposalCarouselPage() {
   const { id } = useParams()
   const router = useRouter()
-  const lang = useLanguage() || 'es'
+  const langContext = useLanguage()
+  const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
+  
   const [quote, setQuote] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [hasScrolled, setHasScrolled] = useState(false)
-  
+  const [isAccepting, setIsAccepting] = useState(false)
+  const [selectedModules, setSelectedModules] = useState<boolean[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [hasOpened, setHasOpened] = useState(false) 
+  const carouselRef = useRef<HTMLDivElement>(null)
+
+  const { scrollY } = useScroll()
+  const bgY = useTransform(scrollY, [0, 1000], ["0%", "20%"])
+  const bgScale = useTransform(scrollY, [0, 1000], [1.05, 1.15])
+  const bgOpacity = useTransform(scrollY, [0, 1000], [0.8, 0.4])
+
   const supabase = createClient()
 
-  // Dictionaries - Cinematic Copy
-  const dict = {
+  // i18n Dictionary
+  const t = {
     es: {
-      loading: "Configurando el entorno...",
-      notFound: "Propuesta no encontrada.",
-      welcome: "Hola, te estaba esperando.",
-      tailored: "He analizado cada detalle para crear esta propuesta exclusiva para",
-      thankYou: "Tu tranquilidad es el objetivo. Exploremos juntos tu nuevo escudo de protección.",
-      scroll: "Descubre tu propuesta",
-      back: "Volver a Propuestas",
-      download: "Descargar Documento Oficial",
-      accepted: "Propuesta Aceptada",
-      rejected: "Propuesta Rechazada",
-      active: "Propuesta Activa",
-      summary: "Escenarios de Cobertura",
-      options: "Tus Opciones de Protección",
-      noDetails: "Aún estamos moldeando las opciones para esta solicitud.",
-      premium: "Inversión Total",
-      monthly: "Esquema Mensual",
-      plans: "Esquemas",
-      limits: "Límites y Alcances",
-      included: "Lo que sí te cubre",
-      excluded: "Lo que queda fuera",
-      notes: "Apuntes Estratégicos",
-      documents: "Anexos Legales",
-      generating: "Compilando propuesta oficial...",
-      success: "Documento generado exitosamente",
-      error: "No pudimos generar el documento"
+      loading: 'Preparando tu experiencia...',
+      notFound: 'Propuesta no encontrada.',
+      back: 'Atrás',
+      coverTitle: '¡Hola',
+      coverThankYou: 'Gracias por confiar en nosotros. Nos tomamos el tiempo de crear esto exclusivamente para ti, queremos que tu patrimonio siempre esté seguro.',
+      revealButton: 'Revelar Propuesta',
+      processedSuccess: '¡Procesado con Éxito!',
+      processedDesc: 'Tu equipo ya está trabajando en los documentos oficiales.',
+      totalInvestment: 'Inversión Total',
+      option1: 'Pago Único',
+      payInFull: 'Pago Único',
+      option2: 'Financiamiento Mensual',
+      perMonth: '/ mes',
+      downpayment: '+ enganche de $',
+      includedInBundle: 'PAQUETE INTEGRADO',
+      or: 'ó',
+      includedTitle: 'Beneficios Incluidos',
+      excludedTitle: 'Exclusiones Principales',
+      coveragesTitle: 'Estructura de Límites',
+      activeModule: 'Incluida en Propuesta',
+      addModule: 'Añadir a Propuesta',
+      limit: 'Límite:',
+      acceptProposal: 'Aceptar Propuesta Oficial',
+      processing: 'Procesando Documento...',
+      toastPreparing: 'Preparando expediente...',
+      toastSuccess: '¡Todo listo! Propuesta aceptada oficialmente.',
+      toastError: 'Ocurrió un error de conexión.',
+      summaryTitle: 'Resumen Ejecutivo',
+      summaryDesc: 'Estas son las pólizas estructuradas para tu protección. Revisa el desglose final de inversión.',
+      costBreakdown: 'Desglose de Costos',
+      slide: 'Póliza',
+      of: 'de',
+      swipeText: 'Desliza para explorar',
+      downloadPdf: 'Descargar PDF'
     },
     en: {
-      loading: "Configuring environment...",
-      notFound: "Proposal not found.",
-      welcome: "Hi, I've been waiting for you.",
-      tailored: "I've analyzed every detail to build this exclusive proposal for",
-      thankYou: "Your peace of mind is the goal. Let's explore your new protection shield together.",
-      scroll: "Discover your proposal",
-      back: "Back to Proposals",
-      download: "Download Official Document",
-      accepted: "Proposal Accepted",
-      rejected: "Proposal Rejected",
-      active: "Active Proposal",
-      summary: "Coverage Scenarios",
-      options: "Your Protection Options",
-      noDetails: "We are still shaping the options for this request.",
-      premium: "Total Investment",
-      monthly: "Monthly Scheme",
-      plans: "Schemes",
-      limits: "Limits & Scope",
-      included: "What is covered",
-      excluded: "What is left out",
-      notes: "Strategic Notes",
-      documents: "Legal Annexes",
-      generating: "Compiling official proposal...",
-      success: "Document generated successfully",
-      error: "We couldn't generate the document"
+      loading: 'Preparing your experience...',
+      notFound: 'Proposal not found.',
+      back: 'Back',
+      coverTitle: 'Hello',
+      coverThankYou: 'Thank you for trusting us. We took the time to create this exclusively for you, we want your assets to always be secure.',
+      revealButton: 'Reveal Proposal',
+      processedSuccess: 'Successfully Processed!',
+      processedDesc: 'Your team is already working on the official documents.',
+      totalInvestment: 'Total Investment',
+      option1: 'Pay in Full',
+      payInFull: 'Pay in Full',
+      option2: 'Monthly Financing',
+      perMonth: '/ month',
+      downpayment: '+ downpayment of $',
+      includedInBundle: 'INTEGRATED BUNDLE',
+      or: 'or',
+      includedTitle: 'Included Benefits',
+      excludedTitle: 'Primary Exclusions',
+      coveragesTitle: 'Limits Structure',
+      activeModule: 'Included in Proposal',
+      addModule: 'Add to Proposal',
+      limit: 'Limit:',
+      acceptProposal: 'Accept Official Proposal',
+      processing: 'Processing Document...',
+      toastPreparing: 'Preparing file...',
+      toastSuccess: 'All set! Proposal officially accepted.',
+      toastError: 'A connection error occurred.',
+      summaryTitle: 'Executive Summary',
+      summaryDesc: 'These are the structured policies for your protection. Review the final investment breakdown.',
+      costBreakdown: 'Cost Breakdown',
+      slide: 'Policy',
+      of: 'of',
+      swipeText: 'Swipe to explore',
+      downloadPdf: 'Download PDF'
     }
   }[lang]
 
@@ -85,367 +141,524 @@ export default function ProposalPresentationPage() {
         .eq("id", id)
         .single()
         
-      if (data) setQuote(data)
-      setTimeout(() => setLoading(false), 1200) // Slight delay for dramatic effect
+      if (data) {
+        setQuote(data)
+        setSelectedModules(new Array(data.quotes_provided?.length || 0).fill(true))
+      }
+      setLoading(false)
     }
     fetchQuote()
+  }, [id])
 
-    const handleScroll = () => {
-      setHasScrolled(window.scrollY > 50)
+  const proposals = quote?.quotes_provided || []
+  const totalSlides = proposals.length + 1 
+
+  const handleScroll = () => {
+    if (carouselRef.current) {
+      const { scrollLeft, clientWidth } = carouselRef.current
+      const newIndex = Math.round(scrollLeft / clientWidth)
+      setCurrentIndex(newIndex)
     }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [id, supabase])
+  }
 
-  const handleGeneratePDF = async () => {
-    setIsGenerating(true)
-    const toastId = toast.loading(dict.generating)
+  const packageTotal = proposals.reduce((acc: any, prop: any, idx: number) => {
+    if (selectedModules[idx] && !prop.is_bundled) {
+      acc.premium += Number(prop.premium || 0)
+      acc.monthly += Number(prop.monthly_payment || 0)
+      acc.downpayment += Number(prop.downpayment || 0)
+    }
+    return acc
+  }, { premium: 0, monthly: 0, downpayment: 0 })
+
+  const handleAccept = async () => {
+    setIsAccepting(true)
+    const toastId = toast.loading(t.toastPreparing)
     try {
-      const { pdf } = await import('@react-pdf/renderer')
-      const { ProposalPDF } = await import('@/components/pdf/ProposalPDF')
-      
-      const blob = await pdf(<ProposalPDF quote={quote} />).toBlob()
-      
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `Propuesta_${quote.client_name.replace(/\s+/g, '_')}.pdf`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      toast.success(dict.success, { id: toastId })
-    } catch (error) {
-      console.error(error)
-      toast.error(dict.error, { id: toastId })
+      await acceptClientQuote(quote.id, packageTotal.premium, selectedModules)
+      setQuote({ ...quote, status: 'ACCEPTED' })
+      toast.success(t.toastSuccess, { id: toastId })
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch (e) {
+      toast.error(t.toastError, { id: toastId })
     } finally {
-      setIsGenerating(false)
+      setIsAccepting(false)
     }
   }
 
-  if (loading) {
-    return (
-      <div className="h-screen w-full flex flex-col items-center justify-center bg-white text-[#514690]">
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }} 
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="w-16 h-16 border-4 border-[#009CFF]/20 border-t-[#009CFF] rounded-full animate-spin mb-8"
-        />
-        <motion.p 
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-          className="text-[#009CFF] tracking-[0.3em] uppercase text-xs font-bold"
-        >
-          {dict.loading}
-        </motion.p>
-      </div>
-    )
+  const generateAndDownloadPDF = async () => {
+    const toastId = toast.loading('Generando documento oficial premium...');
+    try {
+      // 1. Generate Formal PDF Blob
+      const blob = await pdf(<FormalProposalPDF quote={quote} selectedModules={selectedModules} />).toBlob();
+      const arrayBuffer = await blob.arrayBuffer();
+      
+      // 2. Load it into pdf-lib
+      const pdfDoc = await PDFDocument.load(arrayBuffer);
+      
+      // 3. Search for attachments in quote.raw_data
+      const attachments: string[] = [];
+      const searchForPdfs = (obj: any) => {
+        if (!obj) return;
+        if (typeof obj === 'string') {
+          if (obj.includes('/') && obj.toLowerCase().endsWith('.pdf')) {
+            attachments.push(obj);
+          }
+        } else if (Array.isArray(obj)) {
+          obj.forEach(searchForPdfs);
+        } else if (typeof obj === 'object') {
+          Object.values(obj).forEach(searchForPdfs);
+        }
+      };
+      
+      if (quote.raw_data) {
+        searchForPdfs(quote.raw_data);
+      }
+      
+      // 4. Fetch and append each PDF
+      for (const filePath of attachments) {
+        try {
+          const { data } = await supabase.storage.from('quote-attachments').download(filePath);
+          if (data) {
+            const attachmentBuffer = await data.arrayBuffer();
+            const attachmentPdf = await PDFDocument.load(attachmentBuffer);
+            const copiedPages = await pdfDoc.copyPages(attachmentPdf, attachmentPdf.getPageIndices());
+            copiedPages.forEach((page) => pdfDoc.addPage(page));
+          }
+        } catch (err) {
+          console.error("Failed to append PDF:", filePath, err);
+        }
+      }
+      
+      // 5. Save and Download
+      const pdfBytes = await pdfDoc.save();
+      const finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const url = URL.createObjectURL(finalBlob);
+      
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `AlexAI_Propuesta_${quote.client_name?.replace(/\s+/g, '_') || 'Oficial'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('¡PDF Oficial generado exitosamente!', { id: toastId });
+    } catch (e) {
+      console.error(e);
+      toast.error('Error generando PDF', { id: toastId });
+    }
   }
 
-  if (!quote) {
-    return <div className="h-screen w-full flex items-center justify-center bg-white text-[#514690]">{dict.notFound}</div>
-  }
-
-  const proposals = quote.quotes_provided || []
-
-  // Cinematic Animations
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.3, delayChildren: 0.2 } }
-  }
-
-  const textRevealVariants = {
-    hidden: { opacity: 0, y: 40, scale: 0.95 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] } }
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 60, scale: 0.98 },
-    visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 1, ease: [0.16, 1, 0.3, 1] } }
-  }
+  if (loading) return (
+    <div className="h-screen flex flex-col items-center justify-center bg-white">
+      <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: "linear" }}>
+        <Zap className="w-12 h-12 text-[#009CFF]" />
+      </motion.div>
+      <p className="mt-4 font-semibold text-slate-400">{t.loading}</p>
+    </div>
+  )
+  
+  if (!quote) return <div className="h-screen flex items-center justify-center bg-white">{t.notFound}</div>
 
   return (
-    <div className="flex-1 bg-[#FFFFFF] min-h-screen text-[#0B162C] overflow-x-hidden selection:bg-[#009CFF]/20 selection:text-[#009CFF] font-sans">
+    <div className="min-h-screen font-sans text-slate-800 pb-20 overflow-hidden relative selection:bg-[#009CFF] selection:text-white bg-[#F4F7FA] print:bg-white print:pb-0">
       
-      {/* Floating Action Bar */}
-      <AnimatePresence>
-        {hasScrolled && (
-          <motion.div 
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed top-0 inset-x-0 z-50 bg-white/70 backdrop-blur-2xl border-b border-[#514690]/5 shadow-sm px-6 py-4 flex items-center justify-between"
-          >
-            <button 
-              onClick={() => router.push('/proposals')}
-              className="flex items-center text-slate-500 hover:text-[#009CFF] font-medium text-sm transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5 mr-1" />
-              <span className="hidden sm:inline">{dict.back}</span>
-            </button>
-            
-            <div className="flex items-center gap-3 md:gap-4">
-              <span className={`px-4 py-1.5 rounded-full text-[10px] md:text-xs font-bold tracking-widest uppercase border ${
-                quote.status === 'ACCEPTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                quote.status === 'REJECTED' ? 'bg-red-50 text-red-600 border-red-200' :
-                'bg-[#009CFF]/5 text-[#009CFF] border-[#009CFF]/20'
-              }`}>
-                {quote.status === 'ACCEPTED' ? dict.accepted : quote.status === 'REJECTED' ? dict.rejected : dict.active}
-              </span>
-              <button 
-                onClick={handleGeneratePDF}
-                disabled={isGenerating}
-                className="flex items-center px-5 py-2.5 bg-[#514690] hover:bg-[#3D3470] text-white rounded-xl text-sm font-bold transition-all shadow-[0_4px_15px_rgba(81,70,144,0.2)] hover:shadow-[0_8px_25px_rgba(81,70,144,0.3)] hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none"
-              >
-                <Download className="w-4 h-4 md:mr-2" />
-                <span className="hidden md:inline">{dict.download}</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cinematic Hero Section - Light Theme but with deep motion and structure */}
-      <section className="relative min-h-screen flex flex-col justify-center p-6 md:p-12 overflow-hidden bg-[#F8FAFC]">
-        {/* Soft Animated Background Blobs */}
-        <motion.div 
-          animate={{ scale: [1, 1.1, 1], rotate: [0, 90, 0] }}
-          transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-          className="absolute top-0 right-0 w-[800px] h-[800px] bg-gradient-to-bl from-[#E0C0FF]/30 to-transparent rounded-full blur-[120px] opacity-60 -translate-y-1/3 translate-x-1/3"
+      {/* MAIN BACKGROUND - Pastel Digital Illustration Style */}
+      <div className="fixed inset-0 z-0 pointer-events-none print:hidden bg-white">
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-50 saturate-[1.5] contrast-[1.1] blur-[2px]" 
+          style={{ backgroundImage: "url('/alex-assets/Wallpaper-1.jpeg')" }} 
         />
-        <motion.div 
-          animate={{ scale: [1, 1.2, 1], rotate: [0, -90, 0] }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-          className="absolute bottom-0 left-0 w-[800px] h-[800px] bg-gradient-to-tr from-[#9CEAEF]/30 to-transparent rounded-full blur-[120px] opacity-60 translate-y-1/3 -translate-x-1/4"
-        />
-        
-        <motion.div 
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-7xl mx-auto w-full flex flex-col lg:flex-row items-center justify-between gap-16 relative z-10"
-        >
-          
-          <div className="flex-1 text-center lg:text-left z-20">
-            {quote.agencies?.logo_url && (
-              <motion.div variants={textRevealVariants} className="mb-12 inline-block">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={quote.agencies.logo_url} alt="Agency Logo" className="h-14 md:h-16 object-contain" />
-              </motion.div>
-            )}
+        {/* Heavy pastel white gradient overlay to wash it out nicely */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/30 via-white/60 to-[#F4F7FA]" />
+      </div>
 
-            <motion.p variants={textRevealVariants} className="text-[#009CFF] font-bold text-sm tracking-[0.2em] uppercase mb-4">
-              {dict.welcome}
-            </motion.p>
-            
-            <motion.div variants={textRevealVariants} className="overflow-hidden mb-8">
-              <h1 className="text-6xl md:text-8xl font-black text-[#514690] tracking-tight leading-[1.1] pb-2">
-                {quote.client_name}
-              </h1>
-            </motion.div>
+      {/* ======================= COVER SCREEN ======================= */}
+      <div 
+        className={`fixed inset-0 z-50 flex flex-col items-center justify-center px-6 transition-all duration-1000 bg-white/90 backdrop-blur-2xl print:relative print:block print:h-auto print:bg-white print:page-break-after-always print:z-0 ${hasOpened ? 'opacity-0 pointer-events-none translate-y-[-10%]' : 'opacity-100'}`}
+      >
+        {/* Wrapping Paper Background Elements (Animated & more opaque) */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none print:hidden flex items-center justify-center z-0">
+          <motion.img animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }} src="/alex-assets/Image-2.png" alt="Deco" className="absolute top-[10%] left-[15%] w-32 md:w-48 opacity-15 -rotate-12" />
+          <motion.img animate={{ y: [0, 20, 0] }} transition={{ repeat: Infinity, duration: 7, ease: "easeInOut" }} src="/alex-assets/Image-4.png" alt="Deco" className="absolute top-[15%] right-[20%] w-40 md:w-56 opacity-15 rotate-12" />
+          <motion.img animate={{ x: [0, -20, 0] }} transition={{ repeat: Infinity, duration: 8, ease: "easeInOut" }} src="/alex-assets/Image-5.png" alt="Deco" className="absolute bottom-[20%] left-[25%] w-36 md:w-52 opacity-15 rotate-45" />
+          <motion.img animate={{ y: [0, -25, 0], rotate: [-45, -35, -45] }} transition={{ repeat: Infinity, duration: 9, ease: "easeInOut" }} src="/alex-assets/Image-7.png" alt="Deco" className="absolute top-[50%] left-[5%] w-24 md:w-32 opacity-15 -rotate-45" />
+          <motion.img animate={{ y: [0, 15, 0], rotate: [90, 100, 90] }} transition={{ repeat: Infinity, duration: 7.5, ease: "easeInOut" }} src="/alex-assets/Image-8.png" alt="Deco" className="absolute bottom-[30%] right-[30%] w-28 md:w-40 opacity-15 rotate-90" />
+          <motion.img animate={{ x: [0, 20, 0] }} transition={{ repeat: Infinity, duration: 8.5, ease: "easeInOut" }} src="/alex-assets/Image-10.png" alt="Deco" className="absolute top-[60%] right-[10%] w-32 md:w-48 opacity-15 rotate-180" />
+        </div>
 
-            <motion.p variants={textRevealVariants} className="text-slate-500 text-lg md:text-2xl font-light max-w-2xl mx-auto lg:mx-0 leading-relaxed mb-10">
-              {dict.tailored} <span className="text-[#0B162C] font-semibold">{quote.client_business_type}</span>. <br/>
-              <span className="opacity-70 mt-2 block">{dict.thankYou}</span>
-            </motion.p>
-          </div>
+        {/* Adornments (Dog) huge on the right, overflowing screen so it doesn't cover text */}
+        <div className="absolute bottom-0 -right-20 md:-right-32 lg:-right-48 hidden md:block w-[28rem] lg:w-[40rem] xl:w-[50rem] opacity-100 origin-bottom pointer-events-none z-10">
+          <img src="/alex-assets/Image-12.png" alt="Perrito" className="w-full h-auto drop-shadow-xl" />
+        </div>
 
-          <motion.div 
-            variants={textRevealVariants}
-            className="w-full max-w-lg lg:max-w-xl lg:w-1/2 relative z-10"
-          >
-            {/* User's uploaded Image (Cinematically animated) */}
-            <motion.div 
-              animate={{ y: [-15, 15, -15] }}
-              transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
-              className="relative w-full aspect-square drop-shadow-2xl"
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/alex-assets/image-1.png" alt="Alex AI Assistant" className="w-full h-full object-contain" />
-            </motion.div>
-          </motion.div>
-
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2.5, duration: 1.5 }}
-          className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center"
-        >
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] mb-4 text-[#514690]/50">{dict.scroll}</p>
-          <motion.div
-            animate={{ y: [0, 12, 0] }}
-            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
-          >
-            <ChevronDown className="w-5 h-5 text-[#009CFF]" />
-          </motion.div>
-        </motion.div>
-      </section>
-
-      {/* Main Content Area */}
-      <div className="bg-white relative z-20 shadow-[0_-20px_50px_rgba(0,0,0,0.03)] rounded-t-[3rem] -mt-8 pt-24 pb-32">
-        <div className="max-w-7xl mx-auto p-4 md:p-8">
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true, margin: "-100px" }}
-            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center gap-8 mb-20"
-          >
-            <div className="h-[2px] bg-gradient-to-r from-transparent via-slate-200 to-slate-200 flex-1"></div>
-            <h2 className="text-3xl md:text-5xl font-black text-[#514690] tracking-tight">{dict.options}</h2>
-            <div className="h-[2px] bg-gradient-to-l from-transparent via-slate-200 to-slate-200 flex-1"></div>
-          </motion.div>
-
-          {proposals.length === 0 ? (
-            <div className="bg-[#F8FAFC] p-20 rounded-[3rem] border border-slate-100 text-center">
-              <p className="text-xl text-slate-500 font-light">{dict.noDetails}</p>
-            </div>
+        <div className="text-center max-w-4xl print:py-20 relative z-20 w-full">
+          {quote.agencies?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={quote.agencies.logo_url} alt="Agency" className="h-24 md:h-32 object-contain drop-shadow-sm mx-auto mb-10 print:h-24" />
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-10">
-              {proposals.map((prop: any, idx: number) => (
-                <motion.div 
-                  key={idx} 
-                  variants={cardVariants}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true, margin: "-50px" }}
-                  custom={idx}
-                  className="bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] overflow-hidden flex flex-col group hover:shadow-[0_20px_60px_rgba(0,156,255,0.08)] hover:-translate-y-2 transition-all duration-700"
-                >
-                  {/* Header de la Tarjeta */}
-                  <div className="p-10 pb-8 border-b border-slate-100 relative overflow-hidden bg-gradient-to-b from-[#F8FAFC] to-white">
-                    <motion.div 
-                      className="absolute top-0 right-0 w-40 h-40 bg-[#009CFF]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"
-                      whileHover={{ scale: 1.5, backgroundColor: "rgba(0,156,255,0.1)" }}
-                      transition={{ duration: 0.7 }}
-                    />
-                    <p className="text-[10px] font-black text-[#009CFF] uppercase tracking-[0.2em] mb-4 relative z-10">{prop.carrier || 'Aseguradora'}</p>
-                    <h3 className="text-4xl font-black text-[#514690] relative z-10 leading-tight">{prop.product}</h3>
-                  </div>
-
-                  {/* Precios */}
-                  <div className="p-10 bg-white border-b border-slate-100 relative">
-                    <div className="flex flex-col gap-5">
-                      <div>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{dict.premium}</p>
-                        <p className="text-5xl font-black text-[#0B162C] tracking-tighter">${Number(prop.premium).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                      </div>
-                      {prop.monthly_payment && Number(prop.monthly_payment) > 0 && (
-                        <div className="pt-6 border-t border-slate-100">
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{dict.monthly}</p>
-                          <p className="text-3xl font-bold text-[#514690] tracking-tight">${Number(prop.monthly_payment).toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-                        </div>
-                      )}
-                    </div>
-                    {prop.payment_options && (
-                      <div className="mt-8 pt-8 border-t border-slate-100">
-                        <div className="bg-[#F8FAFC] p-5 rounded-2xl border border-slate-100">
-                          <span className="font-bold text-[#009CFF] uppercase text-[10px] tracking-widest block mb-2">{dict.plans}</span> 
-                          <p className="text-sm text-slate-600 font-medium leading-relaxed">{prop.payment_options}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Detalles */}
-                  <div className="p-10 flex-1 flex flex-col gap-10 bg-[#F8FAFC]/50">
-                    
-                    {/* Límites */}
-                    {prop.coverages && (
-                      <div>
-                        <p className="text-[10px] font-bold text-[#514690] uppercase tracking-widest mb-5 flex items-center gap-2">
-                          <ShieldCheck className="w-4 h-4 text-[#009CFF]" /> {dict.limits}
-                        </p>
-                        <ul className="space-y-4">
-                          {prop.coverages.split(',').map((c: string, i: number) => (
-                            <li key={i} className="flex items-start text-sm">
-                              <CheckCircle2 className="w-5 h-5 text-[#009CFF] mr-4 mt-0.5 shrink-0" />
-                              <span className="text-slate-600 font-medium leading-relaxed">{c.trim()}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    <div className="flex flex-col gap-5">
-                      {/* Qué Incluye */}
-                      {prop.included && (
-                        <div className="bg-emerald-50/80 rounded-3xl p-6 border border-emerald-100">
-                          <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-4 flex items-center">
-                            <Check className="w-4 h-4 mr-2" /> {dict.included}
-                          </p>
-                          <ul className="space-y-3">
-                            {prop.included.split(',').map((inc: string, i: number) => (
-                              <li key={i} className="text-sm text-emerald-800 font-medium leading-relaxed">{inc.trim()}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {/* Qué Excluye */}
-                      {prop.excluded && (
-                        <div className="bg-red-50/80 rounded-3xl p-6 border border-red-100">
-                          <p className="text-[10px] font-bold text-red-600 uppercase tracking-widest mb-4 flex items-center">
-                            <X className="w-4 h-4 mr-2" /> {dict.excluded}
-                          </p>
-                          <ul className="space-y-3">
-                            {prop.excluded.split(',').map((exc: string, i: number) => (
-                              <li key={i} className="text-sm text-red-800 font-medium leading-relaxed">{exc.trim()}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Notas */}
-                    {prop.notes && (
-                      <div className="bg-white rounded-3xl p-6 border border-slate-200 mt-auto shadow-sm">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 flex items-center gap-2">
-                          <FileText className="w-4 h-4 text-[#514690]" /> {dict.notes}
-                        </p>
-                        <p className="text-sm text-slate-600 font-medium leading-relaxed">{prop.notes}</p>
-                      </div>
-                    )}
-                    
-                  </div>
-                </motion.div>
-              ))}
+            <div className="w-24 h-24 bg-gradient-to-br from-[#009CFF]/10 to-[#514690]/10 rounded-3xl mx-auto flex items-center justify-center mb-10 shadow-sm border border-slate-100 print:hidden">
+              <Star className="w-12 h-12 text-[#514690]" />
             </div>
           )}
           
-          {/* Archivos Originales */}
-          {proposals.some((p: any) => p.file_url) && (
-            <motion.div 
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-28 text-center"
-            >
-              <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em] mb-8">{dict.documents}</h3>
-              <div className="flex flex-wrap justify-center gap-6">
-                {proposals.map((p: any, i: number) => p.file_url ? (
-                  <a 
-                    key={i}
-                    href={p.file_url} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="group flex items-center px-8 py-5 bg-white border border-slate-200 rounded-3xl hover:border-[#009CFF] transition-all duration-500 shadow-sm hover:shadow-[0_10px_30px_rgba(0,156,255,0.1)] hover:-translate-y-1"
-                  >
-                    <FileText className="w-6 h-6 mr-4 text-slate-400 group-hover:text-[#009CFF] transition-colors duration-500" />
-                    <span className="font-bold text-sm text-[#514690] group-hover:text-[#009CFF] transition-colors duration-500 tracking-wide">{p.product}</span>
-                  </a>
-                ) : null)}
-              </div>
-            </motion.div>
-          )}
+          <h1 className="text-5xl md:text-7xl font-bold text-slate-800 leading-tight tracking-tight mb-8">
+            {t.coverTitle} <span className="text-[#514690]">{quote.client_name.split(' ')[0]}</span>!
+          </h1>
+          
+          <p className="text-xl md:text-2xl font-medium text-slate-500 leading-relaxed mb-16 max-w-2xl mx-auto">
+            {t.coverThankYou}
+          </p>
+
+          {/* Reveal Button with Cat */}
+          <div className="relative inline-block mx-auto mt-4">
+             {/* Cat paw above button (z-30) */}
+             <div className="absolute -left-28 md:-left-36 -top-6 md:-top-8 w-40 md:w-48 hidden md:block pointer-events-none z-30">
+               <img src="/alex-assets/Image-13.png" alt="Gatito" className="w-full h-auto drop-shadow-md" />
+             </div>
+             
+             <button
+               onClick={() => setHasOpened(true)}
+               className="print:hidden bg-white text-[#514690] hover:bg-[#F4F7FA] border border-slate-200 px-10 py-5 rounded-full font-bold text-xl flex items-center shadow-sm transition-all hover:scale-105 active:scale-95 group relative z-10"
+             >
+               <motion.div animate={{ rotate: [0, -15, 15, -15, 15, 0] }} transition={{ repeat: Infinity, duration: 1.5, repeatDelay: 1 }} className="mr-3 text-[#009CFF]">
+                 <Gift className="w-6 h-6" />
+               </motion.div>
+               {t.revealButton}
+             </button>
+          </div>
         </div>
       </div>
+
+      {/* ======================= MAIN CAROUSEL CONTENT ======================= */}
+      <div 
+        className={`relative z-10 w-full mx-auto px-0 pt-6 transition-all duration-1000 print:block print:w-full print:opacity-100 print:scale-100 print:translate-y-0 ${hasOpened ? 'opacity-100 scale-100 translate-y-0 delay-300' : 'opacity-0 scale-95 translate-y-10 pointer-events-none'}`}
+      >
+        
+        {/* Top Navbar */}
+        <nav className="h-16 flex items-center justify-between sticky top-0 z-50 px-6 max-w-7xl mx-auto print:hidden">
+          <button onClick={() => router.push('/proposals')} className="flex items-center text-sm font-semibold text-slate-500 hover:text-slate-800 transition-colors bg-white/80 backdrop-blur-md rounded-full px-4 py-2 shadow-sm border border-slate-100">
+            <ChevronLeft className="w-4 h-4 mr-1" />
+            {t.back}
+          </button>
+
+          <button onClick={generateAndDownloadPDF} className="flex items-center text-sm font-semibold text-slate-500 hover:text-[#009CFF] transition-colors bg-white/80 backdrop-blur-md rounded-full px-4 py-2 shadow-sm border border-slate-100">
+            <Download className="w-4 h-4 mr-2" />
+            {t.downloadPdf}
+          </button>
+        </nav>
+
+        {/* Swipe Indicator (Animated) */}
+        <div className="max-w-7xl mx-auto px-6 mt-4 mb-4 flex justify-center z-20 relative print:hidden">
+          <div className="flex items-center space-x-2 text-slate-400 font-bold text-sm tracking-widest uppercase">
+            <span>{t.swipeText}</span>
+            <motion.div
+              animate={{ x: [0, 8, 0] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+            >
+              <ArrowRight className="w-4 h-4" />
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Horizontal Scroll Carousel (Turns vertical on Print) */}
+        <div 
+          className="w-full flex overflow-x-auto snap-x snap-mandatory scroll-smooth pb-10 hide-scrollbar print:block print:overflow-visible print:pb-0"
+          ref={carouselRef}
+          onScroll={handleScroll}
+          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        >
+          {proposals.map((prop: any, idx: number) => {
+            const isSelected = selectedModules[idx]
+
+            return (
+              <div key={idx} className="min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:mb-16 print:break-inside-avoid">
+                <div 
+                  className={`w-full max-w-5xl bg-white rounded-3xl overflow-hidden transition-all duration-300 border print:border-slate-300 print:shadow-none print:rounded-lg ${isSelected ? 'border-slate-200 shadow-xl shadow-slate-200/50' : 'border-slate-100 shadow-sm opacity-60 grayscale-[0.2] scale-[0.98] print:opacity-100 print:grayscale-0 print:scale-100'}`}
+                >
+                  
+                  {/* 1. Elegant Header */}
+                  <div className={`p-8 md:p-12 flex flex-col md:flex-row md:items-start justify-between gap-6 border-b border-slate-100 print:border-slate-200 ${isSelected ? 'bg-gradient-to-br from-white to-slate-50/50 print:bg-white' : 'bg-white'}`}>
+                    
+                    <div className="flex-1">
+                      <div className="flex items-end mb-4 gap-3">
+                        {prop.carrier ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img 
+                            src={getCarrierLogo(prop.carrier) || ""} 
+                            alt={prop.carrier}
+                            className="h-10 md:h-12 object-contain mix-blend-multiply opacity-80 print:opacity-100"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        {prop.carrier && (
+                          <span className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
+                            {prop.carrier}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
+                        {prop.product}
+                      </h2>
+                    </div>
+
+                    {/* Price Block (Clean typography) */}
+                    <div className="flex-1 flex flex-col md:items-end text-left md:text-right mt-4 md:mt-0">
+                      {prop.is_bundled ? (
+                        <div className="bg-[#514690]/5 text-[#514690] px-5 py-2 rounded-full font-bold text-sm tracking-widest border border-[#514690]/10">
+                          {t.includedInBundle}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col md:items-end">
+                          <div className="flex items-baseline text-slate-800">
+                            <span className="text-2xl font-semibold mr-1 text-slate-400">$</span>
+                            <span className="font-bold text-4xl md:text-5xl tracking-tight">
+                              {Number(prop.premium).toLocaleString('en-US')}
+                            </span>
+                          </div>
+                          <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1 mb-4">{t.payInFull}</span>
+                          
+                          {prop.monthly_payment && (
+                            <div className="text-sm font-semibold text-slate-500 flex items-center md:justify-end gap-2">
+                              <span>{t.or}</span>
+                              <span className="font-bold text-[#009CFF]">${prop.monthly_payment}</span>
+                              <span>{t.perMonth}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 2. Structured Features Grid with Alex AI Colors */}
+                  <div className="p-8 md:p-12">
+
+                    {/* Coverages: Rosado Alex AI (#D94F90) */}
+                    {prop.coverages && (
+                      <div className="mb-12">
+                        <h4 className="text-xs font-bold text-[#D94F90] uppercase tracking-widest mb-6 flex items-center">
+                          <Shield className="w-4 h-4 mr-2" /> {t.coveragesTitle}
+                        </h4>
+                        
+                        <div className="relative overflow-hidden bg-gradient-to-br from-[#D94F90] via-[#c64481] to-[#a32b62] rounded-[2rem] p-6 md:p-8 shadow-2xl text-white print:bg-[#D94F90] print:text-white print:break-inside-avoid print:shadow-none">
+                          {/* Decorative Inner Backgrounds */}
+                          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl pointer-events-none"></div>
+                          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-black opacity-15 blur-2xl pointer-events-none"></div>
+                          <Shield className="absolute -right-12 -bottom-12 w-72 h-72 text-white opacity-5 pointer-events-none rotate-12" />
+
+                          <div className="relative z-10 flex flex-col gap-3 md:gap-4">
+                            {prop.coverages.split(',').map((cov: string, i: number) => {
+                              const parts = cov.split(':');
+                              const name = parts[0];
+                              const value = parts.slice(1).join(':').trim();
+                              
+                              return (
+                                <div key={i} className="flex flex-col lg:flex-row lg:items-center justify-between bg-white/10 hover:bg-white/20 transition-colors border border-white/20 rounded-2xl p-5 backdrop-blur-md shadow-sm">
+                                  <div className="flex items-center mb-3 lg:mb-0 lg:pr-6 lg:w-[50%]">
+                                    <div className="bg-white/20 p-2.5 rounded-xl mr-4 shrink-0 shadow-inner">
+                                      <Shield className="w-5 h-5 text-white" />
+                                    </div>
+                                    <span className="font-bold text-white text-base md:text-lg leading-tight">{name.trim()}</span>
+                                  </div>
+                                  
+                                  {value ? (
+                                    <div className="lg:w-[50%] lg:text-right">
+                                      <span className="font-black text-white text-lg md:text-xl drop-shadow-sm">
+                                        {value}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <div className="lg:w-[50%] lg:text-right">
+                                      <span className="font-black text-white text-lg md:text-xl drop-shadow-sm">
+                                        {t.includedTitle}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Included: Azul Alex AI (#009CFF) */}
+                    {prop.included && (
+                      <div className="mb-12">
+                        <h4 className="text-xs font-bold text-[#009CFF] uppercase tracking-widest mb-6 flex items-center">
+                          <CheckCircle2 className="w-4 h-4 mr-2" /> {t.includedTitle}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {prop.included.split(',').map((inc: string, i: number) => (
+                            <div key={i} className="flex items-start bg-[#009CFF] border border-[#009CFF] rounded-xl p-5 shadow-sm print:shadow-none print:bg-[#009CFF] print:border-[#009CFF]">
+                              <div className="text-white mt-0.5 mr-4">
+                                {getFeatureIcon(inc)}
+                              </div>
+                              <span className="font-bold text-white leading-snug">{inc.trim()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Excluded: Rojo (red-500) */}
+                    {prop.excluded && (
+                      <div className="mb-12">
+                        <h4 className="text-xs font-bold text-red-500 uppercase tracking-widest mb-6 flex items-center">
+                          <X className="w-4 h-4 mr-1" /> {t.excludedTitle}
+                        </h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {prop.excluded.split(',').map((exc: string, i: number) => (
+                            <div key={i} className="flex items-center text-white font-bold text-sm bg-red-500 border border-red-500 rounded-lg px-4 py-2 shadow-sm print:bg-red-500 print:border-red-500">
+                              <X className="w-4 h-4 mr-2 text-white shrink-0" />
+                              {exc.trim()}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Action Button (Hidden on print) */}
+                    <div className="mt-12 max-w-md print:hidden">
+                      <button
+                        disabled={quote.status === 'ACCEPTED'}
+                        onClick={() => {
+                          const next = [...selectedModules]
+                          next[idx] = !next[idx]
+                          setSelectedModules(next)
+                        }}
+                        className={`w-full relative rounded-2xl p-5 flex items-center justify-between transition-all duration-300 border-2 ${isSelected ? 'bg-white border-[#009CFF]/30 text-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-slate-50'}`}
+                      >
+                        <div className="flex items-center">
+                          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${isSelected ? 'border-[#009CFF] bg-[#009CFF] text-white' : 'border-slate-300 bg-transparent'}`}>
+                            {isSelected && <Check className="w-5 h-5 font-bold" />}
+                          </div>
+                          <span className="font-bold text-lg">{isSelected ? t.activeModule : t.addModule}</span>
+                        </div>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+          
+          {/* ======================= THE SUMMARY SLIDE ======================= */}
+          <div className="min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:page-break-before-always">
+             <div 
+               className="w-full max-w-5xl bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200 flex flex-col p-8 md:p-14 print:shadow-none print:border-0 print:p-0"
+             >
+                <div className="text-left mb-12 border-b border-slate-100 pb-8 print:border-slate-300">
+                  <h2 className="text-4xl font-bold text-slate-800 tracking-tight mb-4 flex items-center">
+                    <ListChecks className="w-8 h-8 mr-4 text-[#514690]" /> {t.summaryTitle}
+                  </h2>
+                  <p className="text-lg font-medium text-slate-500">{t.summaryDesc}</p>
+                </div>
+
+                {quote.status === 'ACCEPTED' ? (
+                  <div className="bg-emerald-50 rounded-2xl p-10 text-emerald-700 border border-emerald-100 text-center max-w-xl mx-auto w-full">
+                    <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-emerald-500" />
+                    <h2 className="text-3xl font-bold tracking-tight">{t.processedSuccess}</h2>
+                    <p className="font-medium mt-2">{t.processedDesc}</p>
+                    
+                    <button 
+                      onClick={generateAndDownloadPDF}
+                      className="mt-6 mx-auto bg-white border border-emerald-200 text-emerald-600 hover:bg-emerald-100 px-6 py-3 rounded-xl font-bold flex items-center justify-center transition-colors print:hidden"
+                    >
+                      <Download className="w-5 h-5 mr-2" />
+                      {t.downloadPdf}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-col lg:flex-row gap-16 w-full">
+                    {/* Selected Policies Breakdown */}
+                    <div className="flex-1">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6">
+                        {t.costBreakdown}
+                      </h4>
+                      <div className="space-y-4">
+                        {proposals.map((prop: any, idx: number) => {
+                          if (!selectedModules[idx]) return null;
+                          return (
+                            <div key={idx} className="flex justify-between items-center bg-slate-50 p-5 rounded-xl border border-slate-100 print:bg-white print:border-slate-200">
+                              <div>
+                                <h5 className="font-bold text-slate-800 text-lg">{prop.product}</h5>
+                                {prop.carrier && <p className="text-xs font-semibold text-slate-500 uppercase mt-1 tracking-wider">{prop.carrier}</p>}
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-[#514690] text-xl">${Number(prop.premium).toLocaleString('en-US')}</p>
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {selectedModules.every(v => !v) && (
+                          <div className="text-center p-8 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-semibold text-sm">
+                            No has seleccionado ninguna póliza
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Final Checkout Bar */}
+                    <div className="flex-1 flex flex-col justify-start">
+                      <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm flex flex-col relative print:border-none print:shadow-none print:p-0">
+                        
+                        <p className="text-slate-500 font-bold text-xs tracking-widest uppercase mb-4 text-left">{t.totalInvestment}</p>
+                        <div className="flex items-baseline text-left mb-8">
+                          <span className="text-3xl font-bold text-slate-400 mr-1">$</span>
+                          <p className="text-6xl font-bold text-[#514690] tracking-tight">
+                            {packageTotal.premium.toLocaleString('en-US')}
+                          </p>
+                        </div>
+                        
+                        {packageTotal.monthly > 0 && (
+                          <div className="bg-slate-50 rounded-xl p-5 border border-slate-100 flex flex-col items-start mb-8 print:border-slate-200 print:bg-white">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">{t.option2}</span>
+                            <div className="flex items-baseline">
+                              <span className="font-bold text-2xl text-slate-700">${packageTotal.monthly.toLocaleString('en-US')}</span>
+                              <span className="text-xs font-semibold text-slate-400 ml-2 uppercase tracking-wider">{t.perMonth}</span>
+                            </div>
+                            {packageTotal.downpayment > 0 && (
+                              <span className="text-xs font-medium text-slate-500 mt-2 bg-white px-3 py-1 rounded-md border border-slate-100">
+                                {t.downpayment}{packageTotal.downpayment}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        
+                        <div className="flex flex-col gap-3 print:hidden">
+                          <button 
+                            onClick={handleAccept}
+                            disabled={isAccepting || !selectedModules.some(Boolean)}
+                            className="w-full bg-[#009CFF] hover:bg-[#008AE6] text-white px-8 py-5 rounded-2xl font-bold text-xl transition-all disabled:opacity-50 flex justify-center items-center shadow-md"
+                          >
+                            {isAccepting ? t.processing : t.acceptProposal}
+                          </button>
+                          
+                          <button 
+                            onClick={generateAndDownloadPDF}
+                            className="w-full bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-8 py-4 rounded-2xl font-bold transition-all flex justify-center items-center"
+                          >
+                            <Download className="w-5 h-5 mr-2 text-slate-400" />
+                            {t.downloadPdf}
+                          </button>
+                        </div>
+                        
+                      </div>
+                    </div>
+                  </div>
+                )}
+             </div>
+          </div>
+
+        </div>
+      </div>
+
     </div>
   )
 }

@@ -107,7 +107,9 @@ export async function processMultipleQuotes(
     commission_percentage: number, 
     file_url?: string,
     monthly_payment?: number,
+    downpayment?: number,
     payment_options?: string,
+    is_bundled?: boolean,
     coverages?: string,
     included?: string,
     excluded?: string,
@@ -179,6 +181,42 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   if (commissionPercentage !== undefined) updates.commission_percentage = commissionPercentage
   if (status === 'ACCEPTED') {
     updates.accepted_at = new Date().toISOString()
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .update(updates)
+    .eq("id", quoteId)
+
+  if (error) {
+    console.error("Error updating quote status:", error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath("/quotes")
+  revalidatePath("/")
+  return { success: true }
+}
+
+export async function acceptClientQuote(quoteId: string, soldPremium: number, selectedModules: boolean[]) {
+  const supabase = createClient()
+  
+  // Fetch current quote to update quotes_provided JSON
+  const { data: quote } = await supabase.from("quote_requests").select("quotes_provided").eq("id", quoteId).single()
+  
+  let updatedQuotesProvided = quote?.quotes_provided || []
+  if (Array.isArray(updatedQuotesProvided)) {
+    updatedQuotesProvided = updatedQuotesProvided.map((prop: any, index: number) => ({
+      ...prop,
+      accepted: selectedModules[index] || false
+    }))
+  }
+
+  const updates: any = { 
+    status: 'ACCEPTED',
+    sold_premium: soldPremium,
+    accepted_at: new Date().toISOString(),
+    quotes_provided: updatedQuotesProvided
   }
 
   const { error } = await supabase

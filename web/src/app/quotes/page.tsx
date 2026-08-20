@@ -20,7 +20,8 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null}[]>([])
+  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
+  const [availableCarriers, setAvailableCarriers] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
   const [commissionPercentage, setCommissionPercentage] = useState("")
@@ -55,9 +56,14 @@ export default function QuotesPage() {
       .from("quote_requests")
       .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
       .order("created_at", { ascending: false })
+      
+    const { data: carriersData } = await supabase.from('appetite_matrix').select('carrier_name').eq('status', 'ELIGIBLE').limit(500)
+    if (carriersData) {
+      setAvailableCarriers(Array.from(new Set(carriersData.map(c => c.carrier_name))).sort())
+    }
     
     if (data) {
-      setQuotes(data.filter((q: any) => !['QUOTED', 'ACCEPTED', 'REJECTED'].includes(q.status)))
+      setQuotes(data.filter((q: any) => !['ACCEPTED', 'REJECTED'].includes(q.status)))
     }
     setLoading(false)
   }
@@ -87,7 +93,12 @@ export default function QuotesPage() {
   const handleProcessSubmit = async () => {
     if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
-      if (!p.premium || !p.commission_percentage || !p.carrier) return toast.error("Completa Aseguradora, prima y % de comisión para todas las propuestas")
+      if (!p.carrier || !p.commission_percentage) return toast.error("Completa Aseguradora y % de comisión para todas las propuestas")
+      if (!p.is_bundled) {
+        if (!p.is_annual && !p.is_monthly) return toast.error("Debes seleccionar al menos una opción de pago (Anual o Mensual) para productos principales")
+        if (p.is_annual && !p.premium) return toast.error("Ingresa la Prima Total para la opción de Pago Anual")
+        if (p.is_monthly && !p.monthly_payment) return toast.error("Ingresa el Pago Mensual para la opción de Pago Mensual")
+      }
     }
     
     setIsUploading(true)
@@ -119,8 +130,10 @@ export default function QuotesPage() {
           carrier: p.carrier,
           premium: parseFloat(p.premium),
           commission_percentage: parseFloat(p.commission_percentage),
-          monthly_payment: p.monthly_payment ? parseFloat(p.monthly_payment) : undefined,
-          payment_options: p.payment_options,
+          monthly_payment: p.monthly_payment && !p.is_bundled ? parseFloat(p.monthly_payment) : undefined,
+          downpayment: p.downpayment && !p.is_bundled ? parseFloat(p.downpayment) : undefined,
+          payment_options: p.is_bundled ? "Incluido en Paquete Principal" : p.payment_options,
+          is_bundled: p.is_bundled,
           coverages: p.coverages,
           included: p.included,
           excluded: p.excluded,
@@ -335,7 +348,7 @@ export default function QuotesPage() {
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
-                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null })) || [])
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
@@ -415,7 +428,7 @@ export default function QuotesPage() {
                           <button 
                             onClick={() => {
                               setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null })) || [])
+                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                             }}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                           >
@@ -851,8 +864,7 @@ export default function QuotesPage() {
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Aseguradora</label>
-                      <input 
-                        type="text" 
+                      <select 
                         value={prop.carrier} 
                         onChange={e => {
                           const next = [...proposals]
@@ -860,24 +872,135 @@ export default function QuotesPage() {
                           setProposals(next)
                         }}
                         className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        placeholder="Ej. Progressive"
-                      />
+                      >
+                        <option value="">Seleccionar Aseguradora...</option>
+                        {availableCarriers.map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    
+                    <div className="md:col-span-2 mt-2">
+                      <label className="flex items-center gap-2 p-3 bg-emerald-500/10 text-emerald-700 rounded-lg cursor-pointer font-medium text-sm border border-emerald-500/20">
+                        <input 
+                          type="checkbox" 
+                          checked={prop.is_bundled || false}
+                          onChange={e => {
+                            const next = [...proposals]
+                            next[idx].is_bundled = e.target.checked
+                            if (e.target.checked) {
+                              next[idx].premium = ""
+                              next[idx].monthly_payment = ""
+                              next[idx].downpayment = ""
+                            }
+                            setProposals(next)
+                          }}
+                          className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-600 h-5 w-5"
+                        />
+                        Cotización en Conjunto (Bundle)
+                        <span className="text-xs font-normal text-emerald-600/80 ml-auto hidden sm:block">
+                          Agrupa el precio de este producto con el paquete principal
+                        </span>
+                      </label>
                     </div>
 
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima Total ($)</label>
-                      <input 
-                        type="number" 
-                        value={prop.premium} 
-                        onChange={e => {
-                          const next = [...proposals]
-                          next[idx].premium = e.target.value
-                          setProposals(next)
-                        }}
-                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        placeholder="0.00"
-                      />
+                    {!prop.is_bundled ? (
+                      <div className="md:col-span-2 pt-2 border-t border-border mt-2">
+                        <label className="text-xs font-medium text-muted-foreground mb-3 block">Opciones de Pago</label>
+                        <div className="flex gap-6 mb-4">
+                          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={prop.is_annual || false}
+                              onChange={e => {
+                                const next = [...proposals];
+                                next[idx].is_annual = e.target.checked;
+                                const opts = [];
+                                if (next[idx].is_annual) opts.push("Pago Anual");
+                                if (next[idx].is_monthly) opts.push("Pago Mensual");
+                                next[idx].payment_options = opts.join(" o ");
+                                setProposals(next);
+                              }}
+                              className="rounded border-input text-[#009CFF] focus:ring-[#009CFF] h-4 w-4"
+                            />
+                            Pago Anual
+                          </label>
+                          <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
+                            <input 
+                              type="checkbox" 
+                              checked={prop.is_monthly || false}
+                              onChange={e => {
+                                const next = [...proposals];
+                                next[idx].is_monthly = e.target.checked;
+                                const opts = [];
+                                if (next[idx].is_annual) opts.push("Pago Anual");
+                                if (next[idx].is_monthly) opts.push("Pago Mensual");
+                                next[idx].payment_options = opts.join(" o ");
+                                setProposals(next);
+                              }}
+                              className="rounded border-input text-[#009CFF] focus:ring-[#009CFF] h-4 w-4"
+                            />
+                            Pago Mensual
+                          </label>
+                        </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {prop.is_annual && (
+                          <div>
+                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima Total ($)</label>
+                            <input 
+                              type="number" 
+                              value={prop.premium} 
+                              onChange={e => {
+                                const next = [...proposals]
+                                next[idx].premium = e.target.value
+                                setProposals(next)
+                              }}
+                              className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                              placeholder="Ej. 1200.00"
+                            />
+                          </div>
+                        )}
+                        {prop.is_monthly && (
+                          <div className="flex gap-4">
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-muted-foreground mb-1 block">Enganche ($)</label>
+                              <input 
+                                type="number" 
+                                value={prop.downpayment || ""} 
+                                onChange={e => {
+                                  const next = [...proposals]
+                                  next[idx].downpayment = e.target.value
+                                  setProposals(next)
+                                }}
+                                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                placeholder="Ej. 200.00"
+                              />
+                            </div>
+                            <div className="flex-1">
+                              <label className="text-xs font-medium text-muted-foreground mb-1 block">Pago Mensual ($)</label>
+                              <input 
+                                type="number" 
+                                value={prop.monthly_payment} 
+                                onChange={e => {
+                                  const next = [...proposals]
+                                  next[idx].monthly_payment = e.target.value
+                                  setProposals(next)
+                                }}
+                                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                                placeholder="Ej. 100.00"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+                    ) : (
+                      <div className="md:col-span-2 py-4 flex items-center justify-center border border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-lg">
+                        <p className="text-sm font-medium text-emerald-600">
+                          El precio de este producto está incluido en el paquete principal.
+                        </p>
+                      </div>
+                    )}
+                    
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">% Comisión (Interno)</label>
                       <input 
@@ -890,35 +1013,6 @@ export default function QuotesPage() {
                         }}
                         className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                         placeholder="0.00"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Pago Mensual ($) (Opcional)</label>
-                      <input 
-                        type="number" 
-                        value={prop.monthly_payment} 
-                        onChange={e => {
-                          const next = [...proposals]
-                          next[idx].monthly_payment = e.target.value
-                          setProposals(next)
-                        }}
-                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        placeholder="0.00"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Opciones de Pago</label>
-                      <input 
-                        type="text" 
-                        value={prop.payment_options} 
-                        onChange={e => {
-                          const next = [...proposals]
-                          next[idx].payment_options = e.target.value
-                          setProposals(next)
-                        }}
-                        className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        placeholder="Ej. Pago Anual o 12 Mensualidades"
                       />
                     </div>
                     
@@ -999,7 +1093,7 @@ export default function QuotesPage() {
               ))}
               
               <button 
-                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null }])}
+                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />
