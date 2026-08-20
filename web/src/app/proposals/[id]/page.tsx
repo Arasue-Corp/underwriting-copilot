@@ -320,7 +320,7 @@ export default function ProposalCarouselPage() {
       
       // 5. Save and Download
       const pdfBytes = await pdfDoc.save();
-      const finalBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+      const finalBlob = new Blob([pdfBytes as any], { type: 'application/pdf' });
       const url = URL.createObjectURL(finalBlob);
       
       const a = document.createElement('a');
