@@ -199,7 +199,7 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
 }
 
 export async function acceptClientQuote(quoteId: string, soldPremium: number, selectedModules: boolean[]) {
-  const supabase = createClient()
+  const supabase = await createClient()
   
   // Fetch current quote to update quotes_provided JSON
   const { data: quote } = await supabase.from("quote_requests").select("quotes_provided").eq("id", quoteId).single()
