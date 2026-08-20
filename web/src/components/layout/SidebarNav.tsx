@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Home, Search, FileText, Users, Database, Building2, ShieldCheck, Layers } from "lucide-react"
+import { Home, Search, FileText, Users, Database, Building2, ShieldCheck, Layers, Calendar } from "lucide-react"
 
 export default function SidebarNav({ role, t }: { role: string, t: any }) {
   const pathname = usePathname()
@@ -57,6 +57,12 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
         <Link href="/clients" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/clients")}`}>
           <Users className={`h-4 w-4 ${getIconClasses("/clients")}`} />
           {t.clients}
+        </Link>
+      </li>
+      <li>
+        <Link href="/visits" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/visits")}`}>
+          <Calendar className={`h-4 w-4 ${getIconClasses("/visits")}`} />
+          {t.visits}
         </Link>
       </li>
       {role === 'ADMIN' && (

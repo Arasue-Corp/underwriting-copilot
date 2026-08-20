@@ -1,0 +1,157 @@
+"use server"
+
+import { createClient } from "@/lib/supabase/server"
+import { revalidatePath } from "next/cache"
+
+// Create a new visit / task
+export async function createVisit(data: any) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) throw new Error("Perfil no encontrado")
+
+    let clientId = data.client_id
+
+    // Si viene información de un nuevo cliente, lo creamos primero
+    if (!clientId && data.new_client_name) {
+      const { data: newClient, error: clientError } = await supabase
+        .from('clients')
+        .insert({
+          agency_id: profile.agency_id,
+          name: data.new_client_name,
+          address: data.new_client_address || null,
+          contact: data.new_client_contact || null
+        })
+        .select('id')
+        .single()
+
+      if (clientError) throw new Error("Error al crear el nuevo cliente: " + clientError.message)
+      clientId = newClient.id
+    }
+
+    if (!clientId) throw new Error("Se requiere un cliente para registrar la visita")
+
+    // Eliminar los campos extra antes de insertar en visits
+    const { new_client_name, new_client_address, new_client_contact, ...visitData } = data
+
+    const { error } = await supabase.from('visits').insert({
+      ...visitData,
+      client_id: clientId,
+      created_by: user.id,
+      agency_id: profile.agency_id
+    })
+
+    if (error) throw error
+
+    revalidatePath('/visits')
+    revalidatePath('/clients')
+    if (clientId) revalidatePath(`/clients/${clientId}`)
+    
+    return { success: true }
+  } catch (error: any) {
+    console.error("Error creating visit:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+// Update a visit (status, assignation, notes)
+export async function updateVisit(id: string, data: any) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
+
+    const { error } = await supabase
+      .from('visits')
+      .update(data)
+      .eq('id', id)
+
+    if (error) throw error
+
+    revalidatePath('/visits')
+    revalidatePath('/clients')
+    return { success: true }
+  } catch (error: any) {
+    console.error("Error updating visit:", error)
+    return { success: false, error: error.message }
+  }
+}
+
+// Get visits for the CRM view
+export async function getVisits() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role, agency_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) return []
+
+    let query = supabase
+      .from('visits')
+      .select(`
+        *,
+        client:clients(name, address, logo_url),
+        assignee:profiles!visits_assigned_to_fkey(name, email),
+        creator:profiles!visits_created_by_fkey(name, email)
+      `)
+      .order('created_at', { ascending: false })
+
+    if (profile.role === 'AGENT') {
+      // Agents see what they created or what is assigned to them
+      query = query.or(`created_by.eq.${user.id},assigned_to.eq.${user.id}`)
+    } else if (profile.role === 'MANAGER') {
+      // Managers see everything in their agency
+      query = query.eq('agency_id', profile.agency_id)
+    }
+
+    const { data, error } = await query
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error getting visits:", error)
+    return []
+  }
+}
+
+export async function getAgencyAgents() {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('agency_id')
+      .eq('id', user.id)
+      .single()
+
+    if (!profile) return []
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, name, email, role')
+      .eq('agency_id', profile.agency_id)
+      .order('name')
+
+    if (error) throw error
+    return data || []
+  } catch (error) {
+    console.error("Error getting agents:", error)
+    return []
+  }
+}

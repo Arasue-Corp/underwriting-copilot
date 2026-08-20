@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Menu, X, Home, Search, FileText, Database, Building2, ShieldCheck, Users, Settings, Layers } from "lucide-react"
+import { Menu, X, Home, Search, FileText, Database, Building2, ShieldCheck, Users, Settings, Layers, Calendar } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 export default function MobileNav({ role, t }: { role: string, t: any }) {
@@ -96,6 +96,12 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
               <Link href="/clients" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/clients")}`}>
                 <Users className="h-5 w-5" />
                 {t.clients}
+              </Link>
+            </li>
+            <li>
+              <Link href="/visits" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/visits")}`}>
+                <Calendar className="h-5 w-5" />
+                {t.visits}
               </Link>
             </li>
             {role === 'ADMIN' && (
