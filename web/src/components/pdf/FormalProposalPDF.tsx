@@ -25,12 +25,6 @@ Font.register({
 });
 
 const styles = StyleSheet.create({
-  page: {
-    padding: 40,
-    fontFamily: 'Inter',
-    backgroundColor: '#ffffff',
-    color: '#334155', // slate-700
-  },
   coverPage: {
     fontFamily: 'Inter',
     backgroundColor: '#0B1120',
@@ -115,6 +109,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     fontFamily: 'Inter',
     backgroundColor: '#ffffff',
+    color: '#334155', // slate-700
   },
   header: {
     fontSize: 20,

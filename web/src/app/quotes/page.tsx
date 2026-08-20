@@ -24,7 +24,7 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
+  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
   const [availableCarriers, setAvailableCarriers] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
