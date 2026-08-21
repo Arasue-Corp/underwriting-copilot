@@ -113,12 +113,17 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
           </div>
           <div>
             <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.legalStructureLabel}</label>
-            <input 
-              type="text" 
+            <select 
               className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
               value={formData.legal_structure} 
               onChange={e => setFormData({...formData, legal_structure: e.target.value})} 
-            />
+            >
+              <option value="">{lang === 'es' ? 'Seleccionar...' : 'Select...'}</option>
+              {(lang === 'es' 
+                ? ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra']
+                : ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
+              ).map(opt => <option key={opt} value={opt}>{opt}</option>)}
+            </select>
           </div>
           <div>
             <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.feinLabel}</label>

@@ -351,7 +351,13 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
                     <label className="text-sm font-medium">
                       {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
                     </label>
-                    {renderField({ id: 'general_legal_structure', type: 'text', required: true })}
+                    {renderField({ 
+                      id: 'general_legal_structure', 
+                      type: 'select', 
+                      required: true,
+                      options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
+                      optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
+                    })}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">FEIN</label>
