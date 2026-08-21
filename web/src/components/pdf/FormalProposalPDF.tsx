@@ -288,10 +288,26 @@ interface FormalProposalPDFProps {
 
 export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: FormalProposalPDFProps) => {
   const proposals = quote?.quotes_provided || [];
-  const lastSelectedIdx = proposals.reduce((last: number, _p: any, idx: number) => selectedModules[idx] ? idx : last, -1);
   
-  const packageTotal = proposals.reduce((acc: any, prop: any, idx: number) => {
-    if (selectedModules[idx] && !prop.is_bundled) {
+  const groupedProposals: any[] = [];
+  proposals.forEach((prop: any, idx: number) => {
+    if (!selectedModules[idx]) return;
+    const existing = groupedProposals.find(g => g.product.trim().toLowerCase() === prop.product.trim().toLowerCase());
+    if (existing) {
+      existing.options.push({ ...prop, originalIdx: idx });
+    } else {
+      groupedProposals.push({
+        product: prop.product,
+        options: [{ ...prop, originalIdx: idx }]
+      });
+    }
+  });
+
+  const lastSelectedIdx = groupedProposals.length - 1;
+  
+  const packageTotal = groupedProposals.reduce((acc, group) => {
+    const prop = group.options[0]; // For total, assume option 1
+    if (!prop.is_bundled) {
       acc.premium += Number(prop.premium || 0);
       acc.monthly += Number(prop.monthly_payment || 0);
     }
@@ -360,23 +376,42 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
           </View>
 
           <Text style={styles.header}>Selected Policies Breakdown</Text>
-          {proposals.map((prop: any, idx: number) => {
-            if (!selectedModules[idx]) return null;
+          {groupedProposals.map((group: any, idx: number) => {
+            const isMulti = group.options.length > 1;
+            const prop = group.options[0];
             return (
               <View key={idx} style={styles.policyBox} wrap={false}>
                 {prop.is_bundled && <Text style={styles.badge}>INTEGRATED BUNDLE</Text>}
                 <View style={styles.tableRow}>
                   <View style={{ width: '70%' }}>
-                    <Text style={styles.policyTitle}>{prop.product}</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
-                      {prop.carrierLogo && <Image src={prop.carrierLogo} style={{ height: 12, objectFit: 'contain', marginRight: 4 }} />}
-                      {prop.carrier && <Text style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>{prop.carrier}</Text>}
-                    </View>
+                    <Text style={styles.policyTitle}>{group.product}</Text>
+                    
+                    {!isMulti && (
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 2 }}>
+                        {prop.carrierLogo && <Image src={prop.carrierLogo} style={{ height: 12, objectFit: 'contain', marginRight: 4 }} />}
+                        {prop.carrier && <Text style={{ fontSize: 9, color: '#64748b', textTransform: 'uppercase' }}>{prop.carrier}</Text>}
+                      </View>
+                    )}
+                    
+                    {isMulti && (
+                      <View style={{ marginTop: 4 }}>
+                        {group.options.map((opt: any, i: number) => (
+                          <Text key={i} style={{ fontSize: 9, color: '#64748b', marginBottom: 2 }}>
+                            Option {i + 1}: {opt.carrier} - ${Number(opt.premium).toLocaleString('en-US')}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
                   </View>
                   <View style={{ width: '30%', textAlign: 'right' }}>
-                    {!prop.is_bundled && (
+                    {!prop.is_bundled && !isMulti && (
                       <Text style={{ fontSize: 14, fontWeight: 'bold', color: '#334155' }}>
                         ${Number(prop.premium).toLocaleString('en-US')}
+                      </Text>
+                    )}
+                    {!prop.is_bundled && isMulti && (
+                      <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#514690' }}>
+                        Multiple Options
                       </Text>
                     )}
                   </View>
@@ -402,9 +437,9 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
       </Page>
 
       {/* 3. POLICY DETAILS (COVERAGES, INCLUSIONS, EXCLUSIONS) */}
-      {proposals.map((prop: any, idx: number) => {
-        if (!selectedModules[idx]) return null;
-        
+      {groupedProposals.map((group: any, idx: number) => {
+        const isMulti = group.options.length > 1;
+
         return (
           <Page key={idx} size="LETTER" style={styles.page}>
             {/* HEADER */}
@@ -416,61 +451,81 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
             </View>
 
             <View style={styles.contentContainer}>
-              <Text style={styles.header}>{prop.product}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-                {prop.carrierLogo && <Image src={prop.carrierLogo.startsWith('http') ? prop.carrierLogo : `${baseUrl}${prop.carrierLogo}`} style={{ height: 16, objectFit: 'contain', marginRight: 6 }} />}
-                {prop.carrier && <Text style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>CARRIER: {prop.carrier}</Text>}
-              </View>
-
+              <Text style={styles.header}>{group.product}</Text>
+              {group.options[0]?.description && <Text style={{ fontSize: 11, color: '#475569', marginBottom: 15, lineHeight: 1.4 }}>{group.options[0].description}</Text>}
+              
               <View style={{ backgroundColor: '#f0f9ff', padding: 12, borderRadius: 6, marginBottom: 20, alignItems: 'center' }}>
                 <Text style={{ fontSize: 11, fontWeight: 'bold', color: '#009CFF', textTransform: 'uppercase', letterSpacing: 1 }}>
                   PREPARED EXCLUSIVELY FOR {quote.client_name}
                 </Text>
               </View>
 
-              {/* Coverages / Limits */}
-              {prop.coverages && (
-                <View wrap={false} style={{ marginBottom: 20 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#009CFF', marginBottom: 10 }}>LIMITS STRUCTURE</Text>
-                  <View style={styles.policyBox}>
-                    {prop.coverages.split('|').map((cov: string, i: number) => {
-                      const parts = cov.split(':');
-                      const name = parts[0];
-                      const value = parts.slice(1).join(':').trim();
-                      return (
-                        <View key={i} style={{ ...styles.tableRow, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, marginBottom: 5 }}>
-                          <Text style={styles.tableColLeft}>{name.trim()}</Text>
-                          <Text style={styles.tableColRight}>{value || 'Included'}</Text>
+              <View style={{ flexDirection: 'column', gap: isMulti ? 30 : 0 }}>
+                {group.options.map((prop: any, optIdx: number) => (
+                  <View key={optIdx} style={{ paddingTop: optIdx > 0 ? 20 : 0, borderTopWidth: optIdx > 0 ? 2 : 0, borderTopColor: '#e2e8f0' }}>
+                    {isMulti && (
+                      <Text style={{ fontSize: 16, fontWeight: 'bold', color: '#514690', marginBottom: 15, paddingBottom: 5, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' }}>
+                        Option {optIdx + 1}
+                      </Text>
+                    )}
+                    
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: isMulti ? 10 : 20 }}>
+                      {prop.carrierLogo && <Image src={prop.carrierLogo.startsWith('http') ? prop.carrierLogo : `${baseUrl}${prop.carrierLogo}`} style={{ height: 30, objectFit: 'contain', marginRight: 8 }} />}
+                      {prop.carrier && <Text style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase' }}>CARRIER: {prop.carrier}</Text>}
+                    </View>
+
+                    {isMulti && !prop.is_bundled && (
+                      <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#334155', marginBottom: 15 }}>
+                        Premium: ${Number(prop.premium).toLocaleString('en-US')}
+                      </Text>
+                    )}
+
+                    {/* Coverages / Limits */}
+                    {prop.coverages && (
+                      <View wrap={false} style={{ marginBottom: 20 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#009CFF', marginBottom: 10 }}>LIMITS STRUCTURE</Text>
+                        <View style={styles.policyBox}>
+                          {prop.coverages.split('|').map((cov: string, i: number) => {
+                            const parts = cov.split(':');
+                            const name = parts[0];
+                            const value = parts.slice(1).join(':').trim();
+                            return (
+                              <View key={i} style={{ ...styles.tableRow, borderBottomWidth: 1, borderBottomColor: '#f1f5f9', paddingBottom: 5, marginBottom: 5 }}>
+                                <Text style={styles.tableColLeft}>{name.trim()}</Text>
+                                <Text style={styles.tableColRight}>{value || 'Included'}</Text>
+                              </View>
+                            );
+                          })}
                         </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              )}
+                      </View>
+                    )}
 
-              {/* Included */}
-              {prop.included && (
-                <View wrap={false} style={{ marginBottom: 20 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#10b981', marginBottom: 10 }}>INCLUDED BENEFITS</Text>
-                  <View style={styles.policyBox}>
-                    {prop.included.split('|').map((inc: string, i: number) => (
-                      <Text key={i} style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>• {inc.trim()}</Text>
-                    ))}
-                  </View>
-                </View>
-              )}
+                    {/* Included */}
+                    {prop.included && (
+                      <View wrap={false} style={{ marginBottom: 20 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#10b981', marginBottom: 10 }}>INCLUDED BENEFITS</Text>
+                        <View style={styles.policyBox}>
+                          {prop.included.split('|').map((inc: string, i: number) => (
+                            <Text key={i} style={{ fontSize: 10, color: '#475569', marginBottom: 4 }}>• {inc.trim()}</Text>
+                          ))}
+                        </View>
+                      </View>
+                    )}
 
-              {/* Excluded */}
-              {prop.excluded && (
-                <View wrap={false} style={{ marginBottom: 20 }}>
-                  <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', marginBottom: 10 }}>PRIMARY EXCLUSIONS</Text>
-                  <View style={styles.policyBox}>
-                    {prop.excluded.split('|').map((exc: string, i: number) => (
-                      <Text key={i} style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>• {exc.trim()}</Text>
-                    ))}
+                    {/* Excluded */}
+                    {prop.excluded && (
+                      <View wrap={false} style={{ marginBottom: 20 }}>
+                        <Text style={{ fontSize: 12, fontWeight: 'bold', color: '#64748b', marginBottom: 10 }}>PRIMARY EXCLUSIONS</Text>
+                        <View style={styles.policyBox}>
+                          {prop.excluded.split('|').map((exc: string, i: number) => (
+                            <Text key={i} style={{ fontSize: 10, color: '#94a3b8', marginBottom: 4 }}>• {exc.trim()}</Text>
+                          ))}
+                        </View>
+                      </View>
+                    )}
                   </View>
-                </View>
-              )}
+                ))}
+              </View>
               
               {/* Final Signature on the Last Page */}
               {idx === lastSelectedIdx && (

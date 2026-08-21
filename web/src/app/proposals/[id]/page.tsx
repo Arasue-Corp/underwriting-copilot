@@ -212,6 +212,28 @@ export default function ProposalCarouselPage() {
     }
   }[lang]
 
+  
+  useEffect(() => {
+    if (!carouselRef.current) return;
+    
+    // We observe all slides. If a slide becomes fully visible, we scroll the window to the top.
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      });
+    }, {
+      root: carouselRef.current,
+      threshold: 0.6
+    });
+
+    const slides = document.querySelectorAll('.slide-container');
+    slides.forEach(slide => observer.observe(slide));
+
+    return () => observer.disconnect();
+  }, [quote, selectedModules]);
+
   useEffect(() => {
     const fetchQuote = async () => {
       const { data } = await supabase
@@ -222,7 +244,16 @@ export default function ProposalCarouselPage() {
         
       if (data) {
         setQuote(data)
-        setSelectedModules(new Array(data.quotes_provided?.length || 0).fill(true))
+        const initialSelected = new Array(data.quotes_provided?.length || 0).fill(false);
+        const seenProducts = new Set();
+        data.quotes_provided?.forEach((prop: any, idx: number) => {
+          const productKey = prop.product.trim().toLowerCase();
+          if (!seenProducts.has(productKey)) {
+            seenProducts.add(productKey);
+            initialSelected[idx] = true;
+          }
+        });
+        setSelectedModules(initialSelected);
       }
 
       const { data: carriersData } = await supabase.from('carriers').select('name, logo_url')
@@ -246,7 +277,21 @@ export default function ProposalCarouselPage() {
   }, [id])
 
   const proposals = quote?.quotes_provided || []
-  const totalSlides = proposals.length + 1 
+  
+  const groupedProposals: any[] = [];
+  proposals.forEach((prop: any, idx: number) => {
+    const existing = groupedProposals.find(g => g.product.trim().toLowerCase() === prop.product.trim().toLowerCase());
+    if (existing) {
+      existing.options.push({ ...prop, originalIdx: idx });
+    } else {
+      groupedProposals.push({
+        product: prop.product,
+        options: [{ ...prop, originalIdx: idx }]
+      });
+    }
+  });
+
+  const totalSlides = groupedProposals.length + 1 
 
   const handleScroll = () => {
     if (carouselRef.current) {
@@ -256,11 +301,12 @@ export default function ProposalCarouselPage() {
     }
   }
 
-  const packageTotal = proposals.reduce((acc: any, prop: any, idx: number) => {
-    if (selectedModules[idx] && !prop.is_bundled) {
-      acc.premium += Number(prop.premium || 0)
-      acc.monthly += Number(prop.monthly_payment || 0)
-      acc.downpayment += Number(prop.downpayment || 0)
+  const packageTotal = groupedProposals.reduce((acc: any, group: any) => {
+    const selectedOpt = group.options.find((o: any) => selectedModules[o.originalIdx]);
+    if (selectedOpt && !selectedOpt.is_bundled) {
+      acc.premium += Number(selectedOpt.premium || 0)
+      acc.monthly += Number(selectedOpt.monthly_payment || 0)
+      acc.downpayment += Number(selectedOpt.downpayment || 0)
     }
     return acc
   }, { premium: 0, monthly: 0, downpayment: 0 })
@@ -398,7 +444,8 @@ export default function ProposalCarouselPage() {
           )}
           
           <h1 className="text-5xl md:text-7xl font-bold text-slate-800 leading-tight tracking-tight mb-8">
-            {t.coverTitle} <span className="text-[#514690]">{quote.client_name.split(' ')[0]}</span>!
+            {t.coverTitle} <br />
+            <span className="text-[#514690]">{quote.client_name}!</span>
           </h1>
           
           <p className="text-xl md:text-2xl font-medium text-slate-500 leading-relaxed mb-16 max-w-2xl mx-auto">
@@ -463,11 +510,13 @@ export default function ProposalCarouselPage() {
           onScroll={handleScroll}
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          {proposals.map((prop: any, idx: number) => {
-            const isSelected = selectedModules[idx]
+          {groupedProposals.map((group: any, idx: number) => {
+            const isSelected = group.options.some((o: any) => selectedModules[o.originalIdx]);
+            const isMulti = group.options.length > 1;
+            const prop = group.options[0]; // For generic fields like carrier if not multi
 
             return (
-              <div key={idx} className="min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:mb-16 print:break-inside-avoid">
+              <div key={idx} className="slide-container min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:mb-16 print:break-inside-avoid">
                 <div 
                   className={`w-full max-w-5xl bg-white rounded-3xl overflow-hidden transition-all duration-300 border print:border-slate-300 print:shadow-none print:rounded-lg ${isSelected ? 'border-slate-200 shadow-xl shadow-slate-200/50' : 'border-slate-100 shadow-sm opacity-60 grayscale-[0.2] scale-[0.98] print:opacity-100 print:grayscale-0 print:scale-100'}`}
                 >
@@ -477,8 +526,7 @@ export default function ProposalCarouselPage() {
                     
                     <div className="flex-1">
                       <div className="flex items-end mb-4 gap-3">
-                        {prop.carrier ? (
-                          // eslint-disable-next-line @next/next/no-img-element
+                        {!isMulti && prop.carrier ? (
                           <img 
                             src={(carriersMap[prop.carrier]?.trim() ? carriersMap[prop.carrier] : getCarrierLogo(prop.carrier)) || ""} 
                             alt={prop.carrier}
@@ -489,7 +537,7 @@ export default function ProposalCarouselPage() {
                             }}
                           />
                         ) : null}
-                        {prop.carrier && (
+                        {!isMulti && prop.carrier && (
                           <span className="hidden text-sm font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">
                             {prop.carrier}
                           </span>
@@ -497,35 +545,64 @@ export default function ProposalCarouselPage() {
                       </div>
                       
                       <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
-                        {prop.product}
+                        {group.product}
                       </h2>
                     </div>
 
                     {/* Price Block (Clean typography) */}
-                    <div className="flex-1 flex flex-col md:items-end text-left md:text-right mt-4 md:mt-0">
-                      {prop.is_bundled ? (
-                        <div className="bg-[#514690]/5 text-[#514690] px-5 py-2 rounded-full font-bold text-sm tracking-widest border border-[#514690]/10">
-                          {t.includedInBundle}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col md:items-end">
-                          <div className="flex items-baseline text-slate-800">
-                            <span className="text-2xl font-semibold mr-1 text-slate-400">$</span>
-                            <span className="font-bold text-4xl md:text-5xl tracking-tight">
-                              {Number(prop.premium).toLocaleString('en-US')}
-                            </span>
-                          </div>
-                          <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1 mb-4">{t.payInFull}</span>
-                          
-                          {prop.monthly_payment && (
-                            <div className="text-sm font-semibold text-slate-500 flex items-center md:justify-end gap-2">
-                              <span>{t.or}</span>
-                              <span className="font-bold text-[#009CFF]">${prop.monthly_payment}</span>
-                              <span>{t.perMonth}</span>
+                    <div className="flex-1 flex flex-col md:items-end text-left md:text-right mt-4 md:mt-0 gap-6">
+                      {group.options.map((opt: any, optIdx: number) => (
+                        <div key={optIdx} className="w-full flex flex-col md:items-end">
+                          {opt.is_bundled ? (
+                            <div className="bg-[#514690]/5 text-[#514690] px-5 py-2 rounded-full font-bold text-sm tracking-widest border border-[#514690]/10">
+                              {t.includedInBundle}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col md:items-end w-full">
+                              {isMulti && (
+                                <div className="flex items-center justify-end w-full mb-2 gap-2">
+                                  <span className="bg-slate-100 px-3 py-1 rounded-md text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                    {lang === 'es' ? 'Opción' : 'Option'} {optIdx + 1}
+                                  </span>
+                                  {opt.carrier && (
+                                    <div className="flex items-center gap-2">
+                                      {(carriersMap[opt.carrier]?.trim() || opt.carrierLogo) && (
+                                        <img 
+                                          src={carriersMap[opt.carrier]?.trim() ? carriersMap[opt.carrier] : (opt.carrierLogo?.startsWith('http') ? opt.carrierLogo : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/logos/${opt.carrierLogo}`)} 
+                                          alt={opt.carrier}
+                                          className="h-8 object-contain mix-blend-multiply opacity-80"
+                                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                                        />
+                                      )}
+                                      <span className="text-sm font-bold text-[#514690] uppercase tracking-widest">{opt.carrier}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              <div className="flex items-baseline text-slate-800">
+                                <span className="text-2xl font-semibold mr-1 text-slate-400">$</span>
+                                <span className="font-bold text-4xl md:text-5xl tracking-tight">
+                                  {Number(opt.premium).toLocaleString('en-US')}
+                                </span>
+                              </div>
+                              <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1 mb-4">{t.payInFull}</span>
+                              
+                              {opt.monthly_payment && (
+                                <div className="text-sm font-semibold text-slate-500 flex flex-col md:items-end gap-1">
+                                  <div className="flex items-center md:justify-end gap-2">
+                                    <span>{t.or}</span>
+                                    <span className="font-bold text-[#009CFF]">${opt.monthly_payment}</span>
+                                    <span>{t.perMonth}</span>
+                                  </div>
+                                  {Number(opt.downpayment || 0) > 0 && (
+                                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">{t.downpayment}{Number(opt.downpayment).toLocaleString('en-US')}</span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
-                      )}
+                      ))}
                     </div>
                   </div>
 
@@ -537,109 +614,121 @@ export default function ProposalCarouselPage() {
                       {t.preparedExclusivelyFor} {quote.client_name}
                     </div>
 
-                    {/* Coverages: Azul Alex AI (#009CFF) */}
-                    {prop.coverages && (
-                      <div className="mb-12">
-                        <h4 className="text-xs font-bold text-[#009CFF] uppercase tracking-widest mb-6 flex items-center">
-                          <Shield className="w-4 h-4 mr-2" /> {t.coveragesTitle}
-                        </h4>
-                        
-                        <div className="relative overflow-hidden bg-gradient-to-br from-[#009CFF] via-[#008AE6] to-[#005B99] rounded-[2rem] p-6 md:p-8 shadow-2xl text-white print:bg-[#009CFF] print:text-white print:break-inside-avoid print:shadow-none">
-                          {/* Decorative Inner Backgrounds */}
-                          <div className="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white opacity-10 blur-3xl pointer-events-none"></div>
-                          <div className="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-black opacity-15 blur-2xl pointer-events-none"></div>
-                          <Shield className="absolute -right-12 -bottom-12 w-72 h-72 text-white opacity-5 pointer-events-none rotate-12" />
+                    <div className={`flex flex-col ${isMulti ? 'xl:flex-row gap-8 xl:gap-12' : 'gap-12'}`}>
+                      {group.options.map((opt: any, optIdx: number) => (
+                        <div key={optIdx} className="flex-1 bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-slate-100">
+                          {isMulti && (
+                            <h3 className="text-xl font-black text-slate-800 mb-8 pb-4 border-b-2 border-slate-100 flex items-center justify-between">
+                              <span>{lang === 'es' ? 'Opción' : 'Option'} {optIdx + 1}</span>
+                              {opt.carrier && <span className="text-sm font-bold text-[#514690] uppercase tracking-widest">{opt.carrier}</span>}
+                            </h3>
+                          )}
 
-                          <div className="relative z-10 flex flex-col gap-3 md:gap-4">
-                            {prop.coverages.split('|').map((cov: string, i: number) => {
-                              const parts = cov.split(':');
-                              const name = parts[0];
-                              const value = parts.slice(1).join(':').trim();
+                          {/* Coverages */}
+                          {opt.coverages && (
+                            <div className="mb-12">
+                              <h4 className="text-xs font-bold text-[#009CFF] uppercase tracking-widest mb-6 flex items-center">
+                                <Shield className="w-4 h-4 mr-2" /> {t.coveragesTitle}
+                              </h4>
                               
-                              return (
-                                <div key={i} className="flex flex-col lg:flex-row lg:items-center justify-between bg-white/10 hover:bg-white/20 transition-colors border border-white/20 rounded-2xl p-5 backdrop-blur-md shadow-sm">
-                                  <div className="flex items-center mb-3 lg:mb-0 lg:pr-6 lg:w-[50%]">
-                                    <div className="bg-white/20 p-2.5 rounded-xl mr-4 shrink-0 shadow-inner">
-                                      <Shield className="w-5 h-5 text-white" />
-                                    </div>
-                                    <span className="font-bold text-white text-base md:text-lg leading-tight">{name.trim()}</span>
-                                  </div>
-                                  
-                                  {value ? (
-                                    <div className="lg:w-[50%] lg:text-right">
-                                      <span className="font-black text-white text-lg md:text-xl drop-shadow-sm">
-                                        {value}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <div className="lg:w-[50%] lg:text-right">
-                                      <span className="font-black text-white text-lg md:text-xl drop-shadow-sm">
-                                        {t.includedTitle}
-                                      </span>
-                                    </div>
-                                  )}
+                              <div className="relative overflow-hidden bg-gradient-to-br from-[#009CFF] via-[#008AE6] to-[#005B99] rounded-2xl p-5 shadow-lg text-white">
+                                <div className="relative z-10 flex flex-col gap-3">
+                                  {opt.coverages.split('|').map((cov: string, i: number) => {
+                                    const parts = cov.split(':');
+                                    const name = parts[0];
+                                    const value = parts.slice(1).join(':').trim();
+                                    
+                                    return (
+                                      <div key={i} className="flex flex-col lg:flex-row lg:items-center justify-between bg-white/10 border border-white/20 rounded-xl p-4 shadow-sm">
+                                        <div className="flex items-center lg:w-[50%] mb-2 lg:mb-0">
+                                          <span className="font-bold text-white text-sm leading-tight">{name.trim()}</span>
+                                        </div>
+                                        <div className="lg:w-[50%] lg:text-right">
+                                          <span className="font-black text-white text-base drop-shadow-sm">
+                                            {value || t.includedTitle}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Included: Verde (emerald-500) */}
-                    {prop.included && (
-                      <div className="mb-12">
-                        <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-6 flex items-center">
-                          <CheckCircle2 className="w-4 h-4 mr-2" /> {t.includedTitle}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          {prop.included.split('|').map((inc: string, i: number) => (
-                            <div key={i} className="flex items-start bg-emerald-500 border border-emerald-500 rounded-xl p-5 shadow-sm print:shadow-none print:bg-emerald-500 print:border-emerald-500">
-                              <div className="text-white mt-0.5 mr-4">
-                                {getFeatureIcon(inc)}
                               </div>
-                              <span className="font-bold text-white leading-snug">{inc.trim()}</span>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Excluded: Gris (slate-400 / slate-100) */}
-                    {prop.excluded && (
-                      <div className="mb-12">
-                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
-                          <X className="w-4 h-4 mr-1" /> {t.excludedTitle}
-                        </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                          {prop.excluded.split('|').map((exc: string, i: number) => (
-                            <div key={i} className="flex items-center text-slate-500 font-medium text-sm bg-slate-100 border border-slate-200 rounded-lg px-4 py-2 shadow-sm print:bg-slate-100 print:border-slate-200 opacity-90">
-                              <X className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                              {exc.trim()}
+                          )}
+                          
+                          {/* Included */}
+                          {opt.included && (
+                            <div className="mb-10">
+                              <h4 className="text-xs font-bold text-emerald-500 uppercase tracking-widest mb-6 flex items-center">
+                                <CheckCircle2 className="w-4 h-4 mr-2" /> {t.includedTitle}
+                              </h4>
+                              <div className="flex flex-col gap-3">
+                                {opt.included.split('|').map((inc: string, i: number) => (
+                                  <div key={i} className="flex items-start p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+                                    <div className="text-emerald-500 mt-0.5 mr-3">
+                                      <CheckCircle2 className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-emerald-700 font-semibold text-sm leading-relaxed">{inc.trim()}</span>
+                                  </div>
+                                ))}
+                              </div>
                             </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                          )}
 
-                    {/* Action Button (Hidden on print) */}
-                    <div className="mt-12 max-w-md print:hidden">
-                      <button
-                        disabled={quote.status === 'ACCEPTED'}
-                        onClick={() => {
-                          const next = [...selectedModules]
-                          next[idx] = !next[idx]
-                          setSelectedModules(next)
-                        }}
-                        className={`w-full relative rounded-2xl p-5 flex items-center justify-between transition-all duration-300 border-2 ${isSelected ? 'bg-white border-[#009CFF]/30 text-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-slate-50'}`}
-                      >
-                        <div className="flex items-center">
-                          <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${isSelected ? 'border-[#009CFF] bg-[#009CFF] text-white' : 'border-slate-300 bg-transparent'}`}>
-                            {isSelected && <Check className="w-5 h-5 font-bold" />}
-                          </div>
-                          <span className="font-bold text-lg">{isSelected ? t.activeModule : t.addModule}</span>
+                          {/* Excluded */}
+                          {opt.excluded && (
+                            <div className="mb-4">
+                              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
+                                <X className="w-4 h-4 mr-2" /> {t.excludedTitle}
+                              </h4>
+                              <div className="bg-slate-50 border border-dashed border-slate-200 rounded-xl p-5">
+                                <ul className="space-y-3">
+                                  {opt.excluded.split('|').map((exc: string, i: number) => (
+                                    <li key={i} className="flex items-start text-slate-500 text-sm font-medium">
+                                      <X className="w-4 h-4 mr-3 text-slate-300 shrink-0 mt-0.5" />
+                                      <span className="leading-relaxed">{exc.trim()}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+
                         </div>
-                      </button>
+                      ))}
+                    </div>
+                    
+                    {/* Action Buttons (Hidden on print) */}
+                    <div className="mt-12 flex flex-col xl:flex-row gap-6 print:hidden">
+                      {group.options.map((opt: any, optIdx: number) => {
+                        const isOptSelected = selectedModules[opt.originalIdx];
+                        return (
+                          <button
+                            key={optIdx}
+                            disabled={quote.status === 'ACCEPTED'}
+                            onClick={() => {
+                              const next = [...selectedModules];
+                              // Deselect all others in this group
+                              group.options.forEach((o: any) => {
+                                if (o.originalIdx !== opt.originalIdx) next[o.originalIdx] = false;
+                              });
+                              // Toggle this one
+                              next[opt.originalIdx] = !next[opt.originalIdx];
+                              setSelectedModules(next);
+                            }}
+                            className={`flex-1 relative rounded-2xl p-5 flex items-center justify-between transition-all duration-300 border-2 ${isOptSelected ? 'bg-white border-[#009CFF]/30 text-slate-800 shadow-sm' : 'bg-white border-slate-200 text-slate-400 hover:border-slate-300 hover:bg-slate-50'}`}
+                          >
+                            <div className="flex items-center">
+                              <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center mr-4 transition-colors ${isOptSelected ? 'border-[#009CFF] bg-[#009CFF] text-white' : 'border-slate-300 bg-transparent'}`}>
+                                {isOptSelected && <Check className="w-5 h-5 font-bold" />}
+                              </div>
+                              <span className="font-bold text-lg">
+                                {isOptSelected ? t.activeModule : (isMulti ? (lang === 'es' ? `Elegir Opción ${optIdx + 1}` : `Choose Option ${optIdx + 1}`) : t.addModule)}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
                     </div>
 
                   </div>
@@ -649,7 +738,7 @@ export default function ProposalCarouselPage() {
           })}
           
           {/* ======================= THE SUMMARY SLIDE ======================= */}
-          <div className="min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center pt-2 print:block print:w-full print:px-0 print:page-break-before-always">
+          <div className="slide-container min-w-full w-full shrink-0 snap-center px-4 md:px-12 xl:px-32 flex justify-center items-start pt-2 print:block print:w-full print:px-0 print:page-break-before-always">
               <div 
                className="w-full max-w-5xl bg-white rounded-3xl overflow-hidden border border-slate-200 shadow-xl shadow-slate-200 flex flex-col p-8 md:p-14 print:shadow-none print:border-0 print:p-0"
              >
@@ -697,16 +786,34 @@ export default function ProposalCarouselPage() {
                         {t.costBreakdown}
                       </h4>
                       <div className="space-y-4">
-                        {proposals.map((prop: any, idx: number) => {
-                          if (!selectedModules[idx]) return null;
+                        {groupedProposals.map((group: any, idx: number) => {
+                          const selectedOpt = group.options.find((o: any) => selectedModules[o.originalIdx]);
+                          if (!selectedOpt) return null;
                           return (
                             <div key={idx} className="flex justify-between items-center bg-slate-50 p-5 rounded-xl border border-slate-100 print:bg-white print:border-slate-200">
                               <div>
-                                <h5 className="font-bold text-slate-800 text-lg">{prop.product}</h5>
-                                {prop.carrier && <p className="text-xs font-semibold text-slate-500 uppercase mt-1 tracking-wider">{prop.carrier}</p>}
+                                <h5 className="font-bold text-slate-800 text-lg">{group.product}</h5>
+                                {selectedOpt.carrier && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                    {(carriersMap[selectedOpt.carrier]?.trim() || selectedOpt.carrierLogo) && (
+                                      <img 
+                                        src={carriersMap[selectedOpt.carrier]?.trim() ? carriersMap[selectedOpt.carrier] : (selectedOpt.carrierLogo.startsWith('http') ? selectedOpt.carrierLogo : `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/logos/${selectedOpt.carrierLogo}`)} 
+                                        alt={selectedOpt.carrier}
+                                        className="h-8 object-contain mix-blend-multiply opacity-80"
+                                        onError={(e) => {
+                                          (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                      />
+                                    )}
+                                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{selectedOpt.carrier}</p>
+                                  </div>
+                                )}
                               </div>
                               <div className="text-right">
-                                <p className="font-bold text-[#514690] text-xl">${Number(prop.premium).toLocaleString('en-US')}</p>
+                                <p className="font-bold text-[#514690] text-xl">${Number(selectedOpt.premium).toLocaleString('en-US')}</p>
+                                {Number(selectedOpt.downpayment || 0) > 0 && (
+                                  <p className="text-[10px] font-semibold text-slate-400 mt-1 uppercase tracking-wider">{t.downpayment}{Number(selectedOpt.downpayment).toLocaleString('en-US')}</p>
+                                )}
                               </div>
                             </div>
                           )

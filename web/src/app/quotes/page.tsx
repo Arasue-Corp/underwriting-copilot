@@ -14,6 +14,188 @@ export default function QuotesPage() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [agencyMembers, setAgencyMembers] = useState<any[]>([])
   const lang = useLanguage()
+
+  const t = {
+    es: {
+      successAssigned: "Solicitud reasignada",
+      errorAssigned: "Error al asignar",
+      addProposal: "Agrega al menos una propuesta",
+      completeCarrier: "Completa Aseguradora y % de comisión para todas las propuestas",
+      selectPayment: "Debes seleccionar al menos una opción de pago (Anual o Mensual) para productos principales",
+      enterTotalPremium: "Ingresa la Prima Total para la opción de Pago Anual",
+      enterMonthlyPayment: "Ingresa el Pago Mensual para la opción de Pago Mensual",
+      uploadErrorPDF: "Error al subir el archivo PDF: ",
+      successProcessed: "Cotización procesada exitosamente",
+      dbError: "Error al guardar en base de datos",
+      processError: "Ocurrió un error al procesar",
+      statusError: "Error al actualizar estatus",
+      uploadingDoc: "Subiendo documento...",
+      docSuccess: "Documento subido correctamente",
+      docError: "Error al subir documento",
+      inbox: "Bandeja de Solicitudes",
+      all: "Todas",
+      assignedToMe: "Asignadas a mí",
+      createdByMe: "Creadas por mí",
+      newQuote: "Nueva Cotización",
+      loadingQuotes: "Cargando solicitudes...",
+      noQuotes: "No hay solicitudes para mostrar.",
+      statusMap: {
+        PENDING_MANAGER: "Pendiente Manager",
+        PENDING_AGENT: "Pendiente Agente",
+        SUBMITTED_TO_CARRIER: "Enviada a Carrier",
+        QUOTED: "Cotizado",
+        REJECTED: "Rechazada",
+        ACCEPTED: "Aceptada"
+      },
+      creator: "CREADOR",
+      assignee: "ASIGNADO A",
+      unassigned: "Sin asignar",
+      carrier: "Aseguradora",
+      coverage: "Cobertura",
+      detailsTitle: "Detalles de la Solicitud",
+      reassignTitle: "Reasignar",
+      viewProposals: "Ver Propuestas",
+      editQuote: "Editar Cotización",
+      quote: "Cotizar",
+      client: "Cliente",
+      status: "Estado",
+      action: "Acción",
+      downloadPDF: "Descargar (PDF)",
+      createdBy: "Creado Por",
+      submittedForm: "Formulario Entregado",
+      quoteProposals: "Propuestas de Cotización",
+      commission: "Comisión",
+      download: "Descargar",
+      supportDocs: "Documentos de Respaldo",
+      uploading: "Subiendo...",
+      uploadDoc: "+ Subir Documento",
+      noDocs: "No hay documentos de respaldo adjuntos a esta solicitud.",
+      viewFile: "Ver Archivo",
+      acceptQuote: "Aceptar Cotización",
+      acceptQuoteDesc: "Ingresa la información final para cerrar esta solicitud.",
+      soldPremium: "Prima Vendida ($)",
+      commissionPercentage: "% de Comisión",
+      commissionInternal: "% Comisión (Interno)",
+      cancel: "Cancelar",
+      saving: "Guardando...",
+      reassignDesc: "Asigna esta cotización a otro miembro de tu agencia.",
+      member: "Miembro",
+      select: "Seleccionar...",
+      assign: "Asignar",
+      sendQuotes: "Enviar Cotizaciones",
+      productCoverage: "Producto / Cobertura",
+      selectCarrier: "Seleccionar Aseguradora...",
+      bundleQuote: "Cotización en Conjunto (Bundle)",
+      bundleDesc: "Agrupa el precio de este producto con el paquete principal",
+      paymentOptions: "Opciones de Pago",
+      annualPayment: "Pago Anual",
+      monthlyPayment: "Pago Mensual",
+      totalPremium: "Prima Total ($)",
+      downpayment: "Enganche ($)",
+      includedInBundle: "El precio de este producto está incluido en el paquete principal.",
+      coveragesLimits: "Coberturas / Límites (Separadas por el símbolo |)",
+      includes: "Qué INCLUYE (Separado por |)",
+      excludes: "Qué EXCLUYE (Separado por |)",
+      uwNotes: "Notas de Underwriting / Condiciones",
+      quotePDF: "PDF de Cotización (Opcional - Interno)",
+      addAnotherProposal: "Agregar otra propuesta",
+      savingUploading: "Guardando y Subiendo...",
+      sendToAgent: "Enviar a Agente",
+      generatingPDF: "Generando PDF premium...",
+      pdfSuccess: "PDF descargado exitosamente",
+      pdfError: "Error al generar el PDF"
+    },
+    en: {
+      successAssigned: "Request reassigned",
+      errorAssigned: "Error assigning",
+      addProposal: "Add at least one proposal",
+      completeCarrier: "Complete Carrier and Commission % for all proposals",
+      selectPayment: "You must select at least one payment option (Annual or Monthly) for main products",
+      enterTotalPremium: "Enter the Total Premium for Annual Payment option",
+      enterMonthlyPayment: "Enter the Monthly Payment for Monthly Payment option",
+      uploadErrorPDF: "Error uploading PDF file: ",
+      successProcessed: "Quote processed successfully",
+      dbError: "Error saving to database",
+      processError: "An error occurred while processing",
+      statusError: "Error updating status",
+      uploadingDoc: "Uploading document...",
+      docSuccess: "Document uploaded successfully",
+      docError: "Error uploading document",
+      inbox: "Requests Inbox",
+      all: "All",
+      assignedToMe: "Assigned to me",
+      createdByMe: "Created by me",
+      newQuote: "New Quote",
+      loadingQuotes: "Loading requests...",
+      noQuotes: "No requests to display.",
+      statusMap: {
+        PENDING_MANAGER: "Pending Manager",
+        PENDING_AGENT: "Pending Agent",
+        SUBMITTED_TO_CARRIER: "Submitted to Carrier",
+        QUOTED: "Quoted",
+        REJECTED: "Rejected",
+        ACCEPTED: "Accepted"
+      },
+      creator: "CREATOR",
+      assignee: "ASSIGNED TO",
+      unassigned: "Unassigned",
+      carrier: "Carrier",
+      coverage: "Coverage",
+      detailsTitle: "Request Details",
+      reassignTitle: "Reassign",
+      viewProposals: "View Proposals",
+      editQuote: "Edit Quote",
+      quote: "Quote",
+      client: "Client",
+      status: "Status",
+      action: "Action",
+      downloadPDF: "Download (PDF)",
+      createdBy: "Created By",
+      submittedForm: "Submitted Form",
+      quoteProposals: "Quote Proposals",
+      commission: "Commission",
+      download: "Download",
+      supportDocs: "Supporting Documents",
+      uploading: "Uploading...",
+      uploadDoc: "+ Upload Document",
+      noDocs: "No supporting documents attached to this request.",
+      viewFile: "View File",
+      acceptQuote: "Accept Quote",
+      acceptQuoteDesc: "Enter final information to close this request.",
+      soldPremium: "Sold Premium ($)",
+      commissionPercentage: "Commission %",
+      commissionInternal: "Commission % (Internal)",
+      cancel: "Cancel",
+      saving: "Saving...",
+      reassignDesc: "Assign this quote to another member of your agency.",
+      member: "Member",
+      select: "Select...",
+      assign: "Assign",
+      sendQuotes: "Send Quotes",
+      productCoverage: "Product / Coverage",
+      selectCarrier: "Select Carrier...",
+      bundleQuote: "Bundle Quote",
+      bundleDesc: "Groups the price of this product with the main package",
+      paymentOptions: "Payment Options",
+      annualPayment: "Annual Payment",
+      monthlyPayment: "Monthly Payment",
+      totalPremium: "Total Premium ($)",
+      downpayment: "Downpayment ($)",
+      includedInBundle: "The price of this product is included in the main package.",
+      coveragesLimits: "Coverages / Limits (Separated by |)",
+      includes: "What's INCLUDED (Separated by |)",
+      excludes: "What's EXCLUDED (Separated by |)",
+      uwNotes: "Underwriting Notes / Conditions",
+      quotePDF: "Quote PDF (Optional - Internal)",
+      addAnotherProposal: "Add another proposal",
+      savingUploading: "Saving and Uploading...",
+      sendToAgent: "Send to Agent",
+      generatingPDF: "Generating premium PDF...",
+      pdfSuccess: "PDF downloaded successfully",
+      pdfError: "Error generating PDF"
+    }
+  }[lang]
+
   
   // Modals state
   const [isNewQuoteModalOpen, setIsNewQuoteModalOpen] = useState(false)
@@ -24,7 +206,7 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
+  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, description: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
   const [availableCarriers, setAvailableCarriers] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
@@ -99,8 +281,8 @@ export default function QuotesPage() {
       if (!p.carrier || !p.commission_percentage) return toast.error("Completa Aseguradora y % de comisión para todas las propuestas")
       if (!p.is_bundled) {
         if (!p.is_annual && !p.is_monthly) return toast.error("Debes seleccionar al menos una opción de pago (Anual o Mensual) para productos principales")
-        if (p.is_annual && !p.premium) return toast.error("Ingresa la Prima Total para la opción de Pago Anual")
-        if (p.is_monthly && !p.monthly_payment) return toast.error("Ingresa el Pago Mensual para la opción de Pago Mensual")
+        if (p.is_annual && !p.premium) return toast.error("Ingresa la Prima Total para la opción de {t.annualPayment}")
+        if (p.is_monthly && !p.monthly_payment) return toast.error("Ingresa el {t.monthlyPayment} para la opción de {t.monthlyPayment}")
       }
     }
     
@@ -256,12 +438,12 @@ export default function QuotesPage() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="text-3xl font-bold tracking-tight">{lang === 'es' ? 'Bandeja de Solicitudes' : 'Requests Inbox'}</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t.inbox}</h2>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-wrap gap-2">
-            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Todas' : 'All'}</button>
-            <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Asignadas a mí' : 'Assigned to me'}</button>
-            <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{lang === 'es' ? 'Creadas por mí' : 'Created by me'}</button>
+            <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.all}</button>
+            <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.assignedToMe}</button>
+            <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.createdByMe}</button>
           </div>
           
           <button 
@@ -269,7 +451,7 @@ export default function QuotesPage() {
             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 shadow-sm"
           >
             <Plus className="w-4 h-4" />
-            {lang === 'es' ? 'Nueva Cotización' : 'New Quote'}
+            {t.newQuote}
           </button>
         </div>
       </div>
@@ -303,12 +485,12 @@ export default function QuotesPage() {
                           'bg-amber-500/10 text-amber-600 border-amber-500/30'
                         }`}
                       >
-                        <option value="PENDING_MANAGER">Pendiente Manager</option>
-                        <option value="PENDING_AGENT">Pendiente Agente</option>
-                        <option value="SUBMITTED_TO_CARRIER">Enviada a Carrier</option>
-                        <option value="QUOTED">Cotizado</option>
-                        <option value="REJECTED">Rechazada</option>
-                        <option value="ACCEPTED">Aceptada</option>
+                        <option value="PENDING_MANAGER">{t.statusMap.PENDING_MANAGER}</option>
+                        <option value="PENDING_AGENT">{t.statusMap.PENDING_AGENT}</option>
+                        <option value="SUBMITTED_TO_CARRIER">{t.statusMap.SUBMITTED_TO_CARRIER}</option>
+                        <option value="QUOTED">{t.statusMap.QUOTED}</option>
+                        <option value="REJECTED">{t.statusMap.REJECTED}</option>
+                        <option value="ACCEPTED">{t.statusMap.ACCEPTED}</option>
                       </select>
                       <h4 className="font-bold text-lg leading-tight text-foreground">{quote.client_name}</h4>
                     </div>
@@ -316,30 +498,30 @@ export default function QuotesPage() {
 
                   <div className="grid grid-cols-2 gap-3 pl-2">
                     <div className="space-y-1">
-                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Aseguradora</div>
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">{t.carrier}</div>
                       <div className="text-sm font-medium text-foreground">{quote.carrier_id}</div>
                     </div>
                     <div className="space-y-1">
-                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">Cobertura</div>
+                      <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">{t.coverage}</div>
                       <div className="text-sm font-medium text-foreground">{quote.coverage_requested}</div>
                     </div>
                   </div>
 
                   <div className="bg-muted/30 rounded-lg p-3 grid grid-cols-2 gap-2 text-xs border border-border/50 ml-2">
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-muted-foreground font-medium">CREADOR</span> 
+                      <span className="text-[10px] text-muted-foreground font-medium">{t.creator}</span> 
                       <span className="font-medium text-foreground truncate">{quote.profiles?.name}</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[10px] text-muted-foreground font-medium">ASIGNADO A</span> 
-                      <span className="font-medium text-foreground truncate">{quote.assignee?.name || 'Sin asignar'}</span>
+                      <span className="text-[10px] text-muted-foreground font-medium">{t.assignee}</span> 
+                      <span className="font-medium text-foreground truncate">{quote.assignee?.name || t.unassigned}</span>
                     </div>
                   </div>
 
                   <div className="pt-2 pl-2 flex gap-2">
                     <button 
                       onClick={() => setDetailsQuote(quote)}
-                      title="Ver Detalles"
+                      title={t.detailsTitle}
                       className="p-2.5 bg-secondary/50 text-secondary-foreground rounded-lg hover:bg-secondary transition-colors"
                     >
                       <Eye className="w-5 h-5" />
@@ -348,7 +530,7 @@ export default function QuotesPage() {
                     {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
                       <button 
                         onClick={() => setAssignQuote(quote)}
-                        title="Reasignar"
+                        title={t.reassignTitle}
                         className="p-2.5 bg-secondary/50 text-secondary-foreground rounded-lg hover:bg-secondary transition-colors"
                       >
                         <UserPlus className="w-5 h-5" />
@@ -357,14 +539,14 @@ export default function QuotesPage() {
 
                     {quote.status === 'QUOTED' ? (
                        <div className="flex gap-2 w-full">
-                         <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-600 flex-1 transition-colors shadow-sm">Ver Propuestas</button>
+                         <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-emerald-600 flex-1 transition-colors shadow-sm">{t.viewProposals}</button>
                          <button 
                            onClick={() => {
                              setProcessQuote(quote)
                              const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
-                             setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                             setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                            }}
-                           title="Editar Cotización"
+                           title={t.editQuote}
                            className="p-2.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors shadow-sm"
                          >
                            <Pencil className="w-5 h-5" />
@@ -374,7 +556,7 @@ export default function QuotesPage() {
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
-                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
@@ -391,13 +573,13 @@ export default function QuotesPage() {
               <table className="w-full text-sm text-left">
                 <thead className="bg-muted/50 text-muted-foreground border-b border-border">
                   <tr>
-                    <th className="px-6 py-3 font-medium">Cliente</th>
-                    <th className="px-6 py-3 font-medium">Aseguradora</th>
+                    <th className="px-6 py-3 font-medium">{t.client}</th>
+                    <th className="px-6 py-3 font-medium">{t.carrier}</th>
                     <th className="px-6 py-3 font-medium">Coberturas</th>
                     <th className="px-6 py-3 font-medium">Creador</th>
                     <th className="px-6 py-3 font-medium">Asignado a</th>
-                    <th className="px-6 py-3 font-medium">Estado</th>
-                    <th className="px-6 py-3 font-medium text-right">Acción</th>
+                    <th className="px-6 py-3 font-medium">{t.status}</th>
+                    <th className="px-6 py-3 font-medium text-right">{t.action}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -407,7 +589,7 @@ export default function QuotesPage() {
                       <td className="px-6 py-4">{quote.carrier_id}</td>
                       <td className="px-6 py-4">{quote.coverage_requested}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.profiles?.name}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || 'Sin asignar'}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || t.unassigned}</td>
                       <td className="px-6 py-4">
                         <select 
                           value={quote.status}
@@ -421,18 +603,18 @@ export default function QuotesPage() {
                             'bg-amber-500/10 text-amber-600 border-amber-500/30'
                           }`}
                         >
-                          <option value="PENDING_MANAGER">Pendiente Manager</option>
-                          <option value="PENDING_AGENT">Pendiente Agente</option>
-                          <option value="SUBMITTED_TO_CARRIER">Enviada a Carrier</option>
-                          <option value="QUOTED">Cotizado</option>
-                          <option value="REJECTED">Rechazada</option>
-                          <option value="ACCEPTED">Aceptada</option>
+                          <option value="PENDING_MANAGER">{t.statusMap.PENDING_MANAGER}</option>
+                          <option value="PENDING_AGENT">{t.statusMap.PENDING_AGENT}</option>
+                          <option value="SUBMITTED_TO_CARRIER">{t.statusMap.SUBMITTED_TO_CARRIER}</option>
+                          <option value="QUOTED">{t.statusMap.QUOTED}</option>
+                          <option value="REJECTED">{t.statusMap.REJECTED}</option>
+                          <option value="ACCEPTED">{t.statusMap.ACCEPTED}</option>
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end space-x-2">
                         <button 
                           onClick={() => setDetailsQuote(quote)}
-                          title="Ver Detalles"
+                          title={t.detailsTitle}
                           className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
                         >
                           <Eye className="w-4 h-4" />
@@ -441,7 +623,7 @@ export default function QuotesPage() {
                         {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
                           <button 
                             onClick={() => setAssignQuote(quote)}
-                            title="Reasignar"
+                            title={t.reassignTitle}
                             className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
                           >
                             <UserPlus className="w-4 h-4" />
@@ -450,14 +632,14 @@ export default function QuotesPage() {
 
                         {quote.status === 'QUOTED' ? (
                            <div className="flex justify-end gap-2">
-                             <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-emerald-600">Ver Propuestas</button>
+                             <button onClick={() => setDetailsQuote(quote)} className="bg-emerald-500 text-white px-3 py-1.5 rounded-md text-xs font-medium hover:bg-emerald-600">{t.viewProposals}</button>
                              <button 
                                onClick={() => {
                                  setProcessQuote(quote)
                                  const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
-                                 setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                                 setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                                }}
-                               title="Editar Cotización"
+                               title={t.editQuote}
                                className="p-1.5 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors shadow-sm"
                              >
                                <Pencil className="w-4 h-4" />
@@ -467,7 +649,7 @@ export default function QuotesPage() {
                           <button 
                             onClick={() => {
                               setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                             }}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                           >
@@ -495,7 +677,7 @@ export default function QuotesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Detalles de la Solicitud</h3>
+              <h3 className="text-2xl font-bold">{t.detailsTitle}</h3>
               <div className="flex items-center space-x-2">
                 <button 
                   onClick={async () => {
@@ -577,7 +759,7 @@ export default function QuotesPage() {
                   className="bg-primary/10 text-primary hover:bg-primary/20 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center"
                 >
                   <FileText className="w-4 h-4 mr-2" />
-                  Descargar (PDF)
+                  {t.downloadPDF}
                 </button>
                 <button onClick={() => setDetailsQuote(null)} className="p-2 hover:bg-muted rounded-full">
                   <X className="w-5 h-5" />
@@ -588,17 +770,17 @@ export default function QuotesPage() {
             <div id="quote-details-content" className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Cliente</p>
+                  <p className="text-sm text-muted-foreground font-medium">{t.client}</p>
                   <p className="font-semibold">{detailsQuote.client_name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground font-medium">Creado Por</p>
+                  <p className="text-sm text-muted-foreground font-medium">{t.createdBy}</p>
                   <p className="font-semibold">{detailsQuote.profiles?.name}</p>
                 </div>
               </div>
 
               <div>
-                <p className="text-sm text-muted-foreground font-medium mb-4">Formulario Entregado</p>
+                <p className="text-sm text-muted-foreground font-medium mb-4">{t.submittedForm}</p>
                 <div className="space-y-6">
                   {(() => {
                     const groupedData: Record<string, any> = {};
@@ -653,7 +835,7 @@ export default function QuotesPage() {
                                           <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
                                           {subFileUrl ? (
                                             <a href={subFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium flex items-center">
-                                              Ver Documento
+                                              {t.viewFile}
                                             </a>
                                           ) : (
                                             <span className="font-medium">{String(subV)}</span>
@@ -673,7 +855,7 @@ export default function QuotesPage() {
                                       <span className="font-medium text-muted-foreground capitalize">{subK.replace(/_/g, " ")}:</span> 
                                       {subFileUrl ? (
                                         <a href={subFileUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline font-medium flex items-center">
-                                          Ver Documento
+                                          {t.viewFile}
                                         </a>
                                       ) : (
                                         <span className="font-medium">{String(subV)}</span>
@@ -709,24 +891,41 @@ export default function QuotesPage() {
 
               {detailsQuote.quotes_provided && detailsQuote.quotes_provided.length > 0 && (
                 <div className="mb-6">
-                  <p className="text-sm text-muted-foreground font-medium mb-2">Propuestas de Cotización</p>
-                  <div className="space-y-2">
-                    {detailsQuote.quotes_provided.map((q: any, i: number) => (
-                      <div key={i} className="flex justify-between items-center p-3 border border-border rounded-lg bg-emerald-500/5">
-                        <div className="flex items-center space-x-3">
-                           <FileText className="w-5 h-5 text-emerald-500" />
-                           <span className="font-medium">{q.product}</span>
+                  <p className="text-sm text-muted-foreground font-medium mb-2">{t.quoteProposals}</p>
+                  <div className="space-y-4">
+                    {Object.values(
+                      detailsQuote.quotes_provided.reduce((acc: any, q: any) => {
+                        const product = q.product || 'Unknown';
+                        if (!acc[product]) acc[product] = [];
+                        acc[product].push(q);
+                        return acc;
+                      }, {})
+                    ).map((group: any, idx: number) => (
+                      <div key={idx} className="border border-border rounded-lg bg-emerald-500/5 overflow-hidden">
+                        <div className="bg-emerald-500/10 px-4 py-2 border-b border-border flex items-center space-x-2">
+                           <FileText className="w-4 h-4 text-emerald-600" />
+                           <span className="font-bold text-emerald-700 text-sm uppercase">{group[0].product}</span>
                         </div>
-                        <div className="flex items-center space-x-4 text-right">
-                           <div>
-                             <div className="font-bold text-emerald-600">${q.premium}</div>
-                             {userProfile?.role !== 'AGENT' && (
-                               <div className="text-xs text-muted-foreground font-medium">Comisión: {q.commission_percentage}%</div>
-                             )}
-                           </div>
-                           <a href={q.file_url} target="_blank" rel="noreferrer" className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20">
-                             Descargar
-                           </a>
+                        <div className="p-3 space-y-3">
+                          {group.map((q: any, i: number) => (
+                            <div key={i} className="flex justify-between items-center bg-white p-3 rounded-md border border-border/50">
+                              <div className="flex flex-col">
+                                {group.length > 1 && <span className="text-xs font-bold text-muted-foreground uppercase mb-1">Opción {i + 1}</span>}
+                                <span className="font-semibold text-sm">{q.carrier || t.carrier}</span>
+                              </div>
+                              <div className="flex items-center space-x-4 text-right">
+                                 <div>
+                                   <div className="font-bold text-emerald-600">${q.premium}</div>
+                                   {userProfile?.role !== 'AGENT' && (
+                                     <div className="text-xs text-muted-foreground font-medium">{t.commission}: {q.commission_percentage}%</div>
+                                   )}
+                                 </div>
+                                 <a href={q.file_url} target="_blank" rel="noreferrer" className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20">
+                                   {t.download}
+                                 </a>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     ))}
@@ -736,7 +935,7 @@ export default function QuotesPage() {
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-muted-foreground font-medium">Documentos de Respaldo</p>
+                  <p className="text-sm text-muted-foreground font-medium">{t.supportDocs}</p>
                   <label className="cursor-pointer">
                     <input 
                       type="file" 
@@ -745,7 +944,7 @@ export default function QuotesPage() {
                       disabled={isUploadingDoc}
                     />
                     <span className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded-md font-medium hover:bg-primary/20 transition-colors">
-                      {isUploadingDoc ? 'Subiendo...' : '+ Subir Documento'}
+                      {isUploadingDoc ? t.uploading : t.uploadDoc}
                     </span>
                   </label>
                 </div>
@@ -763,7 +962,7 @@ export default function QuotesPage() {
                            <span className="font-medium text-sm truncate">{doc.file_name}</span>
                         </div>
                         <a href={doc.file_url} target="_blank" rel="noreferrer" className="text-xs font-semibold text-primary hover:underline shrink-0 ml-4">
-                           Ver Archivo
+                           {t.viewFile}
                         </a>
                       </div>
                     ))}
@@ -785,11 +984,11 @@ export default function QuotesPage() {
             className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">Aceptar Cotización</h3>
-            <p className="text-sm text-muted-foreground mb-4">Ingresa la información final para cerrar esta solicitud.</p>
+            <h3 className="text-xl font-bold mb-4">{t.acceptQuote}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{t.acceptQuoteDesc}</p>
             <form onSubmit={handleAcceptSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Prima Vendida ($)</label>
+                <label className="text-sm font-medium">{t.soldPremium}</label>
                 <input 
                   type="number" 
                   required
@@ -800,7 +999,7 @@ export default function QuotesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">% de Comisión</label>
+                <label className="text-sm font-medium">{t.commissionPercentage}</label>
                 <input 
                   type="number" 
                   required
@@ -815,7 +1014,7 @@ export default function QuotesPage() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
-                  {isUploading ? "Guardando..." : "Aceptar Cotización"}
+                  {isUploading ? t.saving : t.acceptQuote}
                 </button>
               </div>
             </form>
@@ -833,18 +1032,18 @@ export default function QuotesPage() {
             className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">Reasignar Solicitud</h3>
-            <p className="text-sm text-muted-foreground mb-4">Asigna esta cotización a otro miembro de tu agencia.</p>
+            <h3 className="text-xl font-bold mb-4">{t.reassignTitle}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{t.reassignDesc}</p>
             <form onSubmit={handleAssign}>
               <div className="mb-6">
-                <label className="text-sm font-medium mb-2 block">Miembro</label>
+                <label className="text-sm font-medium mb-2 block">{t.member}</label>
                 <select 
                   name="assignee"
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   required
                   disabled={isUploading}
                 >
-                  <option value="">Seleccionar...</option>
+                  <option value="">{t.select}</option>
                   {agencyMembers.map(m => (
                     <option key={m.id} value={m.id}>{m.name}</option>
                   ))}
@@ -855,7 +1054,7 @@ export default function QuotesPage() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
-                  {isUploading ? "Guardando..." : "Asignar"}
+                  {isUploading ? t.saving : t.assign}
                 </button>
               </div>
             </form>
@@ -885,7 +1084,7 @@ export default function QuotesPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-2xl font-bold">Enviar Cotizaciones</h3>
+              <h3 className="text-2xl font-bold">{t.sendQuotes}</h3>
               <button onClick={() => setProcessQuote(null)} className="p-2 hover:bg-muted rounded-full">
                 <X className="w-5 h-5" />
               </button>
@@ -906,7 +1105,7 @@ export default function QuotesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / Cobertura</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / {t.coverage}</label>
                       <input 
                         type="text" 
                         value={prop.product} 
@@ -920,7 +1119,7 @@ export default function QuotesPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Aseguradora</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.carrier}</label>
                       <select 
                         value={prop.carrier} 
                         onChange={e => {
@@ -930,7 +1129,7 @@ export default function QuotesPage() {
                         }}
                         className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
                       >
-                        <option value="">Seleccionar Aseguradora...</option>
+                        <option value="">{t.selectCarrier}</option>
                         {Array.from(new Set([...availableCarriers, prop.carrier].filter(Boolean))).map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
@@ -952,16 +1151,16 @@ export default function QuotesPage() {
                           }}
                           className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-600 h-5 w-5"
                         />
-                        Cotización en Conjunto (Bundle)
+                        {t.bundleQuote}
                         <span className="text-xs font-normal text-emerald-600/80 ml-auto hidden sm:block">
-                          Agrupa el precio de este producto con el paquete principal
+                          {t.bundleDesc}
                         </span>
                       </label>
                     </div>
 
                     {!prop.is_bundled ? (
                       <div className="md:col-span-2 pt-2 border-t border-border mt-2">
-                        <label className="text-xs font-medium text-muted-foreground mb-3 block">Opciones de Pago</label>
+                        <label className="text-xs font-medium text-muted-foreground mb-3 block">{t.paymentOptions}</label>
                         <div className="flex gap-6 mb-4">
                           <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                             <input 
@@ -971,14 +1170,14 @@ export default function QuotesPage() {
                                 const next = [...proposals];
                                 next[idx].is_annual = e.target.checked;
                                 const opts = [];
-                                if (next[idx].is_annual) opts.push("Pago Anual");
-                                if (next[idx].is_monthly) opts.push("Pago Mensual");
+                                if (next[idx].is_annual) opts.push("{t.annualPayment}");
+                                if (next[idx].is_monthly) opts.push("{t.monthlyPayment}");
                                 next[idx].payment_options = opts.join(" o ");
                                 setProposals(next);
                               }}
                               className="rounded border-input text-[#009CFF] focus:ring-[#009CFF] h-4 w-4"
                             />
-                            Pago Anual
+                            {t.annualPayment}
                           </label>
                           <label className="flex items-center gap-2 text-sm font-medium cursor-pointer">
                             <input 
@@ -988,21 +1187,21 @@ export default function QuotesPage() {
                                 const next = [...proposals];
                                 next[idx].is_monthly = e.target.checked;
                                 const opts = [];
-                                if (next[idx].is_annual) opts.push("Pago Anual");
-                                if (next[idx].is_monthly) opts.push("Pago Mensual");
+                                if (next[idx].is_annual) opts.push("{t.annualPayment}");
+                                if (next[idx].is_monthly) opts.push("{t.monthlyPayment}");
                                 next[idx].payment_options = opts.join(" o ");
                                 setProposals(next);
                               }}
                               className="rounded border-input text-[#009CFF] focus:ring-[#009CFF] h-4 w-4"
                             />
-                            Pago Mensual
+                            {t.monthlyPayment}
                           </label>
                         </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {prop.is_annual && (
                           <div>
-                            <label className="text-xs font-medium text-muted-foreground mb-1 block">Prima Total ($)</label>
+                            <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.totalPremium}</label>
                             <input 
                               type="number" 
                               value={prop.premium} 
@@ -1019,7 +1218,7 @@ export default function QuotesPage() {
                         {prop.is_monthly && (
                           <div className="flex gap-4">
                             <div className="flex-1">
-                              <label className="text-xs font-medium text-muted-foreground mb-1 block">Enganche ($)</label>
+                              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.downpayment}</label>
                               <input 
                                 type="number" 
                                 value={prop.downpayment || ""} 
@@ -1033,7 +1232,7 @@ export default function QuotesPage() {
                               />
                             </div>
                             <div className="flex-1">
-                              <label className="text-xs font-medium text-muted-foreground mb-1 block">Pago Mensual ($)</label>
+                              <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.monthlyPayment} ($)</label>
                               <input 
                                 type="number" 
                                 value={prop.monthly_payment} 
@@ -1053,13 +1252,13 @@ export default function QuotesPage() {
                     ) : (
                       <div className="md:col-span-2 py-4 flex items-center justify-center border border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-lg">
                         <p className="text-sm font-medium text-emerald-600">
-                          El precio de este producto está incluido en el paquete principal.
+                          {t.includedInBundle}
                         </p>
                       </div>
                     )}
                     
                     <div>
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">% Comisión (Interno)</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.commissionInternal}</label>
                       <input 
                         type="number" 
                         value={prop.commission_percentage} 
@@ -1074,7 +1273,7 @@ export default function QuotesPage() {
                     </div>
                     
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Coberturas / Límites (Separadas por el símbolo |)</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.coveragesLimits}</label>
                       <textarea 
                         value={prop.coverages} 
                         onChange={e => {
@@ -1089,7 +1288,7 @@ export default function QuotesPage() {
                     </div>
 
                     <div>
-                      <label className="text-xs font-medium text-emerald-600 mb-1 block">Qué INCLUYE (Separado por |)</label>
+                      <label className="text-xs font-medium text-emerald-600 mb-1 block">{t.includes}</label>
                       <textarea 
                         value={prop.included} 
                         onChange={e => {
@@ -1103,7 +1302,7 @@ export default function QuotesPage() {
                       />
                     </div>
                     <div>
-                      <label className="text-xs font-medium text-red-600 mb-1 block">Qué EXCLUYE (Separado por |)</label>
+                      <label className="text-xs font-medium text-red-600 mb-1 block">{t.excludes}</label>
                       <textarea 
                         value={prop.excluded} 
                         onChange={e => {
@@ -1118,7 +1317,7 @@ export default function QuotesPage() {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">Notas de Underwriting / Condiciones</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.uwNotes}</label>
                       <textarea 
                         value={prop.notes} 
                         onChange={e => {
@@ -1133,7 +1332,7 @@ export default function QuotesPage() {
                     </div>
 
                     <div className="md:col-span-2">
-                      <label className="text-xs font-medium text-muted-foreground mb-1 block">PDF de Cotización (Opcional - Interno)</label>
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.quotePDF}</label>
                       <input 
                         type="file"
                         accept=".pdf,application/pdf"
@@ -1150,26 +1349,26 @@ export default function QuotesPage() {
               ))}
               
               <button 
-                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "Pago Anual", coverages: "", included: "", excluded: "", notes: "", file: null, is_annual: true, is_monthly: false, is_bundled: false }])}
+                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Agregar otra propuesta
+                {t.addAnotherProposal}
               </button>
 
             </div>
 
             <div className="mt-8 flex justify-end space-x-3">
-              <button onClick={() => setProcessQuote(null)} className="px-5 py-2 border border-border rounded-md font-medium">Cancelar</button>
+              <button onClick={() => setProcessQuote(null)} className="px-5 py-2 border border-border rounded-md font-medium">{t.cancel}</button>
               <button 
                 onClick={handleProcessSubmit}
                 disabled={isUploading}
                 className="px-5 py-2 bg-primary text-primary-foreground rounded-md font-medium flex items-center disabled:opacity-50"
               >
-                {isUploading ? "Guardando y Subiendo..." : (
+                {isUploading ? t.savingUploading : (
                   <>
                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                    Enviar a Agente
+                    {t.sendToAgent}
                   </>
                 )}
               </button>

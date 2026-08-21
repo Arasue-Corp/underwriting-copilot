@@ -288,7 +288,7 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
                   className="bg-transparent border-b border-border/50 outline-none font-medium text-foreground pb-0.5 focus:border-primary"
                 >
                   <option value="none">-- {t.unassigned} --</option>
-                  {agents.map(a => (
+                  {agents.map((a: any) => (
                     <option key={a.id} value={a.id}>{a.id === userProfile?.id ? `${a.name} (${t.me})` : a.name}</option>
                   ))}
                 </select>
