@@ -58,3 +58,36 @@ export async function getClientById(id: string) {
     return { success: false, error: error.message }
   }
 }
+
+export async function updateClient(id: string, data: any) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) return { success: false, error: "Unauthorized" }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role, agency_id")
+      .eq("id", user.id)
+      .single()
+      
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'MANAGER')) {
+      return { success: false, error: "Unauthorized role" }
+    }
+
+    const { error } = await supabase
+      .from("clients")
+      .update(data)
+      .eq("id", id)
+      .eq("agency_id", profile.agency_id)
+
+    if (error) throw error
+
+    revalidatePath('/clients')
+    return { success: true }
+  } catch (error: any) {
+    console.error("Error updating client:", error)
+    return { success: false, error: error.message }
+  }
+}

@@ -7,6 +7,8 @@ import { toast } from 'sonner'
 import { createVisit } from '@/app/actions/visits'
 import { useLanguage } from '@/components/language-provider'
 import { VisitModal } from '@/components/visits/VisitModal'
+import { EditClientModal } from '@/components/clients/EditClientModal'
+import { Edit } from 'lucide-react'
 
 export default function ClientsPage() {
   const langContext = useLanguage()
@@ -31,7 +33,8 @@ export default function ClientsPage() {
       renews: 'Renueva:',
       visitLog: 'Bitácora de Visitas / Actividad',
       noVisits: 'No hay visitas registradas para este cliente.',
-      dataError: 'Error al cargar datos'
+      dataError: 'Error al cargar datos',
+      editClient: 'Editar Cliente'
     },
     en: {
       title: 'Clients Directory',
@@ -52,7 +55,8 @@ export default function ClientsPage() {
       renews: 'Renews:',
       visitLog: 'Visit & Activity Log',
       noVisits: 'No visits registered for this client.',
-      dataError: 'Error loading data'
+      dataError: 'Error loading data',
+      editClient: 'Edit Client'
     }
   }[lang]
 
@@ -60,8 +64,10 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selectedClient, setSelectedClient] = useState<any | null>(null)
+  const [userRole, setUserRole] = useState<string>('')
   
-  // Visit Modal State
+  // Modals State
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [visitForm, setVisitForm] = useState({
@@ -90,9 +96,10 @@ export default function ClientsPage() {
       setLoading(false)
       return
     }
-    const { data: userProfile } = await supabase.from('profiles').select('agency_id').eq('id', user.id).single()
+    const { data: userProfile } = await supabase.from('profiles').select('agency_id, role').eq('id', user.id).single()
     
     if (userProfile?.agency_id) {
+      setUserRole(userProfile.role)
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select(`
@@ -257,13 +264,24 @@ export default function ClientsPage() {
                       </div>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => setIsVisitModalOpen(true)}
-                    className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    {t.logVisit}
-                  </button>
+                  <div className="flex gap-2">
+                    {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+                      <button 
+                        onClick={() => setIsEditModalOpen(true)}
+                        className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-border"
+                      >
+                        <Edit className="w-4 h-4" />
+                        {t.editClient}
+                      </button>
+                    )}
+                    <button 
+                      onClick={() => setIsVisitModalOpen(true)}
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t.logVisit}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -377,6 +395,16 @@ export default function ClientsPage() {
         preselectedClientId={selectedClient?.id}
       />
 
+      {/* Edit Client Modal */}
+      <EditClientModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onSuccess={() => {
+          setIsEditModalOpen(false)
+          loadClients()
+        }}
+        client={selectedClient}
+      />
     </div>
   )
 }
