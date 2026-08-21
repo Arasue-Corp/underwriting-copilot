@@ -39,7 +39,11 @@ export default function VisitsPage() {
       policies: 'Pólizas Sugeridas',
       contact: 'Representantes',
       me: 'Yo',
-      unassigned: 'Sin asignar'
+      unassigned: 'Sin asignar',
+      canceled: 'Cancelada',
+      registerVisit: 'Registrar Visita',
+      clientDeleted: 'Cliente Eliminado',
+      registeredBy: 'Registrado por:'
     },
     en: {
       title: 'CRM & Activity Log',
@@ -58,7 +62,11 @@ export default function VisitsPage() {
       policies: 'Suggested Policies',
       contact: 'Representatives',
       me: 'Me',
-      unassigned: 'Unassigned'
+      unassigned: 'Unassigned',
+      canceled: 'Canceled',
+      registerVisit: 'Register Visit',
+      clientDeleted: 'Deleted Client',
+      registeredBy: 'Registered by:'
     }
   }[lang]
 
@@ -130,7 +138,7 @@ export default function VisitsPage() {
           className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
-          Registrar Visita
+          {t.registerVisit}
         </button>
       </div>
 
@@ -220,7 +228,7 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
       <div className="flex justify-between items-start gap-4">
         <div>
           <h4 className="font-bold text-lg text-foreground leading-tight">
-            {visit.client ? visit.client.name : 'Cliente Eliminado'}
+            {visit.client ? visit.client.name : t.clientDeleted}
           </h4>
           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
             <Calendar className="w-3.5 h-3.5" />
@@ -238,7 +246,7 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
           >
             <option value="PENDING">{t.pending}</option>
             <option value="COMPLETED">{t.completed}</option>
-            <option value="CANCELED">Canceled</option>
+            <option value="CANCELED">{t.canceled}</option>
         </select>
       </div>
 
@@ -274,7 +282,7 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
 
       <div className="flex flex-col gap-2 pt-2 border-t border-border/50">
         <div className="flex items-center gap-2 text-[11px] text-muted-foreground/70 font-medium uppercase tracking-wider">
-          <span>Registrado por: {visit.creator?.name || t.unassigned}</span>
+          <span>{t.registeredBy} {visit.creator?.name || t.unassigned}</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

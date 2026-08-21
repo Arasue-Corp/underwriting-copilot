@@ -104,8 +104,11 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
     next_visit_date: ''
   })
 
-  const policyOptions = ['General liability', 'Commercial auto', 'Workers compensation', 'Professional liability', 'Commercial property']
-
+  const policyOptions = lang === 'es' ? [
+    'Responsabilidad Civil', 'Auto Comercial', 'Workers Comp', 'Responsabilidad Profesional', 'Propiedad Comercial'
+  ] : [
+    'General liability', 'Commercial auto', 'Workers compensation', 'Professional liability', 'Commercial property'
+  ]
   if (!isOpen) return null
 
   const handlePolicyToggle = (policy: string) => {
