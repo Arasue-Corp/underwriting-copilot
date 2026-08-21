@@ -38,19 +38,22 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
   const filteredVisits = visits.filter(visit => {
     if (!startDate && !endDate) return true;
     
-    const visitDate = new Date(visit.created_at);
-    // Normalize visit date to start of day for comparison
-    const vDateNorm = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
+    // We can use visit_date or created_at
+    const visitDateStr = visit.visit_date || visit.created_at;
+    const visitDate = new Date(visitDateStr);
+    
+    // Normalize visit date to start of day (local time)
+    const vDateNorm = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate()).getTime();
 
     if (startDate) {
-      const start = new Date(startDate);
-      const startNorm = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const [year, month, day] = startDate.split('-');
+      const startNorm = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
       if (vDateNorm < startNorm) return false;
     }
     
     if (endDate) {
-      const end = new Date(endDate);
-      const endNorm = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      const [year, month, day] = endDate.split('-');
+      const endNorm = new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).getTime();
       if (vDateNorm > endNorm) return false;
     }
     
