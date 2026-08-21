@@ -2,8 +2,7 @@ import { Activity, CircleDollarSign, Files, Users, TrendingUp, TrendingDown, Ale
 import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
 import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
-import { VisitsChart } from "@/components/dashboard/VisitsChart"
-import { VisitsTable } from "@/components/dashboard/VisitsTable"
+import { VisitsDashboardSection } from "@/components/dashboard/VisitsDashboardSection"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { getVisits } from "@/app/actions/visits"
@@ -50,11 +49,7 @@ export default async function Dashboard() {
       evoTitle: 'Evolución de Cotizaciones',
       evoDesc: 'Primas cotizadas en el último trimestre.',
       distTitle: 'Distribución por Aseguradora',
-      distDesc: 'Polizas emitidas este mes.',
-      visitsTitle: 'Actividad de Visitas',
-      visitsDesc: 'Resumen de visitas registradas por los agentes.',
-      visitsListTitle: 'Visitas Recientes',
-      visitsListDesc: 'Últimas 5 visitas registradas en la agencia.'
+      distDesc: 'Polizas emitidas este mes.'
     }
   }[lang];
 
@@ -278,27 +273,7 @@ export default async function Dashboard() {
 
       {/* Visits Section (Admin/Manager only) */}
       {(role === 'ADMIN' || role === 'MANAGER') && (
-        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 animate-in fade-in slide-in-from-bottom-8 delay-700 duration-700 fill-mode-both mt-8">
-          <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
-            <div className="flex flex-col space-y-1.5 p-6 pb-2">
-              <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.visitsTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.visitsDesc}</p>
-            </div>
-            <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
-              <VisitsChart visits={visits} />
-            </div>
-          </div>
-          
-          <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
-            <div className="flex flex-col space-y-1.5 p-6 pb-2">
-              <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.visitsListTitle}</h3>
-              <p className="text-sm text-muted-foreground">{t.visitsListDesc}</p>
-            </div>
-            <div className="p-6 pt-4 flex-1">
-              <VisitsTable visits={visits} />
-            </div>
-          </div>
-        </div>
+        <VisitsDashboardSection visits={visits} />
       )}
     </div>
   )
