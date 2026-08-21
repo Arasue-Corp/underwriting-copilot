@@ -1317,6 +1317,21 @@ export default function QuotesPage() {
                     </div>
 
                     <div className="md:col-span-2">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{(t as any).description || "Description / Summary"}</label>
+                      <textarea 
+                        value={prop.description || ""} 
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].description = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Product summary and examples..."
+                        rows={2}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.uwNotes}</label>
                       <textarea 
                         value={prop.notes} 
