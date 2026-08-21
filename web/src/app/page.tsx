@@ -92,8 +92,7 @@ export default async function Dashboard() {
   if (quotes) {
     quotes.forEach((q: any) => {
       if (role === 'AGENT' && user) {
-        const isMine = q.assigned_to ? q.assigned_to === user.id : q.agent_id === user.id;
-        if (!isMine) return; // Skip quotes assigned to someone else
+        if (q.agent_id !== user.id) return; // Only count quotes where they are the owner
       }
 
       // Add to monthly chart (using sold_premium if accepted, else premium_amount)

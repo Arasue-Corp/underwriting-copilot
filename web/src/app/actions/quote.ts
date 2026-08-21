@@ -261,3 +261,29 @@ export async function updateQuoteRequestData(quoteId: string, formData: any) {
   revalidatePath("/quotes")
   return { success: true }
 }
+
+export async function transferQuoteOwnership(quoteId: string, newOwnerId: string) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
+    return { success: false, error: "Only managers and admins can transfer property." }
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .update({ agent_id: newOwnerId })
+    .eq("id", quoteId)
+
+  if (error) {
+    console.error("Error transferring property:", error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath("/quotes")
+  revalidatePath("/")
+  return { success: true }
+}

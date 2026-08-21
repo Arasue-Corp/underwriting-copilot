@@ -41,7 +41,7 @@ export async function getAgencyData() {
 
   // Aggregate stats per agent
   const agentStats = agents.map(agent => {
-    const agentQuotes = (quotes || []).filter(q => q.assigned_to ? q.assigned_to === agent.id : q.agent_id === agent.id)
+    const agentQuotes = (quotes || []).filter(q => q.agent_id === agent.id)
     
     const totalQuotes = agentQuotes.length
     const boundQuotes = agentQuotes.filter(q => q.status === 'BOUND')

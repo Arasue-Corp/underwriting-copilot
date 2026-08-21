@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil, ArrowRightLeft } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus } from "@/app/actions/quote"
+import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus, transferQuoteOwnership } from "@/app/actions/quote"
 import { QuoteModal } from "@/components/appetite/QuoteModal"
 import { EditQuoteRequestModal } from "@/components/quotes/EditQuoteRequestModal"
 import { useLanguage } from "@/components/language-provider"
@@ -204,6 +204,7 @@ export default function QuotesPage() {
   const [isUploadingDoc, setIsUploadingDoc] = useState(false)
   const [processQuote, setProcessQuote] = useState<any>(null)
   const [assignQuote, setAssignQuote] = useState<any>(null)
+  const [transferOwnerQuote, setTransferOwnerQuote] = useState<any>(null)
   const [editQuoteRequest, setEditQuoteRequest] = useState<any>(null)
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
@@ -259,22 +260,52 @@ export default function QuotesPage() {
     loadData()
   }, [])
 
-  const handleAssign = async (e: React.FormEvent) => {
+  const handleAssign = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    const form = e.target as HTMLFormElement
-    const assigneeId = (form.elements.namedItem("assignee") as HTMLSelectElement).value
-    if (!assigneeId) return
+    const formData = new FormData(e.currentTarget)
+    const assigneeId = formData.get("assignee") as string
     
-    setIsUploading(true)
-    const res = await assignQuoteRequest(assignQuote.id, assigneeId)
-    if (res.success) {
-      toast.success("Solicitud reasignada")
-      setAssignQuote(null)
-      loadData()
-    } else {
-      toast.error(res.error || "Error al asignar")
+    if (assignQuote && assigneeId) {
+      setIsUploading(true)
+      try {
+        const res = await assignQuoteRequest(assignQuote.id, assigneeId)
+        if (res.success) {
+          toast.success(lang === 'es' ? "Asignado exitosamente" : "Assigned successfully")
+          setAssignQuote(null)
+          loadData()
+        } else {
+          toast.error(res.error || "Error")
+        }
+      } catch (e: any) {
+        toast.error(e.message)
+      } finally {
+        setIsUploading(false)
+      }
     }
-    setIsUploading(false)
+  }
+
+  const handleTransferOwnership = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const newOwnerId = formData.get("new_owner") as string
+    
+    if (transferOwnerQuote && newOwnerId) {
+      setIsUploading(true)
+      try {
+        const res = await transferQuoteOwnership(transferOwnerQuote.id, newOwnerId)
+        if (res.success) {
+          toast.success(lang === 'es' ? "Propiedad transferida exitosamente" : "Ownership transferred successfully")
+          setTransferOwnerQuote(null)
+          loadData()
+        } else {
+          toast.error(res.error || "Error")
+        }
+      } catch (e: any) {
+        toast.error(e.message)
+      } finally {
+        setIsUploading(false)
+      }
+    }
   }
 
   const handleProcessSubmit = async () => {
@@ -623,13 +654,22 @@ export default function QuotesPage() {
                         </button>
                         
                         {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
-                          <button 
-                            onClick={() => setAssignQuote(quote)}
-                            title={t.reassignTitle}
-                            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-                          >
-                            <UserPlus className="w-4 h-4" />
-                          </button>
+                          <div className="inline-flex space-x-2">
+                            <button 
+                              onClick={() => setAssignQuote(quote)}
+                              title={lang === 'es' ? 'Asignar para Procesar (Ayuda)' : 'Assign for Processing'}
+                              className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                            >
+                              <UserPlus className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => setTransferOwnerQuote(quote)}
+                              title={lang === 'es' ? 'Ceder Propiedad' : 'Transfer Ownership'}
+                              className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                            >
+                              <ArrowRightLeft className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
                         {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
                           <button 
@@ -1045,8 +1085,12 @@ export default function QuotesPage() {
             className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">{t.reassignTitle}</h3>
-            <p className="text-sm text-muted-foreground mb-4">{t.reassignDesc}</p>
+            <h3 className="text-xl font-bold mb-4">{lang === 'es' ? 'Asignar para Procesar' : 'Assign for Processing'}</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {lang === 'es' 
+                ? 'El agente seleccionado podrá cotizar esta solicitud, pero la propiedad comercial y las comisiones seguirán perteneciendo al creador.' 
+                : 'The selected agent will be able to quote this request, but the ownership and commissions will remain with the creator.'}
+            </p>
             <form onSubmit={handleAssign}>
               <div className="mb-6">
                 <label className="text-sm font-medium mb-2 block">{t.member}</label>
@@ -1064,10 +1108,54 @@ export default function QuotesPage() {
               </div>
               <div className="flex justify-end gap-3">
                 <button type="button" onClick={() => setAssignQuote(null)} className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md" disabled={isUploading}>
-                  Cancelar
+                  {lang === 'es' ? 'Cancelar' : 'Cancel'}
                 </button>
                 <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
                   {isUploading ? t.saving : t.assign}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Transfer Ownership Modal */}
+      {transferOwnerQuote && (
+        <div 
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setTransferOwnerQuote(null)}
+        >
+          <div 
+            className="bg-card w-full max-w-md rounded-xl shadow-lg border border-border p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold mb-4">{lang === 'es' ? 'Ceder Propiedad' : 'Transfer Ownership'}</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {lang === 'es' 
+                ? '¡Atención! Transferir la propiedad asignará todas las métricas, ventas y comisiones de esta cotización al nuevo agente de forma permanente.' 
+                : 'Warning! Transferring ownership will assign all metrics, sales, and commissions of this quote to the new agent permanently.'}
+            </p>
+            <form onSubmit={handleTransferOwnership}>
+              <div className="mb-6">
+                <label className="text-sm font-medium mb-2 block">{t.member}</label>
+                <select 
+                  name="new_owner"
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  required
+                  disabled={isUploading}
+                >
+                  <option value="">{t.select}</option>
+                  {agencyMembers.map(m => (
+                    <option key={m.id} value={m.id}>{m.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setTransferOwnerQuote(null)} className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md" disabled={isUploading}>
+                  {lang === 'es' ? 'Cancelar' : 'Cancel'}
+                </button>
+                <button type="submit" disabled={isUploading} className="px-4 py-2 bg-primary text-primary-foreground text-sm font-medium rounded-md hover:bg-primary/90 disabled:opacity-50">
+                  {isUploading ? t.saving : (lang === 'es' ? 'Transferir' : 'Transfer')}
                 </button>
               </div>
             </form>
