@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { X, UserPlus, Search } from "lucide-react"
 import { toast } from "sonner"
 import { createVisit } from "@/app/actions/visits"
@@ -103,6 +103,17 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
     additional_notes: '',
     next_visit_date: ''
   })
+
+  useEffect(() => {
+    if (isOpen) {
+      if (preselectedClientId) {
+        setMode('EXISTING')
+        setSelectedClientId(preselectedClientId)
+      } else {
+        setSelectedClientId('')
+      }
+    }
+  }, [isOpen, preselectedClientId])
 
   const policyOptions = lang === 'es' ? [
     'Responsabilidad Civil', 'Auto Comercial', 'Workers Comp', 'Responsabilidad Profesional', 'Propiedad Comercial'
