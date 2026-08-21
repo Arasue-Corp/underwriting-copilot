@@ -547,6 +547,11 @@ export default function ProposalCarouselPage() {
                       <h2 className="text-3xl md:text-4xl font-bold text-slate-800 tracking-tight leading-tight">
                         {group.product}
                       </h2>
+                      {group.options[0]?.description && (
+                        <p className="text-slate-500 mt-2 text-lg whitespace-pre-wrap max-w-3xl">
+                          {group.options[0].description}
+                        </p>
+                      )}
                     </div>
 
                     {/* Price Block (Clean typography) */}
