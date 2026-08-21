@@ -52,6 +52,12 @@ export default async function Dashboard() {
   }[lang];
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let role = 'AGENT';
+  if (user) {
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+    if (profile) role = profile.role;
+  }
   
   // Real Data Fetching
   const { data: quotes, error: quotesError } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
@@ -90,7 +96,16 @@ export default async function Dashboard() {
 
       if (q.status === 'ACCEPTED') {
         totalPremium += q.sold_premium || 0;
-        totalCommissions += ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
+        let commAmount = ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
+        if (role === 'AGENT') {
+          const agentCommPct = q.quotes_provided?.[0]?.agent_commission_percentage;
+          if (agentCommPct && !isNaN(parseFloat(agentCommPct))) {
+            commAmount = commAmount * (parseFloat(agentCommPct) / 100);
+          } else {
+            commAmount = 0;
+          }
+        }
+        totalCommissions += commAmount;
         totalAcceptedQuotes++;
         totalResolvedQuotes++;
         
@@ -109,7 +124,14 @@ export default async function Dashboard() {
         // Sum potential commissions from proposals
         if (Array.isArray(q.quotes_provided)) {
           q.quotes_provided.forEach((prop: any) => {
-            const comm = (parseFloat(prop.premium) * parseFloat(prop.commission_percentage)) / 100;
+            let comm = (parseFloat(prop.premium) * parseFloat(prop.commission_percentage)) / 100;
+            if (role === 'AGENT') {
+              if (prop.agent_commission_percentage && !isNaN(parseFloat(prop.agent_commission_percentage))) {
+                comm = comm * (parseFloat(prop.agent_commission_percentage) / 100);
+              } else {
+                comm = 0;
+              }
+            }
             if (!isNaN(comm)) potentialCommissions += comm;
           });
         }

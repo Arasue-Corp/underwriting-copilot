@@ -206,7 +206,7 @@ export default function QuotesPage() {
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
-  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, description: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
+  const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, agent_commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, description: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
   const [availableCarriers, setAvailableCarriers] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [soldPremium, setSoldPremium] = useState("")
@@ -544,7 +544,7 @@ export default function QuotesPage() {
                            onClick={() => {
                              setProcessQuote(quote)
                              const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
-                             setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                             setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                            }}
                            title={t.editQuote}
                            className="p-2.5 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-colors shadow-sm"
@@ -556,7 +556,7 @@ export default function QuotesPage() {
                       <button 
                         onClick={() => {
                           setProcessQuote(quote)
-                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                          setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                         }}
                         className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors flex-1 shadow-sm"
                       >
@@ -637,7 +637,7 @@ export default function QuotesPage() {
                                onClick={() => {
                                  setProcessQuote(quote)
                                  const existing = Array.isArray(quote.quotes_provided) ? quote.quotes_provided : []
-                                 setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                                 setProposals(existing.length > 0 ? existing.map((e: any) => ({...e, file: null, is_annual: !!e.premium, is_monthly: !!e.monthly_payment})) : quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                                }}
                                title={t.editQuote}
                                className="p-1.5 bg-primary/10 text-primary rounded-md hover:bg-primary/20 transition-colors shadow-sm"
@@ -649,7 +649,7 @@ export default function QuotesPage() {
                           <button 
                             onClick={() => {
                               setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
                             }}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
                           >
@@ -1271,6 +1271,21 @@ export default function QuotesPage() {
                         placeholder="0.00"
                       />
                     </div>
+
+                    <div className="md:col-span-1">
+                      <label className="text-xs font-medium text-muted-foreground mb-1 block">{(t as any).agentCommission || "% Comisión (Agente)"}</label>
+                      <input
+                        type="number"
+                        value={prop.agent_commission_percentage || ""}
+                        onChange={e => {
+                          const next = [...proposals]
+                          next[idx].agent_commission_percentage = e.target.value
+                          setProposals(next)
+                        }}
+                        className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                        placeholder="Ej: 20"
+                      />
+                    </div>
                     
                     <div className="md:col-span-2">
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.coveragesLimits}</label>
@@ -1364,7 +1379,7 @@ export default function QuotesPage() {
               ))}
               
               <button 
-                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false }])}
+                onClick={() => setProposals([...proposals, { product: "", carrier: "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false }])}
                 className="flex items-center justify-center w-full py-3 border-2 border-dashed border-border rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
               >
                 <Plus className="w-4 h-4 mr-2" />
