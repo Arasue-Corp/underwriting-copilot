@@ -12,8 +12,8 @@ interface VisitsDashboardSectionProps {
 export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) {
   const langContext = useLanguage()
   const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
-  
-  const [timeWindow, setTimeWindow] = useState('all')
+  const [startDate, setStartDate] = useState('')
+  const [endDate, setEndDate] = useState('')
 
   const t = {
     es: {
@@ -21,47 +21,37 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
       visitsDesc: 'Resumen de visitas registradas por los agentes.',
       visitsListTitle: 'Visitas Recientes',
       visitsListDesc: 'Últimas 5 visitas registradas en la agencia.',
-      all: 'Histórico',
-      today: 'Hoy',
-      week: 'Esta semana',
-      month: 'Este mes',
-      year: 'Este año'
+      from: 'Desde',
+      to: 'Hasta'
     },
     en: {
       visitsTitle: 'Visits Activity',
       visitsDesc: 'Summary of visits registered by agents.',
       visitsListTitle: 'Recent Visits',
       visitsListDesc: 'Last 5 visits registered in the agency.',
-      all: 'All Time',
-      today: 'Today',
-      week: 'This Week',
-      month: 'This Month',
-      year: 'This Year'
+      from: 'From',
+      to: 'To'
     }
   }[lang]
 
-  // Filter visits based on timeWindow
+  // Filter visits based on date range
   const filteredVisits = visits.filter(visit => {
-    if (timeWindow === 'all') return true;
+    if (!startDate && !endDate) return true;
     
     const visitDate = new Date(visit.created_at);
-    const now = new Date();
-    
-    // Normalize today to start of day for accurate comparison
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    // Normalize visit date to start of day for comparison
+    const vDateNorm = new Date(visitDate.getFullYear(), visitDate.getMonth(), visitDate.getDate());
 
-    if (timeWindow === 'today') {
-      return visitDate >= startOfToday;
-    } else if (timeWindow === 'week') {
-      const startOfWeek = new Date(startOfToday);
-      startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay()); // Sunday as start of week
-      return visitDate >= startOfWeek;
-    } else if (timeWindow === 'month') {
-      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      return visitDate >= startOfMonth;
-    } else if (timeWindow === 'year') {
-      const startOfYear = new Date(now.getFullYear(), 0, 1);
-      return visitDate >= startOfYear;
+    if (startDate) {
+      const start = new Date(startDate);
+      const startNorm = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      if (vDateNorm < startNorm) return false;
+    }
+    
+    if (endDate) {
+      const end = new Date(endDate);
+      const endNorm = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+      if (vDateNorm > endNorm) return false;
     }
     
     return true;
@@ -70,18 +60,25 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
   return (
     <div className="mt-8 space-y-4">
       {/* Filters */}
-      <div className="flex justify-end">
-        <select
-          value={timeWindow}
-          onChange={(e) => setTimeWindow(e.target.value)}
-          className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2.5"
-        >
-          <option value="today">{t.today}</option>
-          <option value="week">{t.week}</option>
-          <option value="month">{t.month}</option>
-          <option value="year">{t.year}</option>
-          <option value="all">{t.all}</option>
-        </select>
+      <div className="flex justify-end items-center gap-4">
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">{t.from || 'Desde'}:</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-sm text-muted-foreground">{t.to || 'Hasta'}:</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 animate-in fade-in slide-in-from-bottom-8 delay-700 duration-700 fill-mode-both">
