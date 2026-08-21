@@ -634,7 +634,7 @@ export default function QuotesPage() {
                         {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
                           <button 
                             onClick={() => setEditQuoteRequest(quote)}
-                            title={language === 'es' ? 'Editar Formulario' : 'Edit Form'}
+                            title={lang === 'es' ? 'Editar Formulario' : 'Edit Form'}
                             className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
                           >
                             <Pencil className="w-4 h-4" />
@@ -657,15 +657,17 @@ export default function QuotesPage() {
                              </button>
                            </div>
                         ) : (
-                          <button 
-                            onClick={() => {
-                              setProcessQuote(quote)
-                              setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
-                            }}
-                            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
-                          >
-                            Cotizar
-                          </button>
+                          (userProfile?.role === 'ADMIN' || userProfile?.role === 'MANAGER' || quote.assigned_to === userProfile?.id) && (
+                            <button 
+                              onClick={() => {
+                                setProcessQuote(quote)
+                                setProposals(quote.products?.map((p: any) => ({ product: p.name || p, carrier: quote.carrier_id || "", premium: "", commission_percentage: "", agent_commission_percentage: "", monthly_payment: "", downpayment: "", payment_options: "{t.annualPayment}", coverages: "", included: "", excluded: "", notes: "", description: "", file: null, is_annual: true, is_monthly: false, is_bundled: false })) || [])
+                              }}
+                              className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                            >
+                              Cotizar
+                            </button>
+                          )
                         )}
                       </td>
                     </tr>
