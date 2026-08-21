@@ -90,7 +90,7 @@ export default function ProposalsPage() {
       
     // Si no es admin/manager, solo ve las suyas
     if (profile && profile.role === 'AGENT') {
-        query = query.eq('agent_id', user.id)
+        query = query.or(`agent_id.eq.${user.id},assigned_to.eq.${user.id}`)
     } else if (profile && profile.role === 'MANAGER') {
         query = query.eq('agency_id', profile.agency_id)
     }

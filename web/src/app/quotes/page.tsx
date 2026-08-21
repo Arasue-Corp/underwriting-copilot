@@ -6,6 +6,7 @@ import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus } from "@/app/actions/quote"
 import { QuoteModal } from "@/components/appetite/QuoteModal"
+import { EditQuoteRequestModal } from "@/components/quotes/EditQuoteRequestModal"
 import { useLanguage } from "@/components/language-provider"
 
 export default function QuotesPage() {
@@ -203,6 +204,7 @@ export default function QuotesPage() {
   const [isUploadingDoc, setIsUploadingDoc] = useState(false)
   const [processQuote, setProcessQuote] = useState<any>(null)
   const [assignQuote, setAssignQuote] = useState<any>(null)
+  const [editQuoteRequest, setEditQuoteRequest] = useState<any>(null)
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   
   // Process State
@@ -627,6 +629,15 @@ export default function QuotesPage() {
                             className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
                           >
                             <UserPlus className="w-4 h-4" />
+                          </button>
+                        )}
+                        {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
+                          <button 
+                            onClick={() => setEditQuoteRequest(quote)}
+                            title={language === 'es' ? 'Editar Formulario' : 'Edit Form'}
+                            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                          >
+                            <Pencil className="w-4 h-4" />
                           </button>
                         )}
 
@@ -1070,6 +1081,18 @@ export default function QuotesPage() {
           loadData() // Refresh quotes list if a new quote was created
         }} 
         rule={null}
+        language={lang}
+      />
+
+      {/* Edit Quote Request Modal */}
+      <EditQuoteRequestModal
+        isOpen={!!editQuoteRequest}
+        onClose={() => setEditQuoteRequest(null)}
+        onSuccess={() => {
+          setEditQuoteRequest(null)
+          loadData()
+        }}
+        quote={editQuoteRequest}
         language={lang}
       />
 

@@ -1,0 +1,315 @@
+"use client"
+
+import { useState, useTransition, useEffect, useRef } from 'react'
+import { X, Check, AlertCircle } from "lucide-react"
+import { toast } from "sonner"
+import { updateQuoteRequestData } from "@/app/actions/quote"
+import { INSURANCE_PRODUCTS, ProductField } from "@/lib/constants/insuranceProducts"
+
+interface EditQuoteRequestModalProps {
+  isOpen: boolean
+  onClose: () => void
+  onSuccess: () => void
+  quote: any
+  language?: 'en' | 'es'
+}
+
+export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, language = 'es' }: EditQuoteRequestModalProps) {
+  const [isPending, startTransition] = useTransition()
+  const [formData, setFormData] = useState<Record<string, any>>({})
+  const [error, setError] = useState<string | null>(null)
+  const [invalidFields, setInvalidFields] = useState<string[]>([])
+  const formRef = useRef<HTMLFormElement>(null)
+
+  useEffect(() => {
+    if (isOpen && quote) {
+      setFormData(quote.form_data || {})
+      setError(null)
+      setInvalidFields([])
+    }
+  }, [isOpen, quote])
+
+  if (!isOpen || !quote) return null
+
+  const handleInputChange = (id: string, value: any) => {
+    setFormData(prev => ({ ...prev, [id]: value }))
+    if (error) setError(null)
+    if (invalidFields.includes(id)) {
+      setInvalidFields(prev => prev.filter(f => f !== id))
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    
+    // Validate required fields based on what is rendered
+    const missingFields: string[] = []
+    
+    const checkRequired = (field: ProductField | any) => {
+      if (field.required && field.type !== 'file') {
+        if (!formData[field.id] || String(formData[field.id]).trim() === '') {
+          missingFields.push(field.id)
+        }
+      }
+    }
+
+    // Step 1 general fields
+    const requiredStep1 = [
+      { id: 'general_client_name', label: language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA', type: 'text', required: true },
+      { id: 'general_legal_structure', label: language === 'es' ? 'Estructura Legal' : 'Legal Structure', type: 'select', required: true },
+      { id: 'general_fein', label: 'FEIN', type: 'text', required: true },
+      { id: 'general_contact', label: language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)', type: 'text', required: true },
+      { id: 'general_address', label: language === 'es' ? 'Dirección Física' : 'Physical Address', type: 'text', required: true },
+      { id: 'general_operations', label: language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description', type: 'textarea', required: true },
+      { id: 'general_experience_years', label: language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience', type: 'number', required: true },
+    ]
+    requiredStep1.forEach(checkRequired)
+
+    // Product specific fields
+    const quoteProducts = quote.products || []
+    const selectedProducts = INSURANCE_PRODUCTS.filter(p => quoteProducts.includes(p.name) || quoteProducts.includes(p.nameEn) || quoteProducts.includes(p.id))
+    
+    selectedProducts.forEach(product => {
+      product.fields.forEach(checkRequired)
+    })
+
+    if (missingFields.length > 0) {
+      setInvalidFields(missingFields)
+      setError(language === 'es' ? 'Faltan campos obligatorios. Por favor, revísalos.' : 'Missing required fields. Please review.')
+      if (formRef.current) formRef.current.scrollTop = 0
+      return
+    }
+
+    startTransition(async () => {
+      try {
+        const result = await updateQuoteRequestData(quote.id, formData)
+        if (result && !result.success) {
+          setError(language === 'es' ? `Hubo un error al actualizar: ${result.error}` : `Error updating: ${result.error}`)
+          if (formRef.current) formRef.current.scrollTop = 0
+          return
+        }
+        toast.success(language === 'es' ? "Cotización actualizada exitosamente" : "Quote updated successfully")
+        onSuccess()
+      } catch (error: any) {
+        console.error(error)
+        setError(language === 'es' ? `Hubo un error inesperado: ${error.message || 'Error desconocido'}` : `There was an unexpected error: ${error.message || 'Unknown error'}`)
+        if (formRef.current) formRef.current.scrollTop = 0
+      }
+    })
+  }
+
+  const renderField = (field: ProductField | any) => {
+    // Skip file inputs for editing to avoid complexity of re-uploading
+    if (field.type === 'file') {
+      const fileValue = formData[field.id]
+      return (
+        <div className="space-y-1 w-full p-3 bg-muted/30 rounded-md border text-sm text-muted-foreground">
+          {fileValue ? (language === 'es' ? 'Archivo adjunto previamente.' : 'File previously attached.') : (language === 'es' ? 'Sin archivo adjunto.' : 'No file attached.')}
+        </div>
+      )
+    }
+
+    const value = formData[field.id] || ""
+    const isInvalid = invalidFields.includes(field.id)
+    const baseClasses = "flex w-full rounded-md border bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    const inputClasses = `${baseClasses} h-10 ${isInvalid ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : 'border-input'}`
+    
+    if (field.type === 'textarea') {
+      return (
+        <div className="space-y-1 w-full">
+          <textarea
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            className={`${baseClasses} min-h-[80px] ${isInvalid ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : 'border-input'}`}
+            placeholder={language === 'es' ? field.label : field.labelEn}
+          />
+        </div>
+      )
+    }
+
+    if (field.type === 'select' || field.type === 'boolean') {
+      const options = field.type === 'boolean' 
+        ? (language === 'es' ? ['Sí', 'No'] : ['Yes', 'No'])
+        : (language === 'es' ? field.options : field.optionsEn) || []
+      
+      return (
+        <div className="space-y-1 w-full">
+          <select
+            value={value}
+            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            className={inputClasses}
+          >
+            <option value="">{language === 'es' ? 'Seleccionar...' : 'Select...'}</option>
+            {options?.map((opt: string) => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+      )
+    }
+
+    return (
+      <div className="space-y-1 w-full">
+        <input
+          type={field.type === 'number' ? 'number' : 'text'}
+          value={value}
+          onChange={(e) => handleInputChange(field.id, e.target.value)}
+          className={inputClasses}
+          placeholder={language === 'es' ? field.label : field.labelEn}
+        />
+      </div>
+    )
+  }
+
+  const quoteProducts = quote.products || []
+  const selectedProducts = INSURANCE_PRODUCTS.filter(p => quoteProducts.includes(p.name) || quoteProducts.includes(p.nameEn) || quoteProducts.includes(p.id))
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
+      <div className="relative w-full max-w-3xl max-h-full flex flex-col rounded-xl border border-border bg-card shadow-lg">
+        {/* Header */}
+        <div className="flex-none flex items-center justify-between border-b border-border p-6 bg-card z-10 rounded-t-xl">
+          <div className="pr-8">
+            <h2 className="text-xl font-bold leading-none tracking-tight text-foreground">
+              {language === 'es' ? 'Editar Solicitud' : 'Edit Request'}
+            </h2>
+            <p className="text-sm text-muted-foreground mt-2">
+              {quote.client_name} - {quote.carrier_id}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring shrink-0">
+            <X className="h-6 w-6 text-foreground" />
+          </button>
+        </div>
+        
+        <form id="edit-quote-form" ref={formRef} onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6" noValidate>
+          
+          {error && (
+            <div className="mb-6 p-4 bg-destructive/15 text-destructive rounded-lg flex items-start space-x-3 border border-destructive/30">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div className="text-sm whitespace-pre-wrap font-medium">{error}</div>
+            </div>
+          )}
+
+          <div className="space-y-8">
+            {/* General Info */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 border-b pb-2">
+                {language === 'es' ? 'Información General' : 'General Information'}
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                  </label>
+                  {renderField({ id: 'general_client_name', type: 'text', required: true })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                  </label>
+                  {renderField({ 
+                    id: 'general_legal_structure', 
+                    type: 'select', 
+                    required: true,
+                    options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
+                    optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
+                  })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">FEIN</label>
+                  {renderField({ id: 'general_fein', type: 'text', required: true })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)'}
+                  </label>
+                  {renderField({ id: 'general_contact', type: 'text', required: true })}
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Dirección Física (Dirección, ZIP, Ciudad, Estado)' : 'Physical Address (Street, ZIP, City, State)'}
+                  </label>
+                  {renderField({ id: 'general_address', type: 'text', required: true })}
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
+                  </label>
+                  {renderField({ id: 'general_operations', type: 'textarea', required: true })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
+                  </label>
+                  {renderField({ id: 'general_experience_years', type: 'number', required: true })}
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">
+                    {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
+                  </label>
+                  {renderField({ id: 'general_loss_runs', type: 'textarea' })}
+                </div>
+              </div>
+            </div>
+
+            {/* Product Specific Info */}
+            {selectedProducts.map(product => (
+              <div key={product.id} className="bg-muted/30 p-5 rounded-xl border border-border">
+                <h4 className="font-bold text-foreground mb-4">
+                  {language === 'es' ? product.name : product.nameEn}
+                </h4>
+                <div className="grid grid-cols-1 gap-4">
+                  {product.fields.map(field => (
+                    <div key={field.id} className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? field.label : field.labelEn}
+                        {!field.required && (
+                          <span className="text-muted-foreground font-normal ml-1">
+                            ({language === 'es' ? 'Opcional' : 'Optional'})
+                          </span>
+                        )}
+                      </label>
+                      {renderField(field)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div className="bg-muted/30 p-5 rounded-xl border border-border">
+              <h4 className="font-bold text-foreground mb-4">
+                {language === 'es' ? 'Campos Personalizados o Notas Adicionales' : 'Custom Fields or Additional Notes'}
+              </h4>
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">
+                  {language === 'es' ? 'Añade cualquier información adicional requerida para esta cotización específica' : 'Add any additional information required for this specific quote'}
+                </label>
+                {renderField({ id: 'custom_notes', type: 'textarea' })}
+              </div>
+            </div>
+          </div>
+
+        </form>
+
+        {/* Footer Navigation */}
+        <div className="flex-none mt-auto p-4 border-t border-border flex justify-end items-center bg-card rounded-b-xl z-10 space-x-3">
+          <button type="button" onClick={onClose} className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground font-medium border border-transparent hover:border-border rounded-md">
+            {language === 'es' ? 'Cancelar' : 'Cancel'}
+          </button>
+          
+          <button 
+            type="submit" 
+            form="edit-quote-form"
+            disabled={isPending}
+            className="inline-flex items-center px-6 py-2 bg-primary text-primary-foreground rounded-md text-sm font-bold hover:bg-primary/90 disabled:opacity-50"
+          >
+            {isPending ? (language === 'es' ? 'Guardando...' : 'Saving...') : (language === 'es' ? 'Guardar Cambios' : 'Save Changes')}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}

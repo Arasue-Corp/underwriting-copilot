@@ -62,7 +62,7 @@ export default async function Dashboard() {
   }
   
   // Real Data Fetching
-  const { data: quotes, error: quotesError } = await supabase.from('quote_requests').select('status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
+  const { data: quotes, error: quotesError } = await supabase.from('quote_requests').select('agent_id, assigned_to, status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
   
   let visits: any[] = [];
   if (role === 'ADMIN' || role === 'MANAGER') {
@@ -91,6 +91,11 @@ export default async function Dashboard() {
   
   if (quotes) {
     quotes.forEach((q: any) => {
+      if (role === 'AGENT' && user) {
+        const isMine = q.assigned_to ? q.assigned_to === user.id : q.agent_id === user.id;
+        if (!isMine) return; // Skip quotes assigned to someone else
+      }
+
       // Add to monthly chart (using sold_premium if accepted, else premium_amount)
       if (q.created_at) {
         const d = new Date(q.created_at);

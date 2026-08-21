@@ -233,3 +233,31 @@ export async function acceptClientQuote(quoteId: string, soldPremium: number, se
   revalidatePath("/")
   return { success: true }
 }
+
+export async function updateQuoteRequestData(quoteId: string, formData: any) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  const { data: quote } = await supabase.from("quote_requests").select("agent_id").eq("id", quoteId).single()
+  
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+  
+  if (!quote || (quote.agent_id !== user.id && profile?.role !== 'ADMIN' && profile?.role !== 'MANAGER')) {
+    return { success: false, error: "Unauthorized to edit this quote" }
+  }
+
+  const { error } = await supabase
+    .from("quote_requests")
+    .update({ form_data: formData })
+    .eq("id", quoteId)
+
+  if (error) {
+    console.error("Error updating quote form data:", error)
+    return { success: false, error: error.message }
+  }
+
+  revalidatePath("/quotes")
+  return { success: true }
+}
