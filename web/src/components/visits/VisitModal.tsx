@@ -19,7 +19,7 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
   const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
   const t = {
     es: {
-      title: 'Registrar Reporte de Visita',
+      title: 'Registrar Visita',
       existingClient: 'Cliente Existente',
       newClient: 'Nuevo Cliente',
       selectClientError: 'Selecciona un cliente de la lista',
@@ -50,7 +50,7 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       savingBtn: 'Guardando...'
     },
     en: {
-      title: 'Log Visit Report',
+      title: 'Log Visit',
       existingClient: 'Existing Client',
       newClient: 'New Client',
       selectClientError: 'Select a client from the list',

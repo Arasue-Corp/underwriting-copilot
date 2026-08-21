@@ -64,7 +64,7 @@ export default function VisitsPage() {
       me: 'Me',
       unassigned: 'Unassigned',
       canceled: 'Canceled',
-      registerVisit: 'Register Visit',
+      registerVisit: 'Log Visit',
       clientDeleted: 'Deleted Client',
       registeredBy: 'Registered by:'
     }
