@@ -85,8 +85,7 @@ export async function updateVisit(id: string, data: any) {
   }
 }
 
-// Get visits for the CRM view
-export async function getVisits(filters?: { startDate?: string, endDate?: string, agencyId?: string, agentId?: string }) {
+export async function getVisits(filters?: { startDate?: string, endDate?: string, agencyId?: string, agentId?: string | string[] }) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -134,7 +133,11 @@ export async function getVisits(filters?: { startDate?: string, endDate?: string
       query = query.lte('created_at', `${filters.endDate}T23:59:59.999Z`)
     }
     if (filters?.agentId) {
-      query = query.eq('assigned_to', filters.agentId)
+      if (Array.isArray(filters.agentId)) {
+        query = query.in('assigned_to', filters.agentId)
+      } else {
+        query = query.eq('assigned_to', filters.agentId)
+      }
     }
 
     const { data, error } = await query

@@ -21,7 +21,8 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
   const [startDate, setStartDate] = useState(searchParams.get("start") || "")
   const [endDate, setEndDate] = useState(searchParams.get("end") || "")
   const [agencyId, setAgencyId] = useState(searchParams.get("agency") || "all")
-  const [agentId, setAgentId] = useState(searchParams.get("agent") || "all")
+  const [agentIds, setAgentIds] = useState<string[]>(searchParams.getAll("agent"))
+  const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
 
   // Translations
   const t = {
@@ -29,21 +30,23 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
       from: "From",
       to: "To",
       agency: "Agency",
-      agent: "Agent",
+      agent: "Agent(s)",
       allAgencies: "All Agencies",
       allAgents: "All Agents",
       apply: "Apply Filters",
-      clear: "Clear"
+      clear: "Clear",
+      selected: "selected"
     },
     es: {
       from: "Desde",
       to: "Hasta",
       agency: "Agencia",
-      agent: "Agente",
+      agent: "Agente(s)",
       allAgencies: "Todas las Agencias",
       allAgents: "Todos los Agentes",
       apply: "Aplicar Filtros",
-      clear: "Limpiar"
+      clear: "Limpiar",
+      selected: "seleccionados"
     }
   }[lang === 'es' ? 'es' : 'en']
 
@@ -64,18 +67,33 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
     if (agencyId !== "all") params.set("agency", agencyId)
     else params.delete("agency")
     
-    if (agentId !== "all") params.set("agent", agentId)
-    else params.delete("agent")
+    // Clear existing agents
+    params.delete("agent")
+    if (agentIds.length > 0 && !agentIds.includes("all")) {
+      agentIds.forEach(id => params.append("agent", id))
+    }
 
     router.push(`${pathname}?${params.toString()}`)
+    setIsAgentDropdownOpen(false)
   }
 
   const handleClear = () => {
     setStartDate("")
     setEndDate("")
     setAgencyId("all")
-    setAgentId("all")
+    setAgentIds([])
     router.push(pathname)
+  }
+
+  const toggleAgent = (id: string) => {
+    if (id === "all") {
+      setAgentIds([])
+      return
+    }
+    setAgentIds(prev => {
+      if (prev.includes(id)) return prev.filter(i => i !== id)
+      return [...prev, id]
+    })
   }
 
   // If the user is just an agent, they don't need to see the agency/agent filters
@@ -83,7 +101,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
   const isAgent = role === 'AGENT'
 
   return (
-    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row items-end gap-4 flex-wrap">
+    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row items-end gap-4 flex-wrap relative">
       <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.from}</label>
         <input 
@@ -111,7 +129,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
             value={agencyId}
             onChange={(e) => {
               setAgencyId(e.target.value)
-              setAgentId("all") // Reset agent when agency changes
+              setAgentIds([]) // Reset agent when agency changes
             }}
             className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
@@ -124,18 +142,46 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
       )}
 
       {!isAgent && (
-        <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
+        <div className="flex flex-col gap-1.5 flex-1 min-w-[160px] relative">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.agent}</label>
-          <select 
-            value={agentId}
-            onChange={(e) => setAgentId(e.target.value)}
-            className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          
+          {/* Custom Dropdown Trigger */}
+          <div 
+            onClick={() => setIsAgentDropdownOpen(!isAgentDropdownOpen)}
+            className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground cursor-pointer flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-primary/50"
           >
-            <option value="all">{t.allAgents}</option>
-            {visibleAgents.map(a => (
-              <option key={a.id} value={a.id}>{a.name}</option>
-            ))}
-          </select>
+            <span className="truncate pr-2">
+              {agentIds.length === 0 ? t.allAgents : `${agentIds.length} ${t.selected}`}
+            </span>
+            <span className="text-xs">▼</span>
+          </div>
+
+          {/* Custom Dropdown Menu */}
+          {isAgentDropdownOpen && (
+            <div className="absolute top-[100%] left-0 mt-1 w-full max-h-60 overflow-y-auto bg-card border border-border rounded-lg shadow-lg z-50 p-2 flex flex-col gap-1">
+              <label className="flex items-center gap-2 p-1.5 hover:bg-muted rounded-md cursor-pointer text-sm">
+                <input 
+                  type="checkbox" 
+                  checked={agentIds.length === 0} 
+                  onChange={() => toggleAgent("all")}
+                  className="rounded border-border text-primary focus:ring-primary"
+                />
+                <span className="truncate">{t.allAgents}</span>
+              </label>
+              
+              {visibleAgents.map(a => (
+                <label key={a.id} className="flex items-center gap-2 p-1.5 hover:bg-muted rounded-md cursor-pointer text-sm">
+                  <input 
+                    type="checkbox" 
+                    checked={agentIds.includes(a.id)} 
+                    onChange={() => toggleAgent(a.id)}
+                    className="rounded border-border text-primary focus:ring-primary"
+                  />
+                  <span className="truncate">{a.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

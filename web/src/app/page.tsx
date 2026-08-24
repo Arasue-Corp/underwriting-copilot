@@ -95,17 +95,28 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   
   if (role === 'ADMIN') {
     if (agencyId) quotesQuery = quotesQuery.eq('agency_id', agencyId);
-    if (agentId) quotesQuery = quotesQuery.eq('agent_id', agentId);
+    if (agentId) {
+      if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
+      else quotesQuery = quotesQuery.eq('agent_id', agentId);
+    }
   } else if (role === 'MANAGER') {
     if (userAgencyId) quotesQuery = quotesQuery.eq('agency_id', userAgencyId);
-    if (agentId) quotesQuery = quotesQuery.eq('agent_id', agentId);
+    if (agentId) {
+      if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
+      else quotesQuery = quotesQuery.eq('agent_id', agentId);
+    }
   }
   
   const { data: quotes, error: quotesError } = await quotesQuery;
   
   let visits: any[] = [];
   if (role === 'ADMIN' || role === 'MANAGER') {
-    visits = await getVisits({ startDate, endDate, agencyId, agentId });
+    visits = await getVisits({ 
+      startDate: startDate as string | undefined, 
+      endDate: endDate as string | undefined, 
+      agencyId: agencyId as string | undefined, 
+      agentId: agentId as string | string[] | undefined 
+    });
   }
   
   if (quotesError) {
