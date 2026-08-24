@@ -135,7 +135,24 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
     }
 
     // Validate step 2 manually
-    // For generic quote, we just check if there's any file or note (optional)
+    const requiredProductFields: { id: string; label: string }[] = []
+    const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
+    selectedProducts.forEach(product => {
+      product.fields.forEach(field => {
+        if (field.required) {
+          requiredProductFields.push({ id: field.id, label: language === 'es' ? field.label : field.labelEn })
+        }
+      })
+    })
+
+    const missingProductFields = requiredProductFields.filter(f => !formData[f.id] || String(formData[f.id]).trim() === '')
+    if (missingProductFields.length > 0) {
+      setInvalidFields(missingProductFields.map(m => m.id))
+      setError(language === 'es' ? `Faltan campos obligatorios en los productos seleccionados:\n${missingProductFields.map(m => '- ' + m.label).join('\n')}` : `Missing required fields in selected products:\n${missingProductFields.map(m => '- ' + m.label).join('\n')}`)
+      if (formRef.current) formRef.current.scrollTop = 0
+      return
+    }
+
     setInvalidFields([])
 
     startTransition(async () => {
@@ -395,6 +412,30 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                 {language === 'es' ? 'Detalles Específicos por Producto' : 'Product Specific Details'}
               </h3>
               
+              {/* Product Specific Info */}
+              {selectedProducts.map(product => (
+                <div key={product.id} className="bg-muted/30 p-5 rounded-xl border border-border">
+                  <h4 className="font-bold text-foreground mb-4">
+                    {language === 'es' ? product.name : product.nameEn}
+                  </h4>
+                  <div className="grid grid-cols-1 gap-4">
+                    {product.fields.map(field => (
+                      <div key={field.id} className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? field.label : field.labelEn}
+                          {!field.required && (
+                            <span className="text-muted-foreground font-normal ml-1">
+                              ({language === 'es' ? 'Opcional' : 'Optional'})
+                            </span>
+                          )}
+                        </label>
+                        {renderField(field)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+
               <div className="bg-muted/30 p-5 rounded-xl border border-border">
                 <h4 className="font-bold text-foreground mb-4">
                   {language === 'es' ? 'Documentos Adjuntos' : 'Attachments'}

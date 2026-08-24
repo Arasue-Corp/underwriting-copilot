@@ -281,6 +281,26 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
 
             <div className="bg-muted/30 p-5 rounded-xl border border-border">
               <h4 className="font-bold text-foreground mb-4">
+                {language === 'es' ? 'Documentos Adjuntos' : 'Attachments'}
+              </h4>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Acord 130 / 125 / etc.</label>
+                  {renderField({ id: 'generic_acord', type: 'file' })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Loss Runs</label>
+                  {renderField({ id: 'generic_loss_runs', type: 'file' })}
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">{language === 'es' ? 'Otro Documento' : 'Other Document'}</label>
+                  {renderField({ id: 'generic_other_doc', type: 'file' })}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-muted/30 p-5 rounded-xl border border-border">
+              <h4 className="font-bold text-foreground mb-4">
                 {language === 'es' ? 'Campos Personalizados o Notas Adicionales' : 'Custom Fields or Additional Notes'}
               </h4>
               <div className="space-y-2">
