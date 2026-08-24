@@ -40,6 +40,7 @@ import HeaderAuth from "@/components/layout/HeaderAuth";
 import MobileNav from "@/components/layout/MobileNav";
 import SidebarNav from "@/components/layout/SidebarNav";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 import { Users } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -136,7 +137,8 @@ export default async function RootLayout({
             header={
               <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
                 <MobileNav role={role} t={t} />
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4 md:gap-6">
+                  {user && <NotificationBell />}
                   <HeaderAuth />
                 </div>
               </header>

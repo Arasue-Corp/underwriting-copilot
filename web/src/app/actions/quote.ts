@@ -91,6 +91,24 @@ export async function submitQuoteRequest(formData: FormData) {
       return { success: false, error: error.message || "Failed to submit quote" }
     }
     
+    // Notify managers
+    const { data: managers } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("agency_id", profile.agency_id)
+      .in("role", ["MANAGER", "ADMIN"])
+      
+    if (managers && managers.length > 0) {
+      const notifications = managers.map(m => ({
+        user_id: m.id,
+        title: "Nueva Solicitud de Cotización",
+        message: `El agente ha solicitado una cotización para ${clientName}.`,
+        type: "new_quote",
+        link: "/quotes"
+      }))
+      await supabase.from("notifications").insert(notifications)
+    }
+
     return { success: true }
   } catch (error: any) {
     console.error("Unexpected error in submitQuoteRequest:", error)
@@ -193,6 +211,18 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
     return { success: false, error: error.message }
   }
 
+  // Notify agent
+  const { data: quote } = await supabase.from("quote_requests").select("agent_id, client_name").eq("id", quoteId).single()
+  if (quote && quote.agent_id !== user.id) {
+    await supabase.from("notifications").insert({
+      user_id: quote.agent_id,
+      title: "Actualización de Cotización",
+      message: `El estado de la cotización de ${quote.client_name} cambió a ${status}.`,
+      type: "quote_update",
+      link: "/quotes"
+    })
+  }
+
   revalidatePath("/quotes")
   revalidatePath("/")
   return { success: true }
@@ -227,6 +257,19 @@ export async function acceptClientQuote(quoteId: string, soldPremium: number, se
   if (error) {
     console.error("Error updating quote status:", error)
     return { success: false, error: error.message }
+  }
+
+  // Notify agent if needed
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: quoteRequest } = await supabase.from("quote_requests").select("agent_id, client_name").eq("id", quoteId).single()
+  if (user && quoteRequest && quoteRequest.agent_id !== user.id) {
+    await supabase.from("notifications").insert({
+      user_id: quoteRequest.agent_id,
+      title: "Cotización Aceptada",
+      message: `El cliente ${quoteRequest.client_name} ha aceptado la cotización.`,
+      type: "quote_accepted",
+      link: "/quotes"
+    })
   }
 
   revalidatePath("/quotes")
