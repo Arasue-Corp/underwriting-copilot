@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil, ArrowRightLeft } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil, ArrowRightLeft, Copy } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus, transferQuoteOwnership } from "@/app/actions/quote"
+import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus, transferQuoteOwnership, duplicateQuoteRequest } from "@/app/actions/quote"
 import { QuoteModal } from "@/components/appetite/QuoteModal"
 import { EditQuoteRequestModal } from "@/components/quotes/EditQuoteRequestModal"
 import { useLanguage } from "@/components/language-provider"
@@ -305,6 +305,23 @@ export default function QuotesPage() {
       } finally {
         setIsUploading(false)
       }
+    }
+  }
+
+  const handleDuplicate = async (quoteId: string) => {
+    setIsUploading(true)
+    try {
+      const res = await duplicateQuoteRequest(quoteId)
+      if (res.success) {
+        toast.success(lang === 'es' ? "Cotización duplicada exitosamente" : "Quote duplicated successfully")
+        loadData()
+      } else {
+        toast.error(res.error || "Error")
+      }
+    } catch (e: any) {
+      toast.error(e.message)
+    } finally {
+      setIsUploading(false)
     }
   }
 
@@ -672,13 +689,23 @@ export default function QuotesPage() {
                           </div>
                         )}
                         {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN') && (
-                          <button 
-                            onClick={() => setEditQuoteRequest(quote)}
-                            title={lang === 'es' ? 'Editar Formulario' : 'Edit Form'}
-                            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
+                          <div className="inline-flex space-x-2">
+                            <button 
+                              onClick={() => setEditQuoteRequest(quote)}
+                              title={lang === 'es' ? 'Editar Formulario' : 'Edit Form'}
+                              className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDuplicate(quote.id)}
+                              title={lang === 'es' ? 'Duplicar Solicitud' : 'Duplicate Request'}
+                              className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                              disabled={isUploading}
+                            >
+                              <Copy className="w-4 h-4" />
+                            </button>
+                          </div>
                         )}
 
                         {quote.status === 'QUOTED' ? (

@@ -330,3 +330,61 @@ export async function transferQuoteOwnership(quoteId: string, newOwnerId: string
   revalidatePath("/")
   return { success: true }
 }
+
+export async function duplicateQuoteRequest(quoteId: string) {
+  const supabase = await createClient()
+  
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "Unauthorized" }
+
+  // 1. Fetch original quote
+  const { data: quote, error: fetchError } = await supabase
+    .from("quote_requests")
+    .select("*")
+    .eq("id", quoteId)
+    .single()
+
+  if (fetchError || !quote) {
+    return { success: false, error: "Original quote not found." }
+  }
+
+  // 2. Insert new duplicated quote
+  const { error: insertError } = await supabase.from("quote_requests").insert({
+    agent_id: quote.agent_id,
+    agency_id: quote.agency_id,
+    client_name: quote.client_name,
+    client_business_type: quote.client_business_type,
+    carrier_id: quote.carrier_id,
+    coverage_requested: quote.coverage_requested,
+    products: quote.products,
+    form_data: quote.form_data,
+    status: "PENDING_MANAGER"
+  })
+
+  if (insertError) {
+    console.error("Error duplicating quote:", insertError)
+    return { success: false, error: insertError.message }
+  }
+
+  // 3. Notify managers
+  const { data: managers } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("agency_id", quote.agency_id)
+    .in("role", ["MANAGER", "ADMIN"])
+    
+  if (managers && managers.length > 0) {
+    const notifications = managers.map(m => ({
+      user_id: m.id,
+      title: "Solicitud Duplicada",
+      message: `El agente ha duplicado una solicitud para ${quote.client_name}.`,
+      type: "new_quote",
+      link: "/quotes"
+    }))
+    await supabase.from("notifications").insert(notifications)
+  }
+
+  revalidatePath("/quotes")
+  revalidatePath("/")
+  return { success: true }
+}
