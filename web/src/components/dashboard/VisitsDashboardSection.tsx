@@ -63,23 +63,23 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
   return (
     <div className="mt-8 space-y-4">
       {/* Filters */}
-      <div className="flex justify-end items-center gap-4">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
           <label className="text-sm text-muted-foreground">{t.from || 'Desde'}:</label>
           <input
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
+            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 w-full sm:w-auto"
           />
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
           <label className="text-sm text-muted-foreground">{t.to || 'Hasta'}:</label>
           <input
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
+            className="bg-background border border-border text-foreground text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 w-full sm:w-auto"
           />
         </div>
       </div>

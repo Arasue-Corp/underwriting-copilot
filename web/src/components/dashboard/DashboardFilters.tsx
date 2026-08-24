@@ -101,7 +101,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
   const isAgent = role === 'AGENT'
 
   return (
-    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row items-end gap-4 flex-wrap relative">
+    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row md:items-end items-stretch gap-4 flex-wrap relative">
       <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.from}</label>
         <input 
