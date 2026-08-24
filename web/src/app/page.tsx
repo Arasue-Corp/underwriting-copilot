@@ -3,13 +3,20 @@ import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
 import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
 import { VisitsDashboardSection } from "@/components/dashboard/VisitsDashboardSection"
+import { DashboardFilters } from "@/components/dashboard/DashboardFilters"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { getVisits } from "@/app/actions/visits"
 
 export const dynamic = 'force-dynamic';
 
-export default async function Dashboard() {
+export default async function Dashboard(props: { searchParams: Promise<{ [key: string]: string | undefined }> }) {
+  const searchParams = await props.searchParams;
+  const startDate = searchParams.start;
+  const endDate = searchParams.end;
+  const agencyId = searchParams.agency;
+  const agentId = searchParams.agent;
+
   const cookieStore = await cookies();
   const langCookie = cookieStore.get('NEXT_LOCALE')?.value as 'en' | 'es' | undefined;
   const lang = langCookie === 'es' ? 'es' : 'en';
@@ -56,17 +63,49 @@ export default async function Dashboard() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   let role = 'AGENT';
+  let userAgencyId: string | undefined;
   if (user) {
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-    if (profile) role = profile.role;
+    const { data: profile } = await supabase.from('profiles').select('role, agency_id').eq('id', user.id).single();
+    if (profile) {
+      role = profile.role;
+      userAgencyId = profile.agency_id;
+    }
   }
   
-  // Real Data Fetching
-  const { data: quotes, error: quotesError } = await supabase.from('quote_requests').select('agent_id, assigned_to, status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
+  // Fetch agencies & agents for filters
+  let agencies: { id: string; name: string }[] = [];
+  let agents: { id: string; name: string; agency_id?: string }[] = [];
+  
+  if (role === 'ADMIN') {
+    const { data: ags } = await supabase.from('agencies').select('id, name');
+    agencies = ags || [];
+    
+    const { data: agnts } = await supabase.from('profiles').select('id, name, agency_id').eq('role', 'AGENT');
+    agents = agnts || [];
+  } else if (role === 'MANAGER' && userAgencyId) {
+    const { data: agnts } = await supabase.from('profiles').select('id, name, agency_id').eq('role', 'AGENT').eq('agency_id', userAgencyId);
+    agents = agnts || [];
+  }
+
+  // Real Data Fetching with Filters
+  let quotesQuery = supabase.from('quote_requests').select('agent_id, assigned_to, status, premium_amount, commission_amount, sold_premium, commission_percentage, quotes_provided, carrier_id, created_at');
+  
+  if (startDate) quotesQuery = quotesQuery.gte('created_at', `${startDate}T00:00:00.000Z`);
+  if (endDate) quotesQuery = quotesQuery.lte('created_at', `${endDate}T23:59:59.999Z`);
+  
+  if (role === 'ADMIN') {
+    if (agencyId) quotesQuery = quotesQuery.eq('agency_id', agencyId);
+    if (agentId) quotesQuery = quotesQuery.eq('agent_id', agentId);
+  } else if (role === 'MANAGER') {
+    if (userAgencyId) quotesQuery = quotesQuery.eq('agency_id', userAgencyId);
+    if (agentId) quotesQuery = quotesQuery.eq('agent_id', agentId);
+  }
+  
+  const { data: quotes, error: quotesError } = await quotesQuery;
   
   let visits: any[] = [];
   if (role === 'ADMIN' || role === 'MANAGER') {
-    visits = await getVisits();
+    visits = await getVisits({ startDate, endDate, agencyId, agentId });
   }
   
   if (quotesError) {
@@ -162,13 +201,22 @@ export default async function Dashboard() {
   
   const hitRatio = totalResolvedQuotes > 0 ? Math.round((totalAcceptedQuotes / totalResolvedQuotes) * 100) : 0;
 
-  const { count: agentsCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
+  // Active agents count
+  let agentsCountQuery = supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
+  if (role === 'MANAGER' && userAgencyId) {
+    agentsCountQuery = agentsCountQuery.eq('agency_id', userAgencyId);
+  } else if (role === 'ADMIN' && agencyId) {
+    agentsCountQuery = agentsCountQuery.eq('agency_id', agencyId);
+  }
+  const { count: agentsCount } = await agentsCountQuery;
   const activeAgents = agentsCount || 0;
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
   return (
     <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <DashboardFilters role={role} lang={lang} agencies={agencies} agents={agents} />
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between space-y-2 md:space-y-0">
         <CrisolPulse 
           title={t.title} 

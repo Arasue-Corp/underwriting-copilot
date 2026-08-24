@@ -86,7 +86,7 @@ export async function updateVisit(id: string, data: any) {
 }
 
 // Get visits for the CRM view
-export async function getVisits() {
+export async function getVisits(filters?: { startDate?: string, endDate?: string, agencyId?: string, agentId?: string }) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
@@ -114,8 +114,27 @@ export async function getVisits() {
       // Agents see what they created or what is assigned to them
       query = query.or(`created_by.eq.${user.id},assigned_to.eq.${user.id}`)
     } else if (profile.role === 'MANAGER') {
-      // Managers see everything in their agency
-      query = query.eq('agency_id', profile.agency_id)
+      // Managers see everything in their agency (unless filtered further)
+      if (filters?.agencyId) {
+        query = query.eq('agency_id', filters.agencyId)
+      } else {
+        query = query.eq('agency_id', profile.agency_id)
+      }
+    } else if (profile.role === 'ADMIN') {
+      if (filters?.agencyId) {
+        query = query.eq('agency_id', filters.agencyId)
+      }
+    }
+    
+    // Additional filters
+    if (filters?.startDate) {
+      query = query.gte('created_at', `${filters.startDate}T00:00:00.000Z`)
+    }
+    if (filters?.endDate) {
+      query = query.lte('created_at', `${filters.endDate}T23:59:59.999Z`)
+    }
+    if (filters?.agentId) {
+      query = query.eq('assigned_to', filters.agentId)
     }
 
     const { data, error } = await query
