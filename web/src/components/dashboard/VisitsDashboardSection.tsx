@@ -4,6 +4,7 @@ import { useState } from "react"
 import { useLanguage } from "@/components/language-provider"
 import { VisitsChart } from "@/components/dashboard/VisitsChart"
 import { VisitsTable } from "@/components/dashboard/VisitsTable"
+import { Filter } from "lucide-react"
 
 interface VisitsDashboardSectionProps {
   visits: any[]
@@ -14,6 +15,7 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
   const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   const t = {
     es: {
@@ -22,7 +24,10 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
       visitsListTitle: 'Visitas Recientes',
       visitsListDesc: 'Últimas 5 visitas registradas en la agencia.',
       from: 'Desde',
-      to: 'Hasta'
+      to: 'Hasta',
+      filters: 'Filtros',
+      show: 'Mostrar',
+      hide: 'Ocultar'
     },
     en: {
       visitsTitle: 'Visits Activity',
@@ -30,7 +35,10 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
       visitsListTitle: 'Recent Visits',
       visitsListDesc: 'Last 5 visits registered in the agency.',
       from: 'From',
-      to: 'To'
+      to: 'To',
+      filters: 'Filters',
+      show: 'Show',
+      hide: 'Hide'
     }
   }[lang]
 
@@ -62,8 +70,21 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
 
   return (
     <div className="mt-8 space-y-4">
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row justify-end sm:items-center gap-4">
+      {/* Filters Mobile Toggle */}
+      <div className="md:hidden flex justify-between items-center mb-2">
+        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Filter className="w-4 h-4" /> {t.filters}
+        </span>
+        <button 
+          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)} 
+          className="px-3 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-muted transition-colors flex items-center gap-2"
+        >
+          {isMobileFiltersOpen ? t.hide : t.show}
+        </button>
+      </div>
+
+      {/* Filters Controls */}
+      <div className={`${isMobileFiltersOpen ? 'flex' : 'hidden'} md:flex flex-col sm:flex-row justify-end sm:items-center gap-4`}>
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
           <label className="text-sm text-muted-foreground">{t.from || 'Desde'}:</label>
           <input
@@ -85,22 +106,22 @@ export function VisitsDashboardSection({ visits }: VisitsDashboardSectionProps) 
       </div>
 
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 animate-in fade-in slide-in-from-bottom-8 delay-700 duration-700 fill-mode-both">
-        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.visitsTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.visitsDesc}</p>
           </div>
-          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
             <VisitsChart visits={filteredVisits} />
           </div>
         </div>
         
-        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.visitsListTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.visitsListDesc}</p>
           </div>
-          <div className="p-6 pt-4 flex-1">
+          <div className="p-6 pt-4 flex-1 w-full overflow-hidden">
             <VisitsTable visits={filteredVisits} />
           </div>
         </div>

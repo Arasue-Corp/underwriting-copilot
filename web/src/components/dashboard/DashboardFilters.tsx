@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation"
 import { useState, useEffect } from "react"
+import { Filter } from "lucide-react"
 
 type Agency = { id: string; name: string }
 type Agent = { id: string; name: string; agency_id?: string }
@@ -23,6 +24,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
   const [agencyId, setAgencyId] = useState(searchParams.get("agency") || "all")
   const [agentIds, setAgentIds] = useState<string[]>(searchParams.getAll("agent"))
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false)
+  const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false)
 
   // Translations
   const t = {
@@ -35,7 +37,10 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
       allAgents: "All Agents",
       apply: "Apply Filters",
       clear: "Clear",
-      selected: "selected"
+      selected: "selected",
+      filters: "Filters",
+      show: "Show",
+      hide: "Hide"
     },
     es: {
       from: "Desde",
@@ -46,7 +51,10 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
       allAgents: "Todos los Agentes",
       apply: "Aplicar Filtros",
       clear: "Limpiar",
-      selected: "seleccionados"
+      selected: "seleccionados",
+      filters: "Filtros",
+      show: "Mostrar",
+      hide: "Ocultar"
     }
   }[lang === 'es' ? 'es' : 'en']
 
@@ -101,16 +109,31 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
   const isAgent = role === 'AGENT'
 
   return (
-    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col md:flex-row md:items-end items-stretch gap-4 flex-wrap relative">
-      <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
-        <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.from}</label>
-        <input 
-          type="date" 
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-        />
+    <div className="bg-card/40 border border-border/40 p-4 rounded-xl shadow-sm mb-8 flex flex-col relative">
+      {/* Mobile toggle */}
+      <div className="md:hidden flex justify-between items-center mb-2">
+        <span className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Filter className="w-4 h-4" /> {t.filters}
+        </span>
+        <button 
+          onClick={() => setIsMobileFiltersOpen(!isMobileFiltersOpen)} 
+          className="px-3 py-1.5 border border-border rounded-lg text-xs font-medium hover:bg-muted transition-colors flex items-center gap-2"
+        >
+          {isMobileFiltersOpen ? t.hide : t.show}
+        </button>
       </div>
+
+      {/* Filter controls */}
+      <div className={`${isMobileFiltersOpen ? 'flex' : 'hidden'} md:flex flex-col md:flex-row md:items-end items-stretch gap-4 flex-wrap mt-2 md:mt-0`}>
+        <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
+          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.from}</label>
+          <input 
+            type="date" 
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="bg-background border border-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+          />
+        </div>
 
       <div className="flex flex-col gap-1.5 flex-1 min-w-[140px]">
         <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.to}</label>
@@ -198,6 +221,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
         >
           {t.apply}
         </button>
+      </div>
       </div>
     </div>
   )

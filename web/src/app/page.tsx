@@ -303,32 +303,32 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
       </div>
       
       <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2 animate-in fade-in slide-in-from-bottom-8 delay-500 duration-700 fill-mode-both">
-        <div className="lg:col-span-2 rounded-2xl glass-panel text-card-foreground flex flex-col">
+        <div className="lg:col-span-2 rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.evoTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.evoDesc}</p>
           </div>
-          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
             <OverviewChart data={overviewData} />
           </div>
         </div>
         
-        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{t.distTitle}</h3>
             <p className="text-sm text-muted-foreground">{t.distDesc}</p>
           </div>
-          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
             <DistributionChart data={distData} />
           </div>
         </div>
 
-        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col">
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
           <div className="flex flex-col space-y-1.5 p-6 pb-2">
             <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{lang === 'es' ? 'Aseguradoras Cotizadas' : 'Quoted Carriers'}</h3>
             <p className="text-sm text-muted-foreground">{lang === 'es' ? 'Distribución de solicitudes cotizadas por aseguradora.' : 'Distribution of quoted requests by carrier.'}</p>
           </div>
-          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground">
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
             <DistributionChart data={quotedDistData} />
           </div>
         </div>
