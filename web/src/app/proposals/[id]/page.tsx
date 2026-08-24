@@ -349,7 +349,7 @@ export default function ProposalCarouselPage() {
       const attachments: string[] = [];
       if (Array.isArray(quote.quotes_provided)) {
         quote.quotes_provided.forEach((q: any, idx: number) => {
-          if (selectedModules[idx] && q.file_url && q.file_url.toLowerCase().endsWith('.pdf')) {
+          if (selectedModules[idx] && q.file_url && q.file_url.toLowerCase().includes('.pdf')) {
             attachments.push(q.file_url);
           }
         });
@@ -358,7 +358,7 @@ export default function ProposalCarouselPage() {
       // 4. Fetch and append each PDF
       for (const url of attachments) {
         try {
-          const response = await fetch(url);
+          const response = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(url)}`);
           if (response.ok) {
             const attachmentBuffer = await response.arrayBuffer();
             const attachmentPdf = await PDFDocument.load(attachmentBuffer);

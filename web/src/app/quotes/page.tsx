@@ -373,6 +373,7 @@ export default function QuotesPage() {
           included: p.included,
           excluded: p.excluded,
           notes: p.notes,
+          description: p.description,
           file_url: fileUrl
         })
       }
