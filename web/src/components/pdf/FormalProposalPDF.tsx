@@ -348,7 +348,7 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
             proposal
           </Text>
           
-          <Image src="/alex-assets/alex-find.png" style={{ position: 'absolute', right: 30, bottom: 20, width: 230, zIndex: 5 }} />
+          <Image src="/alex-assets/alex-find.png" style={{ position: 'absolute', right: 30, bottom: 70, width: 230, zIndex: 5 }} />
           
           {/* Wave separator */}
           <View style={{ position: 'absolute', bottom: -1, left: 0, right: 0, width: '100%' }}>
