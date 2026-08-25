@@ -31,17 +31,18 @@ export function NotificationBell() {
   useEffect(() => {
     const supabase = createClient()
     let channel: any
+    let active = true
 
     const fetchNotifications = async () => {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
+      if (user && active) {
         setUserId(user.id)
         const result = await getNotifications()
-        if (result.success && result.data) {
+        if (result.success && result.data && active) {
           setNotifications(result.data)
         }
       }
-      setLoading(false)
+      if (active) setLoading(false)
     }
 
     fetchNotifications()
@@ -49,9 +50,9 @@ export function NotificationBell() {
     // We can't easily subscribe directly with row level security if we don't have the user ID yet
     // so we get the user first, then subscribe
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
+      if (user && active) {
         channel = supabase
-          .channel('realtime-notifications')
+          .channel(`realtime-notifications-${Math.random()}`)
           .on(
             'postgres_changes',
             { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
@@ -70,6 +71,7 @@ export function NotificationBell() {
     })
 
     return () => {
+      active = false
       if (channel) {
         supabase.removeChannel(channel)
       }
