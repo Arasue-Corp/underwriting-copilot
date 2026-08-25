@@ -214,7 +214,18 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
         <div className="space-y-1 w-full">
           <textarea
             value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            onChange={(e) => {
+            let val = e.target.value;
+            if (field.id === 'general_dob' || (field.label && field.label.includes('Fecha de Nacimiento')) || (field.labelEn && field.labelEn.includes('DOB'))) {
+              val = val.replace(/\D/g, '');
+              if (val.length >= 3 && val.length <= 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2);
+              } else if (val.length > 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+              }
+            }
+            handleInputChange(field.id, val);
+          }}
             className={`${baseClasses} min-h-[80px] ${isInvalid ? 'border-destructive ring-destructive/20 focus-visible:ring-destructive' : 'border-input'}`}
             placeholder={language === 'es' ? field.label : field.labelEn}
           />
@@ -232,7 +243,18 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
         <div className="space-y-1 w-full">
           <select
             value={value}
-            onChange={(e) => handleInputChange(field.id, e.target.value)}
+            onChange={(e) => {
+            let val = e.target.value;
+            if (field.id === 'general_dob' || (field.label && field.label.includes('Fecha de Nacimiento')) || (field.labelEn && field.labelEn.includes('DOB'))) {
+              val = val.replace(/\D/g, '');
+              if (val.length >= 3 && val.length <= 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2);
+              } else if (val.length > 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+              }
+            }
+            handleInputChange(field.id, val);
+          }}
             className={inputClasses}
           >
             <option value="">{language === 'es' ? 'Seleccionar...' : 'Select...'}</option>
@@ -277,7 +299,18 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
         <input
           type={field.type === 'number' ? 'number' : 'text'}
           value={value}
-          onChange={(e) => handleInputChange(field.id, e.target.value)}
+          onChange={(e) => {
+            let val = e.target.value;
+            if (field.id === 'general_dob' || (field.label && field.label.includes('Fecha de Nacimiento')) || (field.labelEn && field.labelEn.includes('DOB'))) {
+              val = val.replace(/\D/g, '');
+              if (val.length >= 3 && val.length <= 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2);
+              } else if (val.length > 4) {
+                val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+              }
+            }
+            handleInputChange(field.id, val);
+          }}
           className={inputClasses}
           placeholder={language === 'es' ? field.label : field.labelEn}
         />

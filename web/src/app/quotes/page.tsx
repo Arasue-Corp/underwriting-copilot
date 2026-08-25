@@ -104,7 +104,8 @@ export default function QuotesPage() {
       sendToAgent: "Enviar a Agente",
       generatingPDF: "Generando PDF premium...",
       pdfSuccess: "PDF descargado exitosamente",
-      pdfError: "Error al generar el PDF"
+      pdfError: "Error al generar el PDF",
+      openAttachment: "{t[language].openAttachment || (language === 'es' ? 'Abrir adjunto' : 'Open Attachment')}"
     },
     en: {
       successAssigned: "Request reassigned",
@@ -954,7 +955,7 @@ export default function QuotesPage() {
                                 </div>
                               ) : (
                                 <span className="text-sm font-medium text-foreground">
-                                   {typeof parsedV === 'string' && parsedV.includes('/') && !parsedV.includes(' ') ? (
+                                   {typeof parsedV === 'string' && parsedV.includes('/') && !parsedV.includes(' ') && !parsedV.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/) ? (
                                      <a href={supabase.storage.from('quote-attachments').getPublicUrl(parsedV).data.publicUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline inline-flex items-center bg-primary/10 px-2 py-1 rounded-md">
                                        <FileText className="w-4 h-4 mr-1"/> Abrir adjunto
                                      </a>
