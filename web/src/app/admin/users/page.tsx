@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { Users, Shield, Building2, Loader2, CheckCircle2 } from "lucide-react"
-import { getUsers, getAgencies, updateUserAdmin } from "@/app/actions/admin"
+import { Users, Shield, Building2, Loader2, CheckCircle2, Edit, Trash2, X } from "lucide-react"
+import { getUsers, getAgencies, updateUserAdmin, deleteUser } from "@/app/actions/admin"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -13,6 +13,11 @@ export default function UsersPage() {
   // Track updating state per user
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [successId, setSuccessId] = useState<string | null>(null)
+
+  const [editingUser, setEditingUser] = useState<any>(null)
+  const [editName, setEditName] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+
 
   useEffect(() => {
     loadData()
@@ -24,6 +29,38 @@ export default function UsersPage() {
     setUsers(uData)
     setAgencies(aData)
     setLoading(false)
+  }
+
+  
+  async function handleDelete(userId: string) {
+    if (!confirm("¿Estás seguro de que deseas eliminar a este usuario?")) return
+    const res = await deleteUser(userId)
+    if (res.success) {
+      loadData()
+      toast.success("Usuario eliminado")
+    } else {
+      toast.error("Error al eliminar: " + res.error)
+    }
+  }
+
+  function openEditModal(user: any) {
+    setEditingUser(user)
+    setEditName(user.name || "")
+  }
+
+  async function handleEditSave(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingUser) return
+    setIsSaving(true)
+    const res = await updateUserAdmin(editingUser.id, { name: editName })
+    if (res.success) {
+      setUsers(users.map((u: any) => u.id === editingUser.id ? { ...u, name: editName } : u))
+      setEditingUser(null)
+      toast.success("Usuario actualizado")
+    } else {
+      toast.error("Error al actualizar: " + res.error)
+    }
+    setIsSaving(false)
   }
 
   async function handleUpdate(userId: string, field: 'role' | 'agency_id', value: string) {
@@ -71,6 +108,7 @@ export default function UsersPage() {
               <th className="px-6 py-3 font-medium">Compañía / Agencia</th>
               <th className="px-6 py-3 font-medium">Nivel de Acceso</th>
               <th className="px-6 py-3 font-medium text-right">Estado</th>
+              <th className="px-6 py-3 font-medium text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -144,6 +182,55 @@ export default function UsersPage() {
         </table>
         </div>
       </div>
+
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4">
+          <div className="bg-card w-full max-w-md rounded-xl border shadow-lg overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-border/50">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Editar Usuario
+              </h3>
+              <button 
+                onClick={() => setEditingUser(null)}
+                className="text-muted-foreground hover:bg-muted p-2 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSave} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <input 
+                  type="text" 
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  className="w-full px-3 py-2 border rounded-md bg-background focus:ring-2 focus:ring-primary outline-none"
+                  required
+                />
+              </div>
+              
+              <div className="pt-4 flex justify-end gap-3">
+                <button 
+                  type="button"
+                  onClick={() => setEditingUser(null)}
+                  className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-muted transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  disabled={isSaving}
+                  className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

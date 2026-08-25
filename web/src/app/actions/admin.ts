@@ -89,7 +89,7 @@ export async function getUsers() {
   }
 }
 
-export async function updateUserAdmin(userId: string, data: { role?: string, agency_id?: string | null }) {
+export async function updateUserAdmin(userId: string, data: { name?: string, role?: string, agency_id?: string | null }) {
   try {
     const supabase = await verifyAdmin()
     
@@ -125,6 +125,32 @@ export async function updateAgency(id: string, data: { name?: string, address?: 
     const { error } = await supabase.from('agencies').update(data).eq('id', id)
     if (error) throw error
     revalidatePath('/admin/agencies')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function deleteUser(userId: string) {
+  try {
+    const supabase = await verifyAdmin()
+    
+    if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      const { createClient } = require('@supabase/supabase-js');
+      const adminAuthClient = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      });
+      const { error: authError } = await adminAuthClient.auth.admin.deleteUser(userId);
+      if (authError) throw authError;
+    } else {
+      const { error } = await supabase.from('profiles').delete().eq('id', userId)
+      if (error) throw error
+    }
+
+    revalidatePath('/admin/users')
     return { success: true }
   } catch (error: any) {
     return { success: false, error: error.message }
