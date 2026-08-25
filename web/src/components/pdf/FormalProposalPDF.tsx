@@ -383,16 +383,12 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
           </View>
         </View>
 
-        {/* Footer */}
-        <View style={{ position: 'absolute', bottom: 40, left: 50, right: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <View style={{ backgroundColor: '#009CFF', padding: 4, borderRadius: 4, marginRight: 8 }}>
-              <Image src="/alex-assets/logo-blanco.png" style={{ height: 12, width: 12, objectFit: 'contain' }} />
-            </View>
-            <Text style={{ fontSize: 9, color: '#94a3b8' }}>Alex AI Insurtech. Confidential</Text>
-          </View>
-          <Text style={{ fontSize: 9, color: '#94a3b8' }} render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
-          <Text style={{ fontSize: 9, color: '#94a3b8' }}>{new Date().toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' })}</Text>
+                {/* FOOTER */}
+        <View style={styles.pageFooter} fixed>
+          <Image src="/alex-assets/brand-011.png" style={styles.footerDecoration} />
+          <Text style={styles.footerText}>GENERATED ON {new Date().toLocaleDateString()}</Text>
+          <Text style={styles.footerText}>ALEX AI INSURTECH | CONFIDENTIAL</Text>
+          <Text style={styles.footerText} render={({ pageNumber, totalPages }) => `PAGE ${pageNumber} OF ${totalPages}`} />
         </View>
       </Page>
 
