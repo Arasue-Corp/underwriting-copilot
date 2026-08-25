@@ -312,9 +312,10 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
     if (!prop.is_bundled) {
       acc.premium += Number(prop.premium || 0);
       acc.monthly += Number(prop.monthly_payment || 0);
+      acc.downpayment += Number(prop.downpayment || 0);
     }
     return acc;
-  }, { premium: 0, monthly: 0 });
+  }, { premium: 0, monthly: 0, downpayment: 0 });
 
   return (
     <Document>
@@ -424,6 +425,13 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
               <Text style={styles.tableColLeft}>Pay in Full Premium</Text>
               <Text style={styles.priceText}>${packageTotal.premium.toLocaleString('en-US')}</Text>
             </View>
+            
+            {packageTotal.downpayment > 0 && (
+              <View style={styles.tableRow}>
+                <Text style={styles.tableColLeft}>Required Downpayment</Text>
+                <Text style={{ ...styles.priceText, color: '#334155', fontSize: 14 }}>${packageTotal.downpayment.toLocaleString('en-US')}</Text>
+              </View>
+            )}
             {packageTotal.monthly > 0 && (
               <View style={styles.tableRow}>
                 <Text style={styles.tableColLeft}>Monthly Financing Option</Text>
