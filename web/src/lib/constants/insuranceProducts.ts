@@ -17,6 +17,7 @@ export interface InsuranceProduct {
   description: string; // Spanish
   descriptionEn: string; // English
   fields: ProductField[];
+  category?: 'commercial' | 'personal'; // Defaults to 'commercial' if undefined
 }
 
 export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
@@ -275,5 +276,95 @@ export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
     description: 'Productos no especificados. Usa el campo de notas personalizadas para más detalle.',
     descriptionEn: 'Unspecified products. Use the custom notes field for details.',
     fields: []
+  },
+  {
+    id: 'personal_auto',
+    name: 'Auto Personal',
+    nameEn: 'Personal Auto',
+    description: 'Seguro de auto para uso personal.',
+    descriptionEn: 'Personal auto insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'pa_vin', label: 'VIN(s) de los vehículos', labelEn: 'Vehicle VIN(s)', type: 'textarea' },
+      { id: 'pa_dl', label: 'Números de Licencia (Drivers)', labelEn: 'Driver License Numbers', type: 'textarea' },
+      { id: 'pa_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'homeowners',
+    name: 'Propietarios (Homeowners)',
+    nameEn: 'Homeowners',
+    description: 'Seguro para propietarios de casa.',
+    descriptionEn: 'Homeowners insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'ho_year_built', label: 'Año de Construcción', labelEn: 'Year Built', type: 'number' },
+      { id: 'ho_roof_year', label: 'Año de actualización del techo', labelEn: 'Roof Update Year', type: 'number' },
+      { id: 'ho_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'renters',
+    name: 'Inquilinos (Renters)',
+    nameEn: 'Renters',
+    description: 'Seguro para inquilinos.',
+    descriptionEn: 'Renters insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'rt_property_value', label: 'Valor Estimado de Pertenencias', labelEn: 'Estimated Value of Belongings', type: 'number' },
+      { id: 'rt_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'rv',
+    name: 'Vehículos Recreativos (RV)',
+    nameEn: 'Recreational Vehicles (RV)',
+    description: 'Seguro para RVs y Motorhomes.',
+    descriptionEn: 'RV and Motorhome insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'rv_vin', label: 'VIN del RV', labelEn: 'RV VIN', type: 'text' },
+      { id: 'rv_value', label: 'Valor Estimado del RV', labelEn: 'Estimated RV Value', type: 'number' },
+      { id: 'rv_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'motorcycle',
+    name: 'Motocicleta',
+    nameEn: 'Motorcycle',
+    description: 'Seguro de motocicleta.',
+    descriptionEn: 'Motorcycle insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'mc_vin', label: 'VIN de la Motocicleta', labelEn: 'Motorcycle VIN', type: 'text' },
+      { id: 'mc_engine', label: 'Tamaño del Motor (cc)', labelEn: 'Engine Size (cc)', type: 'number' },
+      { id: 'mc_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'pet',
+    name: 'Mascotas (Pet)',
+    nameEn: 'Pet Insurance',
+    description: 'Seguro médico para mascotas.',
+    descriptionEn: 'Pet health insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'pet_breed', label: 'Raza y Especie', labelEn: 'Breed and Species', type: 'text' },
+      { id: 'pet_age', label: 'Edad de la mascota', labelEn: 'Pet Age', type: 'number' },
+      { id: 'pet_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
+  },
+  {
+    id: 'boat',
+    name: 'Botes / Embarcaciones',
+    nameEn: 'Boat / Watercraft',
+    description: 'Seguro para botes y motos de agua.',
+    descriptionEn: 'Boat and watercraft insurance.',
+    category: 'personal',
+    fields: [
+      { id: 'bt_length', label: 'Eslora (Largo en pies)', labelEn: 'Length (feet)', type: 'number' },
+      { id: 'bt_value', label: 'Valor Estimado', labelEn: 'Estimated Value', type: 'number' },
+      { id: 'bt_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+    ]
   }
 ];

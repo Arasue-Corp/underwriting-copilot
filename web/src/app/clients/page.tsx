@@ -105,6 +105,8 @@ export default function ClientsPage() {
         .select(`
           id,
           name,
+          first_name,
+          last_name,
           legal_structure,
           fein,
           logo_url,
@@ -252,6 +254,11 @@ export default function ClientsPage() {
                     )}
                     <div>
                       <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                      {(selectedClient.first_name || selectedClient.last_name) && (
+                        <div className="text-sm font-medium text-muted-foreground mt-1">
+                          {selectedClient.first_name} {selectedClient.last_name}
+                        </div>
+                      )}
                       <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
                         <div className="flex gap-4">
                           <span><strong className="text-foreground/70 font-medium">FEIN:</strong> {selectedClient.fein || t.notRegistered}</span>

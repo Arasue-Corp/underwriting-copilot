@@ -17,6 +17,7 @@ interface GenericQuoteModalProps {
 export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialClientId = null }: GenericQuoteModalProps) {
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
+  const [quoteCategory, setQuoteCategory] = useState<'commercial' | 'personal'>('commercial')
   const [selectedProductIds, setSelectedProductIds] = useState<string[]>([])
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [files, setFiles] = useState<Record<string, File>>({})
@@ -42,6 +43,8 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
       if (client) {
         setFormData(prev => ({
           ...prev,
+          general_first_name: client.first_name || "",
+          general_last_name: client.last_name || "",
           general_client_name: client.name,
           general_legal_structure: client.legal_structure || "",
           general_fein: client.fein || "",
@@ -49,12 +52,14 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
           general_address: client.address || ""
         }))
         // clear errors for these fields
-        setInvalidFields(prev => prev.filter(f => !['general_client_name', 'general_legal_structure', 'general_fein', 'general_contact', 'general_address'].includes(f)))
+        setInvalidFields(prev => prev.filter(f => !['general_first_name', 'general_last_name', 'general_client_name', 'general_legal_structure', 'general_fein', 'general_contact', 'general_address'].includes(f)))
       }
     } else if (selectedClientId === 'new') {
       // Clear specific fields if "new client" is selected
       setFormData(prev => ({
         ...prev,
+        general_first_name: "",
+        general_last_name: "",
         general_client_name: "",
         general_legal_structure: "",
         general_fein: "",
@@ -106,7 +111,9 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
     
     if (step === 1) {
       // Validate step 1 manually
-      const requiredStep1 = [
+      const requiredStep1 = quoteCategory === 'commercial' ? [
+        { id: 'general_first_name', label: language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name' },
+        { id: 'general_last_name', label: language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name' },
         { id: 'general_client_name', label: language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA' },
         { id: 'general_legal_structure', label: language === 'es' ? 'Estructura Legal' : 'Legal Structure' },
         { id: 'general_fein', label: 'FEIN' },
@@ -114,7 +121,13 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
         { id: 'general_address', label: language === 'es' ? 'Dirección Física' : 'Physical Address' },
         { id: 'general_operations', label: language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description' },
         { id: 'general_experience_years', label: language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience' },
-      ]
+      ] : [
+        { id: 'general_first_name', label: language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name' },
+        { id: 'general_last_name', label: language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name' },
+        { id: 'general_dob', label: language === 'es' ? 'Fecha de Nacimiento' : 'Date of Birth' },
+        { id: 'general_contact', label: language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)' },
+        { id: 'general_address', label: language === 'es' ? 'Dirección Física' : 'Physical Address' },
+      ];
       
       const missingFields = requiredStep1.filter(f => !formData[f.id] || String(formData[f.id]).trim() === '')
       if (missingFields.length > 0) {
@@ -164,7 +177,7 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
           const p = INSURANCE_PRODUCTS.find(x => x.id === id)
           return p ? p.name : id
         })))
-        submitData.append("form_data", JSON.stringify(formData))
+        submitData.append("form_data", JSON.stringify({ ...formData, general_quote_category: quoteCategory }))
 
         // Append files
         Object.entries(files).forEach(([key, file]) => {
@@ -307,6 +320,24 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                 <h3 className="text-lg font-semibold mb-4">
                   {language === 'es' ? 'Información General (Obligatoria)' : 'General Information (Required)'}
                 </h3>
+
+                {/* Category Toggle */}
+                <div className="mb-6 flex bg-muted/50 p-1 rounded-lg w-full max-w-sm mx-auto">
+                  <button 
+                    type="button"
+                    onClick={() => { setQuoteCategory('commercial'); setFormData(prev => ({...prev, general_quote_category: 'commercial'})) }}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${quoteCategory === 'commercial' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    {language === 'es' ? 'Comercial' : 'Commercial'}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setQuoteCategory('personal'); setFormData(prev => ({...prev, general_quote_category: 'personal'})) }}
+                    className={`flex-1 py-2 text-sm font-semibold rounded-md transition-all ${quoteCategory === 'personal' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  >
+                    Personal
+                  </button>
+                </div>
                 
                 {/* Client Selection */}
                 <div className="mb-6 p-4 bg-muted/20 border border-border/40 rounded-xl space-y-3">
@@ -329,26 +360,53 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                      {language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name'}
                     </label>
-                    {renderField({ id: 'general_client_name', type: 'text', required: true })}
+                    {renderField({ id: 'general_first_name', type: 'text', required: true })}
                   </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
-                      {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                      {language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name'}
                     </label>
-                    {renderField({ 
-                      id: 'general_legal_structure', 
-                      type: 'select', 
-                      required: true,
-                      options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
-                      optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
-                    })}
+                    {renderField({ id: 'general_last_name', type: 'text', required: true })}
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">FEIN</label>
-                    {renderField({ id: 'general_fein', type: 'text', required: true })}
-                  </div>
+
+                  {quoteCategory === 'commercial' && (
+                    <>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                        </label>
+                        {renderField({ id: 'general_client_name', type: 'text', required: true })}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                        </label>
+                        {renderField({ 
+                          id: 'general_legal_structure', 
+                          type: 'select', 
+                          required: true,
+                          options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
+                          optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
+                        })}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">FEIN</label>
+                        {renderField({ id: 'general_fein', type: 'text', required: true })}
+                      </div>
+                    </>
+                  )}
+
+                  {quoteCategory === 'personal' && (
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Fecha de Nacimiento' : 'Date of Birth'}
+                      </label>
+                      {renderField({ id: 'general_dob', type: 'text', required: true })}
+                    </div>
+                  )}
+
                   <div className="space-y-2">
                     <label className="text-sm font-medium">
                       {language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)'}
@@ -361,24 +419,29 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                     </label>
                     {renderField({ id: 'general_address', type: 'text', required: true })}
                   </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">
-                      {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
-                    </label>
-                    {renderField({ id: 'general_operations', type: 'textarea', required: true })}
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
-                    </label>
-                    {renderField({ id: 'general_experience_years', type: 'number', required: true })}
-                  </div>
-                  <div className="space-y-2 md:col-span-2">
-                    <label className="text-sm font-medium">
-                      {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
-                    </label>
-                    {renderField({ id: 'general_loss_runs', type: 'textarea' })}
-                  </div>
+
+                  {quoteCategory === 'commercial' && (
+                    <>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
+                        </label>
+                        {renderField({ id: 'general_operations', type: 'textarea', required: true })}
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
+                        </label>
+                        {renderField({ id: 'general_experience_years', type: 'number', required: true })}
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="text-sm font-medium">
+                          {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
+                        </label>
+                        {renderField({ id: 'general_loss_runs', type: 'textarea' })}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -387,7 +450,7 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                   {language === 'es' ? '¿Qué productos necesitas cotizar?' : 'What products do you need to quote?'}
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
-                  {INSURANCE_PRODUCTS.map(product => (
+                  {INSURANCE_PRODUCTS.filter(p => p.category === quoteCategory || (!p.category && quoteCategory === 'commercial')).map(product => (
                     <label key={product.id} className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedProductIds.includes(product.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}>
                       <input type="checkbox" className="mt-1 shrink-0" checked={selectedProductIds.includes(product.id)} onChange={() => toggleProduct(product.id)} />
                       <div>

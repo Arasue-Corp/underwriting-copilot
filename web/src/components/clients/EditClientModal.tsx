@@ -20,6 +20,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   const t = {
     es: {
       title: 'Editar Cliente',
+      firstNameLabel: 'Nombre del Solicitante',
+      lastNameLabel: 'Apellido del Solicitante',
       nameLabel: 'Nombre Legal de la Empresa y DBA *',
       legalStructureLabel: 'Estructura Legal',
       feinLabel: 'FEIN',
@@ -34,6 +36,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     },
     en: {
       title: 'Edit Client',
+      firstNameLabel: 'Applicant First Name',
+      lastNameLabel: 'Applicant Last Name',
       nameLabel: 'Legal Business Name and DBA *',
       legalStructureLabel: 'Legal Structure',
       feinLabel: 'FEIN',
@@ -50,6 +54,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
     name: '',
     legal_structure: '',
     fein: '',
@@ -60,6 +66,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
   useEffect(() => {
     if (client && isOpen) {
       setFormData({
+        first_name: client.first_name || '',
+        last_name: client.last_name || '',
         name: client.name || '',
         legal_structure: client.legal_structure || '',
         fein: client.fein || '',
@@ -102,6 +110,26 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.firstNameLabel}</label>
+              <input 
+                type="text" 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                value={formData.first_name} 
+                onChange={e => setFormData({...formData, first_name: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.lastNameLabel}</label>
+              <input 
+                type="text" 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                value={formData.last_name} 
+                onChange={e => setFormData({...formData, last_name: e.target.value})} 
+              />
+            </div>
+          </div>
           <div>
             <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.nameLabel}</label>
             <input 

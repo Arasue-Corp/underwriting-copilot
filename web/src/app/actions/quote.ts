@@ -24,17 +24,23 @@ export async function submitQuoteRequest(formData: FormData) {
       return { success: false, error: "Profile not found" }
     }
 
-    const clientName = formData.get("client_name") as string
+    let clientName = formData.get("client_name") as string
     const carrierId = formData.get("carrier_name") as string
     
     const products = JSON.parse((formData.get("products") as string) || "[]")
     const rawFormData = JSON.parse((formData.get("form_data") as string) || "{}")
+    
+    if (!clientName && rawFormData.general_quote_category === 'personal') {
+      clientName = `${rawFormData.general_first_name || ''} ${rawFormData.general_last_name || ''}`.trim()
+    }
 
     // Check if client exists, otherwise create it
     const clientLegalStructure = rawFormData.general_legal_structure || null;
     const clientFein = rawFormData.general_fein || null;
     const clientAddress = rawFormData.general_address || null;
     const clientContact = rawFormData.general_contact || null;
+    const clientFirstName = rawFormData.general_first_name || null;
+    const clientLastName = rawFormData.general_last_name || null;
     
     // Upsert client
     if (clientName) {
@@ -43,11 +49,13 @@ export async function submitQuoteRequest(formData: FormData) {
         .upsert({
           agency_id: profile.agency_id,
           name: clientName,
+          first_name: clientFirstName,
+          last_name: clientLastName,
           legal_structure: clientLegalStructure,
           fein: clientFein,
           address: clientAddress,
           contact: clientContact
-        }, { onConflict: 'agency_id,name', ignoreDuplicates: true });
+        }, { onConflict: 'agency_id,name', ignoreDuplicates: false });
     }
 
     // Upload attachments if present

@@ -56,6 +56,8 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
 
     // Step 1 general fields
     const requiredStep1 = [
+      { id: 'general_first_name', label: language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name', type: 'text', required: true },
+      { id: 'general_last_name', label: language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name', type: 'text', required: true },
       { id: 'general_client_name', label: language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA', type: 'text', required: true },
       { id: 'general_legal_structure', label: language === 'es' ? 'Estructura Legal' : 'Legal Structure', type: 'select', required: true },
       { id: 'general_fein', label: 'FEIN', type: 'text', required: true },
@@ -164,6 +166,7 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
 
   const quoteProducts = quote.products || []
   const selectedProducts = INSURANCE_PRODUCTS.filter(p => quoteProducts.includes(p.name) || quoteProducts.includes(p.nameEn) || quoteProducts.includes(p.id))
+  const quoteCategory = formData.general_quote_category || 'commercial'
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
@@ -202,26 +205,53 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                    {language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name'}
                   </label>
-                  {renderField({ id: 'general_client_name', type: 'text', required: true })}
+                  {renderField({ id: 'general_first_name', type: 'text', required: true })}
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
-                    {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                    {language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name'}
                   </label>
-                  {renderField({ 
-                    id: 'general_legal_structure', 
-                    type: 'select', 
-                    required: true,
-                    options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
-                    optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
-                  })}
+                  {renderField({ id: 'general_last_name', type: 'text', required: true })}
                 </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">FEIN</label>
-                  {renderField({ id: 'general_fein', type: 'text', required: true })}
-                </div>
+
+                {quoteCategory === 'commercial' && (
+                  <>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA'}
+                      </label>
+                      {renderField({ id: 'general_client_name', type: 'text', required: true })}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Estructura Legal' : 'Legal Structure'}
+                      </label>
+                      {renderField({ 
+                        id: 'general_legal_structure', 
+                        type: 'select', 
+                        required: true,
+                        options: ['LLC', 'Corporación', 'Corporación S', 'Propietario Único (Sole Prop)', 'Sociedad (Partnership)', 'Sin Fines de Lucro', 'Otra'],
+                        optionsEn: ['LLC', 'Corporation', 'S Corporation', 'Sole Proprietorship', 'Partnership', 'Non-Profit', 'Other']
+                      })}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">FEIN</label>
+                      {renderField({ id: 'general_fein', type: 'text', required: true })}
+                    </div>
+                  </>
+                )}
+
+                {quoteCategory === 'personal' && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {language === 'es' ? 'Fecha de Nacimiento' : 'Date of Birth'}
+                    </label>
+                    {renderField({ id: 'general_dob', type: 'text', required: true })}
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     {language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)'}
@@ -234,24 +264,29 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
                   </label>
                   {renderField({ id: 'general_address', type: 'text', required: true })}
                 </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">
-                    {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
-                  </label>
-                  {renderField({ id: 'general_operations', type: 'textarea', required: true })}
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
-                  </label>
-                  {renderField({ id: 'general_experience_years', type: 'number', required: true })}
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-sm font-medium">
-                    {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
-                  </label>
-                  {renderField({ id: 'general_loss_runs', type: 'textarea' })}
-                </div>
+
+                {quoteCategory === 'commercial' && (
+                  <>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description'}
+                      </label>
+                      {renderField({ id: 'general_operations', type: 'textarea', required: true })}
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience'}
+                      </label>
+                      {renderField({ id: 'general_experience_years', type: 'number', required: true })}
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <label className="text-sm font-medium">
+                        {language === 'es' ? 'Historial de Siniestralidad (Loss Runs)' : 'Loss Runs'}
+                      </label>
+                      {renderField({ id: 'general_loss_runs', type: 'textarea' })}
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
