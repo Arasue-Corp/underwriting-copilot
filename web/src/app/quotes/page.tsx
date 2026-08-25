@@ -868,7 +868,8 @@ export default function QuotesPage() {
                     const groupedData: Record<string, any> = {};
                     Object.entries(detailsQuote.form_data || {}).forEach(([k, v]) => {
                       const prefix = k.split('_')[0];
-                      const group = ['general', 'bop', 'cyber', 'eo'].includes(prefix) ? prefix : 'otros';
+                      const knownPrefixes = ['general', 'bop', 'cyber', 'eo', 'gl', 'cp', 'ba', 'wc', 'ho', 'pa', 'rt', 'rv', 'umb', 'inm', 'bl', 'pmi'];
+                      const group = knownPrefixes.includes(prefix) ? prefix : 'otros';
                       if (!groupedData[group]) groupedData[group] = {};
                       groupedData[group][k] = v;
                     });
@@ -878,6 +879,18 @@ export default function QuotesPage() {
                       'bop': 'BOP (Business Owner Policy)',
                       'cyber': 'Cyber Liability',
                       'eo': 'Errors & Omissions (E&O)',
+                      'gl': 'General Liability (GL)',
+                      'cp': 'Commercial Property',
+                      'ba': 'Commercial Auto',
+                      'wc': 'Workers Compensation',
+                      'ho': 'Homeowners',
+                      'pa': 'Personal Auto',
+                      'rt': 'Renters',
+                      'rv': 'Recreational Vehicles (RV)',
+                      'umb': 'Umbrella',
+                      'inm': 'Inland Marine',
+                      'bl': 'Builders Risk',
+                      'pmi': 'Pet Medical',
                       'otros': 'Otros Detalles'
                     };
 
