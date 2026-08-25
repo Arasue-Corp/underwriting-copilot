@@ -638,7 +638,11 @@ export default function QuotesPage() {
                   {filteredQuotes.map((quote) => (
                     <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="px-6 py-4 font-medium">{quote.client_name}</td>
-                      <td className="px-6 py-4">{quote.carrier_id}</td>
+                      <td className="px-6 py-4">
+                        {Array.isArray(quote.quotes_provided) && quote.quotes_provided.length > 0 
+                          ? Array.from(new Set(quote.quotes_provided.map((p: any) => p.carrier).filter(Boolean))).join(', ') 
+                          : (quote.carrier_id || '-')}
+                      </td>
                       <td className="px-6 py-4">{quote.coverage_requested}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.profiles?.name}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || t.unassigned}</td>
