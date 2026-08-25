@@ -343,7 +343,7 @@ export default function ProposalCarouselPage() {
       
       // 2. Load it into pdf-lib to allow appending
       const pdfArrayBuffer = await blob.arrayBuffer();
-      const pdfDoc = await PDFDocument.load(pdfArrayBuffer);
+      const pdfDoc = await PDFDocument.load(pdfArrayBuffer, { ignoreEncryption: true });
 
       // 3. Search for attachments in quote.quotes_provided based on selectedModules
       const attachments: string[] = [];
@@ -361,7 +361,7 @@ export default function ProposalCarouselPage() {
           const response = await fetch(`/api/proxy-pdf?url=${encodeURIComponent(url)}`);
           if (response.ok) {
             const attachmentBuffer = await response.arrayBuffer();
-            const attachmentPdf = await PDFDocument.load(attachmentBuffer);
+            const attachmentPdf = await PDFDocument.load(attachmentBuffer, { ignoreEncryption: true });
             const copiedPages = await pdfDoc.copyPages(attachmentPdf, attachmentPdf.getPageIndices());
             copiedPages.forEach((page) => pdfDoc.addPage(page));
           }
