@@ -515,8 +515,15 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                     {language === 'es' ? product.name : product.nameEn}
                   </h4>
                   <div className="grid grid-cols-1 gap-4">
-                    {product.fields.map(field => (
-                      <div key={field.id} className="space-y-2">
+                    {product.fields.map(field => {
+                        if (field.dependsOn) {
+                          const parentValue = formData[field.dependsOn.field];
+                          if (!field.dependsOn.values.includes(parentValue as string)) {
+                            return null;
+                          }
+                        }
+                        return (
+                        <div key={field.id} className="space-y-2">
                         <label className="text-sm font-medium">
                           {language === 'es' ? field.label : field.labelEn}
                           {!field.required && (
@@ -526,8 +533,9 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
                           )}
                         </label>
                         {renderField(field)}
-                      </div>
-                    ))}
+                        </div>
+                        );
+                      })}
                   </div>
                 </div>
               ))}

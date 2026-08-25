@@ -8,6 +8,7 @@ export interface ProductField {
   options?: string[]; // Spanish options
   optionsEn?: string[]; // English options
   required?: boolean;
+  dependsOn?: { field: string; values: string[] };
 }
 
 export interface InsuranceProduct {
@@ -298,9 +299,18 @@ export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
     descriptionEn: 'Homeowners insurance.',
     category: 'personal',
     fields: [
-      { id: 'ho_year_built', label: 'Año de Construcción', labelEn: 'Year Built', type: 'number' },
-      { id: 'ho_roof_year', label: 'Año de actualización del techo', labelEn: 'Roof Update Year', type: 'number' },
-      { id: 'ho_notes', label: 'Notas Adicionales', labelEn: 'Additional Notes', type: 'textarea' }
+      { id: 'ho_construction_year', label: 'Año de Construcción', labelEn: 'Construction Year', type: 'number' },
+      { id: 'ho_improvement_quality', label: 'Calidad de Mejoras', labelEn: 'Improvement Quality', type: 'text' },
+      { id: 'ho_has_pool', label: '¿Tiene Piscina?', labelEn: 'Has Pool?', type: 'boolean' },
+      { id: 'ho_pool_fenced', label: '¿Piscina cercada?', labelEn: 'Is the pool fenced?', type: 'boolean', dependsOn: { field: 'ho_has_pool', values: ['Sí', 'Yes'] } },
+      { id: 'ho_pool_depth', label: '¿Piscina de más de 2.5 pies de profundidad?', labelEn: 'Is pool deeper than 2.5 ft?', type: 'boolean', dependsOn: { field: 'ho_has_pool', values: ['Sí', 'Yes'] } },
+      { id: 'ho_livable_area', label: 'Área Habitable Principal (sq ft)', labelEn: 'Main Livable Area (sq ft)', type: 'number' },
+      { id: 'ho_patios', label: 'Patio(s)', labelEn: 'Patio(s)', type: 'text' },
+      { id: 'ho_exterior_wall', label: 'Tipo de Pared Exterior', labelEn: 'Exterior Wall Type', type: 'text' },
+      { id: 'ho_roof_type', label: 'Tipo de Techo', labelEn: 'Roof Type', type: 'text' },
+      { id: 'ho_current_insurance', label: 'Compañía de Seguro Actual (si aplica)', labelEn: 'Current Insurance Company (if any)', type: 'text' },
+      { id: 'ho_has_claims', label: '¿Ha tenido reclamos de seguro?', labelEn: 'Has had insurance claims?', type: 'boolean' },
+      { id: 'ho_has_cancelled', label: '¿Le han cancelado el seguro anteriormente?', labelEn: 'Has had insurance cancelled before?', type: 'boolean' },
     ]
   },
   {
