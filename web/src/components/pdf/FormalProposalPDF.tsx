@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Image,
   Font,
+  Svg,
+  Path,
 } from '@react-pdf/renderer';
 
 // Register a font for a clean, professional look
@@ -332,6 +334,65 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
           <Text style={styles.coverSubtitle}>
             Executive Summary & Insurance Program Proposal
           </Text>
+        </View>
+      </Page>
+
+      {/* 1.5. SUMMARY COVER PAGE */}
+      <Page size="LETTER" style={{ fontFamily: 'Inter', backgroundColor: '#ffffff', position: 'relative' }}>
+        {/* Top Blue Section */}
+        <View style={{ backgroundColor: '#108ee9', height: '60%', width: '100%', position: 'relative', padding: 50, paddingTop: 60 }}>
+          <Text style={{ fontSize: 46, color: '#ffffff', fontWeight: 'bold', lineHeight: 1.1, width: '80%' }}>
+            Executive{'\n'}
+            summary &{'\n'}
+            insurance program{'\n'}
+            proposal
+          </Text>
+          
+          <Image src="/alex-assets/alex-find.png" style={{ position: 'absolute', right: 30, bottom: 20, width: 230, zIndex: 5 }} />
+          
+          {/* Wave separator */}
+          <View style={{ position: 'absolute', bottom: -1, left: 0, right: 0, width: '100%' }}>
+            <Svg viewBox="0 0 1440 320" style={{ width: '100%' }}>
+              <Path fill="#ffffff" d="M0,224L80,229.3C160,235,320,245,480,224C640,203,800,149,960,138.7C1120,128,1280,160,1360,176L1440,192L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z" />
+            </Svg>
+          </View>
+        </View>
+
+        {/* Bottom White Section */}
+        <View style={{ height: '40%', padding: 50, paddingTop: 40, flexDirection: 'row', justifyContent: 'space-between' }}>
+          {/* Col 1 */}
+          <View style={{ width: '30%' }}>
+            <Text style={{ color: '#514690', fontSize: 16, fontWeight: 'bold', marginBottom: 20 }}>Prepared for</Text>
+            <Text style={{ color: '#475569', fontSize: 13, lineHeight: 1.4 }}>{quote.client_name}</Text>
+          </View>
+          
+          {/* Col 2 */}
+          <View style={{ width: '30%' }}>
+            <Text style={{ color: '#514690', fontSize: 16, fontWeight: 'bold', marginBottom: 20 }}>Program details</Text>
+            {groupedProposals.map((g: any, i: number) => (
+              <Text key={i} style={{ color: '#475569', fontSize: 13, lineHeight: 1.4 }}>{g.product}</Text>
+            ))}
+          </View>
+          
+          {/* Col 3 */}
+          <View style={{ width: '35%' }}>
+            <Text style={{ color: '#514690', fontSize: 16, fontWeight: 'bold', marginBottom: 20 }}>Insurtech Advisory</Text>
+            <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5 }}>Direct: +1 (480) 630-9630</Text>
+            <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5 }}>Email: hello@alexai.cloud</Text>
+            <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5, fontStyle: 'italic' }}>alexai.cloud</Text>
+          </View>
+        </View>
+
+        {/* Footer */}
+        <View style={{ position: 'absolute', bottom: 40, left: 50, right: 50, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <View style={{ backgroundColor: '#009CFF', padding: 4, borderRadius: 4, marginRight: 8 }}>
+              <Image src="/alex-assets/logo-blanco.png" style={{ height: 12, width: 12, objectFit: 'contain' }} />
+            </View>
+            <Text style={{ fontSize: 9, color: '#94a3b8' }}>Alex AI Insurtech. Confidential</Text>
+          </View>
+          <Text style={{ fontSize: 9, color: '#94a3b8' }} render={({ pageNumber, totalPages }) => `Página ${pageNumber} de ${totalPages}`} />
+          <Text style={{ fontSize: 9, color: '#94a3b8' }}>{new Date().toLocaleString('es-MX', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute:'2-digit' })}</Text>
         </View>
       </Page>
 
