@@ -25,6 +25,9 @@ export async function getAgencies() {
       .select(`
         id, 
         name, 
+        logo_url,
+        address,
+        phone,
         created_at,
         profiles ( id )
       `)
@@ -108,6 +111,18 @@ export async function deleteAgency(id: string) {
   try {
     const supabase = await verifyAdmin()
     const { error } = await supabase.from('agencies').delete().eq('id', id)
+    if (error) throw error
+    revalidatePath('/admin/agencies')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
+
+export async function updateAgency(id: string, data: { name?: string, address?: string, phone?: string, logo_url?: string }) {
+  try {
+    const supabase = await verifyAdmin()
+    const { error } = await supabase.from('agencies').update(data).eq('id', id)
     if (error) throw error
     revalidatePath('/admin/agencies')
     return { success: true }
