@@ -379,7 +379,7 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
             <Text style={{ color: '#514690', fontSize: 16, fontWeight: 'bold', marginBottom: 20 }}>Insurtech Advisory</Text>
             <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5 }}>Direct: +1 (480) 630-9630</Text>
             <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5 }}>Email: hello@alexai.cloud</Text>
-            <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5, fontStyle: 'italic' }}>alexai.cloud</Text>
+            <Text style={{ color: '#475569', fontSize: 11, lineHeight: 1.5,  }}>alexai.cloud</Text>
           </View>
         </View>
 
