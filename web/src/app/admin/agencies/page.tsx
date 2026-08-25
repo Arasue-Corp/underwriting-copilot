@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Building2, Plus, Users } from "lucide-react"
-import { getAgencies, createAgency } from "@/app/actions/admin"
+import { Building2, Plus, Users, Trash2 } from "lucide-react"
+import { getAgencies, createAgency, deleteAgency } from "@/app/actions/admin"
 
 export default function AgenciesPage() {
   const [agencies, setAgencies] = useState<any[]>([])
@@ -20,6 +20,16 @@ export default function AgenciesPage() {
     const data = await getAgencies()
     setAgencies(data)
     setLoading(false)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("¿Estás seguro de que deseas eliminar esta agencia? Esto podría afectar a los usuarios y clientes asociados.")) return;
+    const res = await deleteAgency(id);
+    if (res.success) {
+      loadAgencies();
+    } else {
+      setError(res.error || "Error al eliminar");
+    }
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -89,16 +99,17 @@ export default function AgenciesPage() {
                   <th className="px-6 py-3 font-medium">Nombre de Agencia</th>
                   <th className="px-6 py-3 font-medium">Usuarios Asignados</th>
                   <th className="px-6 py-3 font-medium text-right">ID Interno</th>
+                  <th className="px-6 py-3 font-medium text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">Cargando...</td>
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">Cargando...</td>
                   </tr>
                 ) : agencies.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-muted-foreground">No hay agencias registradas.</td>
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">No hay agencias registradas.</td>
                   </tr>
                 ) : (
                   agencies.map(agency => (
@@ -113,6 +124,11 @@ export default function AgenciesPage() {
                       </td>
                       <td className="px-6 py-4 text-right text-xs text-muted-foreground font-mono">
                         {agency.id.substring(0,8)}...
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button onClick={() => handleDelete(agency.id)} className="text-rose-500 hover:text-rose-700 p-2 hover:bg-rose-500/10 rounded-full transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </td>
                     </tr>
                   ))

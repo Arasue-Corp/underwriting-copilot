@@ -91,3 +91,20 @@ export async function updateClient(id: string, data: any) {
     return { success: false, error: error.message }
   }
 }
+
+export async function deleteClient(id: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (!profile || profile.role !== 'ADMIN') throw new Error("Acceso denegado")
+    
+    const { error } = await supabase.from('clients').delete().eq('id', id)
+    if (error) throw error
+    revalidatePath('/clients')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}

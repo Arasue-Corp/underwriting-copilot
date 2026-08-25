@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/client"
 import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar, Clock, Plus, X, Building } from 'lucide-react'
 import { toast } from 'sonner'
 import { createVisit } from '@/app/actions/visits'
+import { deleteClient } from '@/app/actions/clients'
 import { useLanguage } from '@/components/language-provider'
 import { VisitModal } from '@/components/visits/VisitModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
-import { Edit } from 'lucide-react'
+import { Edit, Trash2 } from 'lucide-react'
 
 export default function ClientsPage() {
   const langContext = useLanguage()
@@ -155,6 +156,18 @@ export default function ClientsPage() {
     })
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de que deseas eliminar este cliente? Se eliminarán también cotizaciones asociadas.')) return;
+    const res = await deleteClient(id);
+    if (res.success) {
+      toast.success('Cliente eliminado');
+      if (selectedClient?.id === id) setSelectedClient(null);
+      loadClients();
+    } else {
+      toast.error(res.error || 'Error');
+    }
+  }
+
   const handleSubmitVisit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedClient) return
@@ -272,6 +285,15 @@ export default function ClientsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    {userRole === 'ADMIN' && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleDelete(selectedClient.id); }}
+                          className="bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-rose-500/20"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {'Eliminar'}
+                        </button>
+                    )}
                     {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
                       <button 
                         onClick={() => setIsEditModalOpen(true)}

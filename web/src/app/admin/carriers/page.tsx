@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShieldCheck, Plus, Building, FileText, Upload, Save, X } from "lucide-react"
-import { getCarriers, addCarrier, updateCarrier, getCarrierStats } from "@/app/actions/carriers"
+import { ShieldCheck, Plus, Building, FileText, Upload, Save, X, Trash2 } from "lucide-react"
+import { getCarriers, addCarrier, updateCarrier, getCarrierStats, deleteCarrier } from "@/app/actions/carriers"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
@@ -118,6 +118,17 @@ export default function CarriersPage() {
       console.error(e)
     }
     setLoadingStats(false)
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este carrier? Esto eliminará también los datos asociados.')) return;
+    const res = await deleteCarrier(id);
+    if (res.success) {
+      toast.success('Eliminado exitosamente');
+      loadCarriers();
+    } else {
+      toast.error(res.error || 'Error al eliminar');
+    }
   }
 
   async function handleSave(e: React.FormEvent) {
@@ -248,7 +259,13 @@ export default function CarriersPage() {
                     <td className="px-6 py-4 text-muted-foreground">
                       {new Date(carrier.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                        <button 
+                          onClick={() => handleDelete(carrier.id)}
+                          className="text-rose-500 hover:text-rose-700 p-1.5 hover:bg-rose-500/10 rounded-md transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       <button 
                         onClick={() => handleOpenEdit(carrier)}
                         className="bg-secondary text-secondary-foreground px-3 py-1.5 rounded-md text-xs font-medium hover:bg-secondary/80"

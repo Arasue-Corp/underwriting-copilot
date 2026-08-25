@@ -93,3 +93,20 @@ export async function getCarrierStats(carrierName: string) {
     quotesCount: quotesCount || 0
   }
 }
+
+export async function deleteCarrier(id: string) {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error("No autenticado")
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    if (!profile || profile.role !== 'ADMIN') throw new Error("Acceso denegado")
+    
+    const { error } = await supabase.from('carriers').delete().eq('id', id)
+    if (error) throw error
+    revalidatePath('/admin/carriers')
+    return { success: true }
+  } catch (error: any) {
+    return { success: false, error: error.message }
+  }
+}
