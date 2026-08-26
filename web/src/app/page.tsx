@@ -170,16 +170,28 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
         totalAcceptedQuotes++;
         totalResolvedQuotes++;
         
-        const carrierName = q.carrier_id;
-        if (carrierName) {
-          distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+        if (Array.isArray(q.quotes_provided)) {
+          q.quotes_provided.forEach((prop: any, idx: number) => {
+            if ((!q.selected_modules || q.selected_modules[idx]) && prop.carrier) {
+              const carrierName = prop.carrier;
+              distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+            }
+          });
         }
       } else if (q.status === 'QUOTED') {
         totalPremium += q.premium_amount || 0;
         
-        const carrierName = q.carrier_id;
-        if (carrierName) {
-          quotedDistribution[carrierName] = (quotedDistribution[carrierName] || 0) + 1;
+        if (Array.isArray(q.quotes_provided)) {
+          // Track unique carriers per quote so we don't double count if a carrier provided multiple options
+          const uniqueCarriers = new Set<string>();
+          q.quotes_provided.forEach((prop: any) => {
+            if (prop.carrier) {
+              uniqueCarriers.add(prop.carrier);
+            }
+          });
+          uniqueCarriers.forEach(carrierName => {
+            quotedDistribution[carrierName] = (quotedDistribution[carrierName] || 0) + 1;
+          });
         }
         
         // Sum potential commissions from proposals

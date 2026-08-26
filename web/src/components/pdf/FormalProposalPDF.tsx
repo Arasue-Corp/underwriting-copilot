@@ -26,6 +26,14 @@ Font.register({
   src: `${baseUrl}/fonts/Caveat.ttf`
 });
 
+Font.register({
+  family: 'Courier Prime',
+  fonts: [
+    { src: 'https://fonts.gstatic.com/s/courierprime/v11/u-450q2lgwslOqpF_6gQ8kELawFpWg.woff2' },
+    { src: 'https://fonts.gstatic.com/s/courierprime/v11/u-4k0q2lgwslOqpF_6gQ8kELY7pMT-Dfqw.woff2', fontWeight: 700 }
+  ]
+});
+
 const styles = StyleSheet.create({
   coverPage: {
     fontFamily: 'Inter',
@@ -145,17 +153,20 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#334155',
     fontWeight: 'bold',
+    fontFamily: 'Courier Prime',
   },
   tableColRight: {
     width: '40%',
     fontSize: 10,
     color: '#64748b',
     textAlign: 'right',
+    fontFamily: 'Courier Prime',
   },
   priceText: {
     fontSize: 18,
     fontWeight: 'bold',
     color: '#514690',
+    fontFamily: 'Courier Prime',
   },
   logo: {
     width: 120,
