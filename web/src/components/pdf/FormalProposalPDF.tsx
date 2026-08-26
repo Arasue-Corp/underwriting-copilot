@@ -29,8 +29,8 @@ Font.register({
 Font.register({
   family: 'Courier Prime',
   fonts: [
-    { src: 'https://fonts.gstatic.com/s/courierprime/v11/u-450q2lgwslOqpF_6gQ8kELawFpWg.woff2' },
-    { src: 'https://fonts.gstatic.com/s/courierprime/v11/u-4k0q2lgwslOqpF_6gQ8kELY7pMT-Dfqw.woff2', fontWeight: 700 }
+    { src: `${baseUrl}/fonts/CourierPrime-Regular.ttf` },
+    { src: `${baseUrl}/fonts/CourierPrime-Bold.ttf`, fontWeight: 700 }
   ]
 });
 
