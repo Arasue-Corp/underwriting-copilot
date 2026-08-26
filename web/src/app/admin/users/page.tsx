@@ -175,6 +175,14 @@ export default function UsersPage() {
                       <span className="text-xs text-muted-foreground">Sincronizado</span>
                     )}
                   </td>
+                  <td className="px-6 py-4 text-right">
+                    <button onClick={() => openEditModal(user)} className="text-blue-500 hover:text-blue-700 p-2 hover:bg-blue-500/10 rounded-full transition-colors mr-2">
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(user.id)} className="text-rose-500 hover:text-rose-700 p-2 hover:bg-rose-500/10 rounded-full transition-colors">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
