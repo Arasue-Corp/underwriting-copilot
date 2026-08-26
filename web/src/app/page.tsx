@@ -123,7 +123,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
     console.error("Dashboard error:", quotesError);
   }
   
-  let totalPremium = 0;
+  let totalPremiumQuoted = 0;
+  let totalPremiumAccepted = 0;
   let totalCommissions = 0;
   let potentialCommissions = 0;
   let pendingQuotes = 0;
@@ -149,14 +150,15 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
       if (q.created_at) {
         const d = new Date(q.created_at);
         const mName = monthNames[d.getMonth()];
-        const pAmount = q.status === 'ACCEPTED' ? (q.sold_premium || 0) : (q.premium_amount || 0);
+        const pAmount = q.status === 'ACCEPTED' ? (q.sold_premium || q.premium_amount || 0) : (q.premium_amount || 0);
         if (monthlyData[mName] !== undefined) {
           monthlyData[mName] += pAmount;
         }
       }
 
       if (q.status === 'ACCEPTED') {
-        totalPremium += q.sold_premium || 0;
+        totalPremiumAccepted += q.sold_premium || q.premium_amount || 0;
+        totalPremiumQuoted += q.premium_amount || q.sold_premium || 0;
         let commAmount = ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
         if (role === 'AGENT') {
           const agentCommPct = q.quotes_provided?.[0]?.agent_commission_percentage;
@@ -179,7 +181,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           });
         }
       } else if (q.status === 'QUOTED') {
-        totalPremium += q.premium_amount || 0;
+        totalPremiumQuoted += q.premium_amount || 0;
         
         if (Array.isArray(q.quotes_provided)) {
           // Track unique carriers per quote so we don't double count if a carrier provided multiple options
@@ -209,6 +211,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           });
         }
       } else if (q.status === 'REJECTED') {
+        totalPremiumQuoted += q.premium_amount || 0;
         totalResolvedQuotes++;
       } else if (q.status === 'PENDING_MANAGER' || q.status === 'PENDING') {
         pendingQuotes++;
@@ -245,7 +248,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           title={t.title} 
           desc={t.desc} 
           lang={lang} 
-          realData={{ pending: pendingQuotes, premium: totalPremium, agents: activeAgents }} 
+          realData={{ pending: pendingQuotes, premium: totalPremiumQuoted, agents: activeAgents }} 
         />
         <div className="flex items-center space-x-2">
           {quotesError && <div className="text-red-500 text-sm">Error loading data: {quotesError.message}</div>}
@@ -262,7 +265,10 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
             </div>
           </div>
           <div className="p-6 pt-0">
-            <div className="font-playfair text-3xl font-bold">{formatCurrency(totalPremium)}</div>
+            <div className="font-playfair text-3xl font-bold">{formatCurrency(totalPremiumQuoted)}</div>
+            <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
+              <span className="text-emerald-500 font-semibold mr-1">{formatCurrency(totalPremiumAccepted)}</span> {lang === 'es' ? 'aceptadas' : 'accepted'}
+            </p>
           </div>
         </div>
         

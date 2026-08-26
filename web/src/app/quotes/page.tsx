@@ -253,7 +253,7 @@ export default function QuotesPage() {
       setAvailableCarriers(Array.from(new Set(carriersData.map(c => c.name))).sort())
     }
     if (data) {
-      setQuotes(data.filter((q: any) => !['ACCEPTED', 'REJECTED'].includes(q.status)))
+      setQuotes(data.filter((q: any) => !['REJECTED'].includes(q.status)))
     }
     setLoading(false)
   }
