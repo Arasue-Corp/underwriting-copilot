@@ -1,4 +1,4 @@
-import { Activity, CircleDollarSign, Files, Users, TrendingUp, TrendingDown, AlertCircle, ShieldCheck } from "lucide-react"
+import { Activity, CircleDollarSign, Files, Users, TrendingUp, TrendingDown, AlertCircle, ShieldCheck, CheckCircle } from "lucide-react"
 import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
 import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
@@ -256,7 +256,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
         </div>
       </div>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5">
         <div className="rounded-2xl glass-panel text-card-foreground group accent-left-navy hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 delay-100 fill-mode-both">
           <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
             <h3 className="tracking-tight text-sm font-medium text-muted-foreground">{t.totalPrem}</h3>
@@ -266,9 +266,18 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           </div>
           <div className="p-6 pt-0">
             <div className="font-playfair text-3xl font-bold">{formatCurrency(totalPremiumQuoted)}</div>
-            <p className="text-xs font-medium text-muted-foreground mt-2 flex items-center">
-              <span className="text-emerald-500 font-semibold mr-1">{formatCurrency(totalPremiumAccepted)}</span> {lang === 'es' ? 'aceptadas' : 'accepted'}
-            </p>
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass-panel text-card-foreground group accent-left-emerald hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] dark:hover:shadow-[0_12px_40px_rgba(0,0,0,0.6)] animate-in fade-in slide-in-from-bottom-4 delay-150 fill-mode-both">
+          <div className="p-6 flex flex-row items-center justify-between space-y-0 pb-2">
+            <h3 className="tracking-tight text-sm font-medium text-muted-foreground">{lang === 'es' ? 'Prima Aceptada' : 'Accepted Premium'}</h3>
+            <div className="p-2 bg-emerald-500/10 rounded-full group-hover:bg-emerald-500/20 transition-colors group-hover:scale-110 duration-300">
+              <CheckCircle className="h-5 w-5 text-emerald-500" />
+            </div>
+          </div>
+          <div className="p-6 pt-0">
+            <div className="font-playfair text-3xl font-bold text-emerald-600 dark:text-emerald-400">{formatCurrency(totalPremiumAccepted)}</div>
           </div>
         </div>
         
