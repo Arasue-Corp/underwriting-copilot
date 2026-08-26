@@ -1102,10 +1102,31 @@ export default function QuotesPage() {
                           const newArr = [...selectedAcceptQuotes];
                           newArr[i] = e.target.checked;
                           setSelectedAcceptQuotes(newArr);
+                          
+                          let sumPremium = 0;
+                          let commSum = 0;
+                          let count = 0;
+                          acceptQuote.quotes_provided?.forEach((opt: any, idx: number) => {
+                            if (newArr[idx]) {
+                              const prem = parseFloat(opt.premium || 0);
+                              const comm = parseFloat(opt.commission_percentage || 0);
+                              if (!isNaN(prem)) sumPremium += prem;
+                              if (!isNaN(comm)) commSum += comm;
+                              count++;
+                            }
+                          });
+                          
+                          if (count > 0) {
+                            setSoldPremium(sumPremium.toString());
+                            setCommissionPercentage((commSum / count).toString());
+                          } else {
+                            setSoldPremium("");
+                            setCommissionPercentage("");
+                          }
                         }}
                         className="rounded border-border text-primary focus:ring-primary"
                       />
-                      <span><span className="font-semibold">{opt.carrier}</span> - ${opt.price}</span>
+                      <span><span className="font-semibold">{opt.carrier}</span> - ${opt.premium}</span>
                     </label>
                   ))}
                   {(!acceptQuote.quotes_provided || acceptQuote.quotes_provided.length === 0) && (
