@@ -191,7 +191,7 @@ export async function assignQuoteRequest(quoteId: string, assigneeId: string) {
   return { success: true }
 }
 
-export async function updateQuoteStatus(quoteId: string, status: string, soldPremium?: number, commissionPercentage?: number) {
+export async function updateQuoteStatus(quoteId: string, status: string, soldPremium?: number, commissionPercentage?: number, selectedQuotes?: boolean[]) {
   const supabase = await createClient()
   
   const { data: { user } } = await supabase.auth.getUser()
@@ -207,6 +207,18 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   if (commissionPercentage !== undefined) updates.commission_percentage = commissionPercentage
   if (status === 'ACCEPTED') {
     updates.accepted_at = new Date().toISOString()
+  }
+  
+  if (selectedQuotes && selectedQuotes.length > 0) {
+    const { data: quote } = await supabase.from("quote_requests").select("quotes_provided").eq("id", quoteId).single()
+    let updatedQuotesProvided = quote?.quotes_provided || []
+    if (Array.isArray(updatedQuotesProvided)) {
+      updatedQuotesProvided = updatedQuotesProvided.map((prop: any, index: number) => ({
+        ...prop,
+        accepted: selectedQuotes[index] || false
+      }))
+      updates.quotes_provided = updatedQuotesProvided
+    }
   }
 
   const { error } = await supabase

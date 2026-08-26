@@ -208,6 +208,7 @@ export default function QuotesPage() {
   const [transferOwnerQuote, setTransferOwnerQuote] = useState<any>(null)
   const [editQuoteRequest, setEditQuoteRequest] = useState<any>(null)
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
+  const [selectedAcceptQuotes, setSelectedAcceptQuotes] = useState<boolean[]>([])
   
   // Process State
   const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, agent_commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, description: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
@@ -398,6 +399,7 @@ export default function QuotesPage() {
   const handleStatusChange = async (quote: any, newStatus: string) => {
     if (newStatus === 'ACCEPTED') {
       setAcceptQuote(quote)
+      setSelectedAcceptQuotes(new Array(quote.quotes_provided?.length || 0).fill(false))
       return
     }
 
@@ -418,7 +420,8 @@ export default function QuotesPage() {
       acceptQuote.id, 
       'ACCEPTED', 
       parseFloat(soldPremium), 
-      parseFloat(commissionPercentage)
+      parseFloat(commissionPercentage),
+      selectedAcceptQuotes
     )
     if (res.success) {
       setAcceptQuote(null)
@@ -1086,6 +1089,31 @@ export default function QuotesPage() {
             <h3 className="text-xl font-bold mb-4">{t.acceptQuote}</h3>
             <p className="text-sm text-muted-foreground mb-4">{t.acceptQuoteDesc}</p>
             <form onSubmit={handleAcceptSubmit} className="space-y-4">
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium">{lang === 'es' ? 'Opciones Aceptadas' : 'Accepted Options'}</label>
+                <div className="space-y-2 max-h-40 overflow-y-auto border border-border rounded-md p-3 bg-muted/30">
+                  {acceptQuote.quotes_provided?.map((opt: any, i: number) => (
+                    <label key={i} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted p-1 rounded">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAcceptQuotes[i] || false}
+                        onChange={(e) => {
+                          const newArr = [...selectedAcceptQuotes];
+                          newArr[i] = e.target.checked;
+                          setSelectedAcceptQuotes(newArr);
+                        }}
+                        className="rounded border-border text-primary focus:ring-primary"
+                      />
+                      <span><span className="font-semibold">{opt.carrier}</span> - ${opt.price}</span>
+                    </label>
+                  ))}
+                  {(!acceptQuote.quotes_provided || acceptQuote.quotes_provided.length === 0) && (
+                    <p className="text-xs text-muted-foreground">{lang === 'es' ? 'No hay opciones registradas.' : 'No options registered.'}</p>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-medium">{t.soldPremium}</label>
                 <input 
