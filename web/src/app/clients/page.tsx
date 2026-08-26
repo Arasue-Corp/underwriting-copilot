@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { createClient } from "@/lib/supabase/client"
 import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar, Clock, Plus, X, Building } from 'lucide-react'
 import { toast } from 'sonner'
@@ -69,6 +70,7 @@ export default function ClientsPage() {
   
   // Modals State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [expandedVisits, setExpandedVisits] = useState<Record<string, boolean>>({})
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [visitForm, setVisitForm] = useState({
@@ -327,10 +329,10 @@ export default function ClientsPage() {
                   ) : (
                     <div className="space-y-4">
                       {selectedClient.quote_requests.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((quote: any) => (
-                        <div key={quote.id} className="border border-border rounded-lg p-4 bg-muted/20 flex flex-col justify-between gap-3">
+                        <Link href={`/proposals/${quote.id}`} key={quote.id} className="block border border-border rounded-xl p-5 bg-card hover:bg-muted/50 transition-colors shadow-sm flex flex-col justify-between gap-4 cursor-pointer group">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <span className="font-semibold text-foreground">{quote.coverage_requested}</span>
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="font-bold text-base text-foreground group-hover:text-primary transition-colors">{quote.coverage_requested}</span>
                               <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border font-bold ${
                                 quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
                                 quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
@@ -339,7 +341,7 @@ export default function ClientsPage() {
                                 {quote.status}
                               </span>
                             </div>
-                            <div className="text-xs text-muted-foreground">
+                            <div className="text-sm text-muted-foreground">
                               {t.carrier} <span className="font-medium text-foreground">{quote.carrier_id || t.tbd}</span>
                             </div>
                           </div>
@@ -359,7 +361,7 @@ export default function ClientsPage() {
                               <div className="text-sm font-bold">${parseFloat(quote.sold_premium).toLocaleString()} USD</div>
                             )}
                           </div>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}
@@ -380,9 +382,12 @@ export default function ClientsPage() {
                           <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-card text-muted-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
                             <Building className="w-4 h-4" />
                           </div>
-                          <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border border-border p-4 rounded-xl shadow-sm">
+                          <div 
+                              className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border border-border p-5 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer"
+                              onClick={() => setExpandedVisits(prev => ({ ...prev, [visit.id]: !prev[visit.id] }))}
+                            >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-bold text-muted-foreground">
+                              <span className="text-sm font-bold text-muted-foreground">
                                 {new Date(visit.created_at).toLocaleDateString()}
                               </span>
                               <span className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold ${
@@ -390,12 +395,12 @@ export default function ClientsPage() {
                               }`}>{visit.status}</span>
                             </div>
                             {visit.conversation_notes && (
-                              <p className="text-sm text-foreground/90 line-clamp-3 mb-2">{visit.conversation_notes}</p>
+                              <p className={`text-base text-foreground/90 mb-3 ${expandedVisits[visit.id] ? '' : 'line-clamp-3'}`}>{visit.conversation_notes}</p>
                             )}
                             {visit.policies_needed && visit.policies_needed.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2">
                                 {visit.policies_needed.slice(0,3).map((p:string, i:number) => (
-                                  <span key={i} className="text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{p}</span>
+                                  <span key={i} className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-md">{p}</span>
                                 ))}
                               </div>
                             )}
