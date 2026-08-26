@@ -31,7 +31,8 @@ export function DistributionChart({ data }: { data?: any[] }) {
           verticalAlign="bottom" 
           height={36} 
           iconType="circle"
-          wrapperStyle={{ fontSize: '12px', color: 'var(--muted-foreground)' }}
+          wrapperStyle={{ fontSize: '12px' }}
+          formatter={(value) => <span style={{ color: '#475569', fontWeight: 500 }}>{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>
