@@ -377,7 +377,7 @@ export default function ClientsPage() {
                     <p className="text-muted-foreground text-sm">{t.noVisits}</p>
                   ) : (
                     <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-                      {selectedClient.visits.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map((visit: any) => (
+                      {selectedClient.visits.sort((a: any, b: any) => new Date(b.visit_date || b.created_at).getTime() - new Date(a.visit_date || a.created_at).getTime()).map((visit: any) => (
                         <div key={visit.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                           <div className="flex items-center justify-center w-10 h-10 rounded-full border border-border bg-card text-muted-foreground shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-sm z-10">
                             <Building className="w-4 h-4" />
@@ -388,7 +388,7 @@ export default function ClientsPage() {
                             >
                             <div className="flex items-center justify-between mb-2">
                               <span className="text-sm font-bold text-muted-foreground">
-                                {new Date(visit.created_at).toLocaleDateString()}
+                                {new Date(visit.visit_date || visit.created_at).toLocaleDateString()}
                               </span>
                               <span className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold ${
                                 visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
