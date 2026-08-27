@@ -133,47 +133,49 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
         return
       }
 
-      if (selectedProductIds.length === 0) {
-        setError(language === 'es' ? "Por favor selecciona al menos un producto para cotizar." : "Please select at least one product to quote.")
-        return
-      }
       setInvalidFields([])
       setStep(2)
-      // Scroll to top
       setTimeout(() => { if (formRef.current) formRef.current.scrollTop = 0 }, 10)
       return
     }
 
-    // Validate step 2 manually
-    let missingStep2Names: string[] = []
-    let missingStep2Ids: string[] = []
-    const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
-    selectedProducts.forEach(product => {
-      product.fields.forEach(field => {
-        if (field.required) {
-          if (field.type === 'file') {
-            if (!files[field.id]) {
-              missingStep2Names.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
-              missingStep2Ids.push(field.id)
-            }
-          } else {
-            if (!formData[field.id] || String(formData[field.id]).trim() === '') {
-              missingStep2Names.push(`${language === 'es' ? product.name : product.nameEn} - ${language === 'es' ? field.label : field.labelEn}`)
-              missingStep2Ids.push(field.id)
-            }
-          }
-        }
-      })
-    })
-
-    if (missingStep2Names.length > 0) {
-      setInvalidFields(missingStep2Ids)
-      setError(language === 'es' ? `Faltan campos obligatorios:\n${missingStep2Names.map(m => '- ' + m).join('\n')}` : `Missing required fields:\n${missingStep2Names.map(m => '- ' + m).join('\n')}`)
-      // Scroll to top
-      if (formRef.current) formRef.current.scrollTop = 0
+    if (step === 2) {
+      if (selectedProductIds.length === 0) {
+        // Proceed to submit directly
+        performSubmit()
+      } else {
+        setStep(3)
+        setTimeout(() => { if (formRef.current) formRef.current.scrollTop = 0 }, 10)
+      }
       return
     }
 
+    if (step === 3) {
+      // Validate step 3 manually
+      const requiredProductFields: { id: string; label: string }[] = []
+      const selectedProducts = INSURANCE_PRODUCTS.filter(p => selectedProductIds.includes(p.id))
+      selectedProducts.forEach(product => {
+        product.fields.forEach(field => {
+          if (field.required) {
+            requiredProductFields.push({ id: field.id, label: language === 'es' ? field.label : field.labelEn })
+          }
+        })
+      })
+
+      const missingProductFields = requiredProductFields.filter(f => !formData[f.id] || String(formData[f.id]).trim() === '')
+      if (missingProductFields.length > 0) {
+        setInvalidFields(missingProductFields.map(m => m.id))
+        setError(language === 'es' ? `Faltan campos obligatorios en los productos seleccionados:\n${missingProductFields.map(m => '- ' + m.label).join('\n')}` : `Missing required fields in selected products:\n${missingProductFields.map(m => '- ' + m.label).join('\n')}`)
+        if (formRef.current) formRef.current.scrollTop = 0
+        return
+      }
+
+      setInvalidFields([])
+      performSubmit()
+    }
+  }
+
+  const performSubmit = () => {
     startTransition(async () => {
       try {
         const submitData = new FormData()
@@ -488,11 +490,20 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-border">
-                <h3 className="text-lg font-semibold mb-4">
+            </div>
+          )}
+
+          {/* Step 2: Product Catalog */}
+          {step === 2 && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              <div className="pt-2">
+                <h3 className="text-lg font-semibold mb-2">
                   {language === 'es' ? '¿Qué productos necesitas cotizar?' : 'What products do you need to quote?'}
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto pr-2">
+                <p className="text-sm text-muted-foreground mb-4">
+                  {language === 'es' ? 'Selecciona los productos. Si no requieres productos específicos, puedes enviar la solicitud directamente.' : 'Select the products. If you do not require specific products, you can submit the request directly.'}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-80 overflow-y-auto pr-2">
                   {INSURANCE_PRODUCTS.filter(p => p.category === quoteCategory || (!p.category && quoteCategory === 'commercial')).map(product => (
                     <label key={product.id} className={`flex items-start space-x-3 p-3 rounded-lg border cursor-pointer transition-colors ${selectedProductIds.includes(product.id) ? 'bg-primary/10 border-primary' : 'hover:bg-muted'}`}>
                       <input type="checkbox" className="mt-1 shrink-0" checked={selectedProductIds.includes(product.id)} onChange={() => toggleProduct(product.id)} />
@@ -511,8 +522,8 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
             </div>
           )}
 
-          {/* Step 2: Dynamic Product Fields */}
-          {step === 2 && (
+          {/* Step 3: Dynamic Product Fields */}
+          {step === 3 && (
             <div className="space-y-8 animate-in fade-in slide-in-from-right-4">
               <h3 className="text-lg font-semibold border-b pb-2">
                 {language === 'es' ? 'Detalles Específicos por Producto' : 'Product Specific Details'}
@@ -581,13 +592,26 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
             </button>
           )}
           
-          {step < 2 ? (
+          {step === 1 ? (
             <button 
               type="submit" 
               form="quote-form"
               className="inline-flex items-center px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium hover:bg-primary/90"
             >
               {language === 'es' ? 'Siguiente' : 'Next'} <ChevronRight className="w-4 h-4 ml-2" />
+            </button>
+          ) : step === 2 ? (
+            <button 
+              type="submit" 
+              form="quote-form"
+              disabled={isPending}
+              className={`inline-flex items-center px-6 py-2 ${selectedProductIds.length === 0 ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-primary hover:bg-primary/90'} text-primary-foreground rounded-md text-sm font-bold disabled:opacity-50`}
+            >
+              {selectedProductIds.length === 0 ? (
+                isPending ? (language === 'es' ? 'Procesando...' : 'Processing...') : (language === 'es' ? 'Enviar Solicitud Directa' : 'Submit Direct Request')
+              ) : (
+                <>{language === 'es' ? 'Siguiente' : 'Next'} <ChevronRight className="w-4 h-4 ml-2" /></>
+              )}
             </button>
           ) : (
             <button 
