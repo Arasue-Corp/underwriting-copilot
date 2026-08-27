@@ -331,7 +331,7 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 sm:p-6 overflow-hidden">
       <div className="relative w-full max-w-3xl max-h-full flex flex-col rounded-xl border border-border bg-card shadow-lg">
         {/* Header */}
         <div className="flex-none flex items-center justify-between border-b border-border p-6 bg-card z-10 rounded-t-xl">

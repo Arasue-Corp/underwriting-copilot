@@ -278,7 +278,10 @@ export function AppetiteRadar({
               
               {hoveredCarrier.status !== 'PROHIBITED' && (
                 <button
-                  onClick={() => setQuoteCarrier(hoveredCarrier)}
+                  onClick={() => {
+                    setQuoteCarrier(hoveredCarrier)
+                    setHoveredCarrier(null)
+                  }}
                   className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors shadow-xl hover:shadow-2xl flex items-center justify-center gap-3"
                 >
                   <FileText className="w-7 h-7" />
