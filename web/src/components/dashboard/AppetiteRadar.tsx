@@ -99,6 +99,7 @@ export function AppetiteRadar({
   }, [data])
 
   return (
+    <>
     <div 
       className="relative w-full max-w-4xl mx-auto h-[700px] flex items-center justify-center overflow-hidden rounded-[3rem] glass-panel bg-black/5 dark:bg-black/20"
       onClick={() => setHoveredCarrier(null)}
@@ -187,6 +188,7 @@ export function AppetiteRadar({
           </g>
         </svg>
       )}
+    </div>
 
       {/* Modal Info Panel */}
       <AnimatePresence>
@@ -293,6 +295,6 @@ export function AppetiteRadar({
         onClose={() => setQuoteCarrier(null)} 
         rule={quoteCarrier} 
       />
-    </div>
+    </>
   )
 }
