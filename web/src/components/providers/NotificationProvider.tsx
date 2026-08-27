@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { getTasks, updateTask } from "@/app/actions/tasks"
 import { createNotification } from "@/app/actions/notifications"
+import { createClient } from "@/lib/supabase/client"
 import { useLanguage } from "@/components/language-provider"
 import { BellRing } from "lucide-react"
 
@@ -15,6 +16,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
     const checkTasks = async () => {
       try {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
         const tasks = await getTasks()
         if (!active || !tasks) return
 
@@ -22,6 +27,8 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         for (const task of tasks) {
           if (task.status !== 'PENDING') continue
+          // Only process notifications for the assigned user, to avoid other users marking it as notified
+          if (task.assignee_id !== user.id) continue
 
           const dueDate = new Date(task.due_date)
           const timeDiff = dueDate.getTime() - now.getTime()
