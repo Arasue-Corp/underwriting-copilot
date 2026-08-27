@@ -92,23 +92,23 @@ export function AppetiteRadar({
     }
 
     return [
-      ...getNodes(eligible, 160, 0),       // Inner Ring (320px diameter)
-      ...getNodes(restricted, 290, Math.PI / 4), // Middle Ring (580px diameter)
-      ...getNodes(prohibited, 420, Math.PI / 2)  // Outer Ring (840px diameter)
+      ...getNodes(eligible, 120, 0),       // Inner Ring
+      ...getNodes(restricted, 220, Math.PI / 4), // Middle Ring
+      ...getNodes(prohibited, 320, Math.PI / 2)  // Outer Ring
     ]
   }, [data])
 
   return (
     <div 
-      className="relative w-full max-w-6xl mx-auto h-[900px] flex items-center justify-center overflow-hidden rounded-[3rem] glass-panel bg-black/5 dark:bg-black/20"
+      className="relative w-full max-w-4xl mx-auto h-[700px] flex items-center justify-center overflow-hidden rounded-[3rem] glass-panel bg-black/5 dark:bg-black/20"
       onClick={() => setHoveredCarrier(null)}
     >
       
       {/* Radar Rings Background */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20 dark:opacity-40">
-        <div className="absolute w-[320px] h-[320px] rounded-full border-2 border-emerald-500/50 border-dashed" />
-        <div className="absolute w-[580px] h-[580px] rounded-full border-2 border-amber-500/30 border-dashed" />
-        <div className="absolute w-[840px] h-[840px] rounded-full border-2 border-red-500/20 border-dashed" />
+        <div className="absolute w-[240px] h-[240px] rounded-full border-2 border-emerald-500/50 border-dashed" />
+        <div className="absolute w-[440px] h-[440px] rounded-full border-2 border-amber-500/30 border-dashed" />
+        <div className="absolute w-[640px] h-[640px] rounded-full border-2 border-red-500/20 border-dashed" />
         
         {/* Crosshairs */}
         <div className="absolute w-full h-[1px] bg-foreground/10" />
@@ -117,13 +117,13 @@ export function AppetiteRadar({
 
       {/* Center Target (The Industry) */}
       <motion.div 
-        className="absolute z-30 flex flex-col items-center justify-center text-center p-8 bg-background/90 backdrop-blur-xl rounded-full border border-primary/20 shadow-[0_0_60px_rgba(22,45,89,0.3)] dark:shadow-[0_0_60px_rgba(242,211,172,0.1)] w-56 h-56"
+        className="absolute z-30 flex flex-col items-center justify-center text-center p-6 bg-background/80 backdrop-blur-xl rounded-full border border-primary/20 shadow-[0_0_40px_rgba(22,45,89,0.3)] dark:shadow-[0_0_40px_rgba(242,211,172,0.1)] w-40 h-40"
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
         transition={{ type: "spring", bounce: 0.5 }}
       >
-        <Crosshair className="w-12 h-12 text-primary mb-3 opacity-80" />
-        <span className="font-bold text-lg leading-tight text-foreground">{industryName}</span>
+        <Crosshair className="w-8 h-8 text-primary mb-2 opacity-80" />
+        <span className="font-bold text-sm leading-tight text-foreground">{industryName}</span>
       </motion.div>
 
       {/* Orbiting Nodes */}
@@ -158,12 +158,12 @@ export function AppetiteRadar({
               )}
               
               <div className={`
-                relative flex items-center justify-center w-16 h-16 rounded-full border-2 bg-white shadow-lg transition-colors
+                relative flex items-center justify-center w-20 h-20 rounded-full border-[3px] bg-white shadow-lg transition-colors
                 ${node.status === 'ELIGIBLE' ? 'border-emerald-500' : ''}
                 ${node.status === 'RESTRICTED' ? 'border-amber-500' : ''}
                 ${node.status === 'PROHIBITED' ? 'border-red-500/50 opacity-60' : ''}
               `}>
-                <CarrierLogo carrierName={node.carrier_name} className="w-10 h-10" />
+                <CarrierLogo carrierName={node.carrier_name} className="w-14 h-14" />
               </div>
             </div>
           </motion.div>
@@ -188,97 +188,103 @@ export function AppetiteRadar({
         </svg>
       )}
 
-      {/* Hover Info Panel */}
+      {/* Modal Info Panel */}
       <AnimatePresence>
         {hoveredCarrier && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 glass-panel p-8 rounded-3xl w-[95%] max-w-2xl border-t-[6px] shadow-2xl bg-background/95 backdrop-blur-3xl"
-            onClick={(e) => e.stopPropagation()}
-            style={{ 
-              borderTopColor: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' 
-            }}
+          <div 
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+            onClick={() => setHoveredCarrier(null)}
           >
-            <button 
-              onClick={() => setHoveredCarrier(null)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground bg-muted/50 rounded-full transition-colors"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              transition={{ type: "spring", bounce: 0.3 }}
+              className="relative w-full max-w-2xl bg-background/95 backdrop-blur-3xl p-8 rounded-3xl border-t-[6px] shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar"
+              onClick={(e) => e.stopPropagation()}
+              style={{ 
+                borderTopColor: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' 
+              }}
             >
-              <XCircle className="w-5 h-5" />
-            </button>
-            
-            <div className="flex items-center gap-5 mb-5 pr-10">
-              <CarrierLogo carrierName={hoveredCarrier.carrier_name} className="w-16 h-16 bg-white p-2" />
-              <div>
-                <h4 className="font-playfair text-3xl font-bold leading-tight">{hoveredCarrier.carrier_name}</h4>
-                <div className="text-sm font-bold text-muted-foreground uppercase tracking-widest mt-2 line-clamp-2">
-                  {hoveredCarrier.product_line}
+              <button 
+                onClick={() => setHoveredCarrier(null)}
+                className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-foreground bg-muted/50 rounded-full transition-colors"
+              >
+                <XCircle className="w-6 h-6" />
+              </button>
+              
+              <div className="flex items-center gap-6 mb-6 pr-12">
+                <CarrierLogo carrierName={hoveredCarrier.carrier_name} className="w-20 h-20 bg-white p-2 border shadow-sm rounded-2xl" />
+                <div>
+                  <h4 className="font-playfair text-4xl font-bold leading-tight">{hoveredCarrier.carrier_name}</h4>
+                  <div className="text-base font-bold text-muted-foreground uppercase tracking-widest mt-2">
+                    {hoveredCarrier.product_line}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-2 mb-4 bg-muted/20 p-2 rounded-xl inline-flex">
-               {hoveredCarrier.status === 'ELIGIBLE' && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
-               {hoveredCarrier.status === 'RESTRICTED' && <AlertCircle className="w-5 h-5 text-amber-500" />}
-               {hoveredCarrier.status === 'PROHIBITED' && <XCircle className="w-5 h-5 text-red-500" />}
-               
-               <span className="font-bold text-base tracking-widest uppercase pr-3" style={{ color: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' }}>
-                 {hoveredCarrier.status === 'ELIGIBLE' && (language === 'es' ? 'ELEGIBLE' : 'ELIGIBLE')}
-                 {hoveredCarrier.status === 'RESTRICTED' && (language === 'es' ? 'RESTRINGIDO' : 'RESTRICTED')}
-                 {hoveredCarrier.status === 'PROHIBITED' && (language === 'es' ? 'PROHIBIDO' : 'PROHIBITED')}
-               </span>
-            </div>
-
-            <div className="bg-muted/30 p-5 rounded-2xl text-base leading-relaxed mb-5 max-h-[150px] overflow-y-auto custom-scrollbar">
-              <span className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">
-                {language === 'es' ? 'Condiciones Específicas' : 'Specific Conditions'}
-              </span>
-              {hoveredCarrier.conditions || (language === 'es' ? 'Sin condiciones especiales detalladas.' : 'No detailed special conditions.')}
-            </div>
-
-            {hoveredCarrier.general_prohibited_operations && hoveredCarrier.general_prohibited_operations.length > 0 && (
-              <div className="bg-rose-500/5 border border-rose-500/20 p-5 rounded-2xl text-base leading-relaxed mb-5 max-h-[120px] overflow-y-auto custom-scrollbar">
-                <span className="block text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-3">
-                  {language === 'es' ? 'Operaciones Prohibidas' : 'Prohibited Operations'}
-                </span>
-                <ul className="list-disc pl-5 text-foreground/90 space-y-2 text-sm">
-                  {hoveredCarrier.general_prohibited_operations.map((op, i) => (
-                    <li key={i}>{op}</li>
-                  ))}
-                </ul>
+              <div className="flex items-center gap-2 mb-6 bg-muted/30 px-4 py-2 rounded-xl inline-flex">
+                 {hoveredCarrier.status === 'ELIGIBLE' && <CheckCircle2 className="w-6 h-6 text-emerald-500" />}
+                 {hoveredCarrier.status === 'RESTRICTED' && <AlertCircle className="w-6 h-6 text-amber-500" />}
+                 {hoveredCarrier.status === 'PROHIBITED' && <XCircle className="w-6 h-6 text-red-500" />}
+                 
+                 <span className="font-bold text-lg tracking-widest uppercase pr-2" style={{ color: hoveredCarrier.status === 'ELIGIBLE' ? '#10b981' : hoveredCarrier.status === 'RESTRICTED' ? '#f59e0b' : '#ef4444' }}>
+                   {hoveredCarrier.status === 'ELIGIBLE' && (language === 'es' ? 'ELEGIBLE' : 'ELIGIBLE')}
+                   {hoveredCarrier.status === 'RESTRICTED' && (language === 'es' ? 'RESTRINGIDO' : 'RESTRICTED')}
+                   {hoveredCarrier.status === 'PROHIBITED' && (language === 'es' ? 'PROHIBIDO' : 'PROHIBITED')}
+                 </span>
               </div>
-            )}
 
-            <div className="flex gap-5 mb-6">
-              <div className="flex-1 bg-background/50 p-4 rounded-2xl border border-border/50 text-center">
-                <span className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                  {language === 'es' ? 'Prima Mínima' : 'Min Premium'}
+              <div className="bg-muted/30 p-6 rounded-2xl text-lg leading-relaxed mb-6">
+                <span className="block text-sm font-bold text-muted-foreground uppercase tracking-widest mb-3">
+                  {language === 'es' ? 'Condiciones Específicas' : 'Specific Conditions'}
                 </span>
-                <span className={`font-semibold ${!hoveredCarrier.min_premium ? 'text-muted-foreground/60 text-sm' : 'text-lg'}`}>
-                  {hoveredCarrier.min_premium ? `$${hoveredCarrier.min_premium.toLocaleString()}` : (language === 'es' ? 'Según riesgo' : 'Varies by risk')}
-                </span>
+                {hoveredCarrier.conditions || (language === 'es' ? 'Sin condiciones especiales detalladas.' : 'No detailed special conditions.')}
               </div>
-              <div className="flex-1 bg-background/50 p-4 rounded-2xl border border-border/50 text-center">
-                <span className="block text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2">
-                  {language === 'es' ? 'Límites Max' : 'Max Limits'}
-                </span>
-                <span className={`font-semibold ${!hoveredCarrier.max_limits ? 'text-muted-foreground/60 text-sm' : 'text-lg'}`}>
-                  {hoveredCarrier.max_limits ? `$${hoveredCarrier.max_limits.toLocaleString()}` : (language === 'es' ? 'Sujeto a eval' : 'Subject to eval')}
-                </span>
+
+              {hoveredCarrier.general_prohibited_operations && hoveredCarrier.general_prohibited_operations.length > 0 && (
+                <div className="bg-rose-500/5 border border-rose-500/20 p-6 rounded-2xl text-lg leading-relaxed mb-6">
+                  <span className="block text-sm font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mb-3">
+                    {language === 'es' ? 'Operaciones Prohibidas' : 'Prohibited Operations'}
+                  </span>
+                  <ul className="list-disc pl-6 text-foreground/90 space-y-2">
+                    {hoveredCarrier.general_prohibited_operations.map((op, i) => (
+                      <li key={i}>{op}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex gap-6 mb-8">
+                <div className="flex-1 bg-background/50 p-5 rounded-2xl border border-border/50 text-center">
+                  <span className="block text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                    {language === 'es' ? 'Prima Mínima' : 'Min Premium'}
+                  </span>
+                  <span className={`font-semibold ${!hoveredCarrier.min_premium ? 'text-muted-foreground/60 text-base' : 'text-xl'}`}>
+                    {hoveredCarrier.min_premium ? `$${hoveredCarrier.min_premium.toLocaleString()}` : (language === 'es' ? 'Según riesgo' : 'Varies by risk')}
+                  </span>
+                </div>
+                <div className="flex-1 bg-background/50 p-5 rounded-2xl border border-border/50 text-center">
+                  <span className="block text-sm font-bold text-muted-foreground uppercase tracking-widest mb-2">
+                    {language === 'es' ? 'Límites Max' : 'Max Limits'}
+                  </span>
+                  <span className={`font-semibold ${!hoveredCarrier.max_limits ? 'text-muted-foreground/60 text-base' : 'text-xl'}`}>
+                    {hoveredCarrier.max_limits ? `$${hoveredCarrier.max_limits.toLocaleString()}` : (language === 'es' ? 'Sujeto a evaluación' : 'Subject to eval')}
+                  </span>
+                </div>
               </div>
-            </div>
-            
-            {hoveredCarrier.status !== 'PROHIBITED' && (
-              <button
-                onClick={() => setQuoteCarrier(hoveredCarrier)}
-                className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-lg font-bold hover:bg-primary/90 transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-3"
-              >
-                <FileText className="w-6 h-6" />
-                {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
-              </button>
-            )}
-          </motion.div>
+              
+              {hoveredCarrier.status !== 'PROHIBITED' && (
+                <button
+                  onClick={() => setQuoteCarrier(hoveredCarrier)}
+                  className="w-full py-4 rounded-2xl bg-primary text-primary-foreground text-xl font-bold hover:bg-primary/90 transition-colors shadow-xl hover:shadow-2xl flex items-center justify-center gap-3"
+                >
+                  <FileText className="w-7 h-7" />
+                  {language === 'es' ? 'Solicitar Cotización' : 'Request Quote'}
+                </button>
+              )}
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
