@@ -45,6 +45,25 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       requirementsLabel: 'Requerimientos Detectados y Oportunidades',
       additionalNotesLabel: 'Notas Adicionales (Agente)',
       nextVisitLabel: 'Agendar Siguiente Visita',
+      contactMethodLabel: 'Método de Contacto',
+      contactMethodPlaceholder: '-- Seleccionar Método --',
+      contactMethodOptions: {
+        CALL: 'Llamada Telefónica',
+        IN_PERSON: 'Reunión en Persona',
+        EMAIL: 'Correo Electrónico',
+        VIDEO_CALL: 'Videollamada',
+        OTHER: 'Otro'
+      },
+      contactReasonLabel: 'Motivo del Contacto',
+      contactReasonPlaceholder: '-- Seleccionar Motivo --',
+      contactReasonOptions: {
+        FOLLOW_UP: 'Seguimiento',
+        INTERVIEW: 'Entrevista Inicial',
+        SCOUTING: 'Scouting / Prospección',
+        PROPOSAL: 'Presentar Propuesta',
+        OTHER: 'Otro'
+      },
+      otherSpecifyLabel: 'Especificar Otro',
       cancelBtn: 'Cancelar',
       saveBtn: 'Guardar Reporte',
       savingBtn: 'Guardando...'
@@ -76,6 +95,25 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       requirementsLabel: 'Detected Requirements & Opportunities',
       additionalNotesLabel: 'Additional Notes (Agent)',
       nextVisitLabel: 'Schedule Next Visit',
+      contactMethodLabel: 'Contact Method',
+      contactMethodPlaceholder: '-- Select Method --',
+      contactMethodOptions: {
+        CALL: 'Phone Call',
+        IN_PERSON: 'In-Person Meeting',
+        EMAIL: 'Email',
+        VIDEO_CALL: 'Video Call',
+        OTHER: 'Other'
+      },
+      contactReasonLabel: 'Contact Reason',
+      contactReasonPlaceholder: '-- Select Reason --',
+      contactReasonOptions: {
+        FOLLOW_UP: 'Follow-up',
+        INTERVIEW: 'Initial Interview',
+        SCOUTING: 'Scouting / Prospecting',
+        PROPOSAL: 'Present Proposal',
+        OTHER: 'Other'
+      },
+      otherSpecifyLabel: 'Specify Other',
       cancelBtn: 'Cancel',
       saveBtn: 'Save Report',
       savingBtn: 'Saving...'
@@ -101,7 +139,11 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
     detected_requirements: '',
     conversation_notes: '',
     additional_notes: '',
-    next_visit_date: ''
+    next_visit_date: '',
+    contact_method: '',
+    contact_method_other: '',
+    contact_reason: '',
+    contact_reason_other: ''
   })
 
   useEffect(() => {
@@ -161,6 +203,10 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       conversation_notes: visitForm.conversation_notes,
       additional_notes: visitForm.additional_notes,
       next_visit_date: visitForm.next_visit_date ? new Date(visitForm.next_visit_date).toISOString() : null,
+      contact_method: visitForm.contact_method || null,
+      contact_method_other: visitForm.contact_method === 'OTHER' ? visitForm.contact_method_other : null,
+      contact_reason: visitForm.contact_reason || null,
+      contact_reason_other: visitForm.contact_reason === 'OTHER' ? visitForm.contact_reason_other : null,
       status: 'COMPLETED'
     }
 
@@ -240,6 +286,57 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.contactMethodLabel}</label>
+              <select 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                value={visitForm.contact_method}
+                onChange={e => setVisitForm({...visitForm, contact_method: e.target.value})}
+              >
+                <option value="">{t.contactMethodPlaceholder}</option>
+                <option value="CALL">{t.contactMethodOptions.CALL}</option>
+                <option value="IN_PERSON">{t.contactMethodOptions.IN_PERSON}</option>
+                <option value="EMAIL">{t.contactMethodOptions.EMAIL}</option>
+                <option value="VIDEO_CALL">{t.contactMethodOptions.VIDEO_CALL}</option>
+                <option value="OTHER">{t.contactMethodOptions.OTHER}</option>
+              </select>
+              {visitForm.contact_method === 'OTHER' && (
+                <input 
+                  type="text" 
+                  placeholder={t.otherSpecifyLabel} 
+                  className="w-full mt-2 bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                  value={visitForm.contact_method_other} 
+                  onChange={e => setVisitForm({...visitForm, contact_method_other: e.target.value})} 
+                />
+              )}
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.contactReasonLabel}</label>
+              <select 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                value={visitForm.contact_reason}
+                onChange={e => setVisitForm({...visitForm, contact_reason: e.target.value})}
+              >
+                <option value="">{t.contactReasonPlaceholder}</option>
+                <option value="FOLLOW_UP">{t.contactReasonOptions.FOLLOW_UP}</option>
+                <option value="INTERVIEW">{t.contactReasonOptions.INTERVIEW}</option>
+                <option value="SCOUTING">{t.contactReasonOptions.SCOUTING}</option>
+                <option value="PROPOSAL">{t.contactReasonOptions.PROPOSAL}</option>
+                <option value="OTHER">{t.contactReasonOptions.OTHER}</option>
+              </select>
+              {visitForm.contact_reason === 'OTHER' && (
+                <input 
+                  type="text" 
+                  placeholder={t.otherSpecifyLabel} 
+                  className="w-full mt-2 bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                  value={visitForm.contact_reason_other} 
+                  onChange={e => setVisitForm({...visitForm, contact_reason_other: e.target.value})} 
+                />
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

@@ -249,6 +249,21 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
             <option value="CANCELED">{t.canceled}</option>
         </select>
       </div>
+      
+      {(visit.contact_method || visit.contact_reason) && (
+        <div className="flex gap-2">
+          {visit.contact_method && (
+            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded font-medium border border-border">
+              {visit.contact_method === 'OTHER' ? visit.contact_method_other : visit.contact_method}
+            </span>
+          )}
+          {visit.contact_reason && (
+            <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded font-medium border border-border">
+              {visit.contact_reason === 'OTHER' ? visit.contact_reason_other : visit.contact_reason}
+            </span>
+          )}
+        </div>
+      )}
 
       {(visit.conversation_notes || visit.detected_requirements) && (
         <div className="bg-muted/30 rounded-lg p-3 space-y-3 text-sm">

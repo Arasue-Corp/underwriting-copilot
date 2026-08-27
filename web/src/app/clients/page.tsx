@@ -394,6 +394,20 @@ export default function ClientsPage() {
                                 visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
                               }`}>{visit.status}</span>
                             </div>
+                            {(visit.contact_method || visit.contact_reason) && (
+                              <div className="flex gap-2 mb-2">
+                                {visit.contact_method && (
+                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                                    {visit.contact_method === 'OTHER' ? visit.contact_method_other : visit.contact_method}
+                                  </span>
+                                )}
+                                {visit.contact_reason && (
+                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
+                                    {visit.contact_reason === 'OTHER' ? visit.contact_reason_other : visit.contact_reason}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                             {visit.conversation_notes && (
                               <p className={`text-base text-foreground/90 mb-3 ${expandedVisits[visit.id] ? '' : 'line-clamp-3'}`}>{visit.conversation_notes}</p>
                             )}
