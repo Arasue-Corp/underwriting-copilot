@@ -14,7 +14,7 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => !n.is_read).length
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -37,9 +37,9 @@ export function NotificationBell() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user && active) {
         setUserId(user.id)
-        const result = await getNotifications()
-        if (result.success && result.data && active) {
-          setNotifications(result.data)
+        const data = await getNotifications()
+        if (data && active) {
+          setNotifications(data)
         }
       }
       if (active) setLoading(false)
@@ -79,12 +79,12 @@ export function NotificationBell() {
   }, [])
 
   const handleMarkAsRead = async (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n))
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n))
     await markNotificationAsRead(id)
   }
 
   const handleMarkAllAsRead = async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })))
     await markAllNotificationsAsRead()
   }
 
@@ -154,9 +154,9 @@ export function NotificationBell() {
                 {notifications.map((notification) => (
                   <div 
                     key={notification.id} 
-                    className={`p-3 rounded-lg flex gap-3 transition-colors ${notification.read ? 'bg-transparent hover:bg-muted/50' : 'bg-primary/5 hover:bg-primary/10'}`}
+                    className={`p-3 rounded-lg flex gap-3 transition-colors ${notification.is_read ? 'bg-transparent hover:bg-muted/50' : 'bg-primary/5 hover:bg-primary/10'}`}
                   >
-                    {!notification.read && (
+                    {!notification.is_read && (
                       <div className="mt-1.5 flex-shrink-0">
                         <div className="w-2 h-2 rounded-full bg-primary" />
                       </div>
@@ -164,9 +164,9 @@ export function NotificationBell() {
                     <div className="flex-1 min-w-0">
                       {notification.link ? (
                         <Link 
-                          href={notification.link}
+                          href={notification.link || '#'}
                           onClick={() => {
-                            if (!notification.read) handleMarkAsRead(notification.id)
+                            if (!notification.is_read) handleMarkAsRead(notification.id)
                             setIsOpen(false)
                           }}
                           className="block"
@@ -177,7 +177,7 @@ export function NotificationBell() {
                       ) : (
                         <div 
                           onClick={() => {
-                            if (!notification.read) handleMarkAsRead(notification.id)
+                            if (!notification.is_read) handleMarkAsRead(notification.id)
                           }}
                           className="cursor-pointer"
                         >

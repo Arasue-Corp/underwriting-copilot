@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from "@/lib/supabase/client"
-import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar, Clock, Plus, X, Building, Trash2, Edit, History } from 'lucide-react'
+import { Search, ChevronRight, UserPlus, FileText, CheckCircle2, XCircle, Clock, Eye, Trash2, Send, Download, Phone, Mail, FileUp, X, File, ShieldAlert, ArrowRightLeft, Building, Edit, Plus, History, ListTodo } from 'lucide-react'
 import { toast } from 'sonner'
 import { createVisit } from '@/app/actions/visits'
 import { deleteClient } from '@/app/actions/clients'
 import { useLanguage } from '@/components/language-provider'
 import { VisitModal } from '@/components/visits/VisitModal'
+import { TaskModal } from '@/components/tasks/TaskModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
 import { ActivityLogsModal } from '@/components/logs/ActivityLogsModal'
 
@@ -27,7 +28,9 @@ export default function ClientsPage() {
       address: 'Dirección:',
       contact: 'Contacto:',
       notRegistered: 'No registrado',
+      editClient: 'Editar Cliente',
       logVisit: 'Registrar Visita',
+      newTask: 'Nueva Tarea',
       quoteHistory: 'Historial de Cotizaciones',
       noQuotes: 'Este cliente no tiene cotizaciones aún.',
       carrier: 'Aseguradora:',
@@ -35,8 +38,7 @@ export default function ClientsPage() {
       renews: 'Renueva:',
       visitLog: 'Bitácora de Visitas / Actividad',
       noVisits: 'No hay visitas registradas para este cliente.',
-      dataError: 'Error al cargar datos',
-      editClient: 'Editar Cliente'
+      dataError: 'Error al cargar datos'
     },
     en: {
       title: 'Clients Directory',
@@ -49,7 +51,9 @@ export default function ClientsPage() {
       address: 'Address:',
       contact: 'Contact:',
       notRegistered: 'Not registered',
+      editClient: 'Edit Client',
       logVisit: 'Log Visit',
+      newTask: 'New Task',
       quoteHistory: 'Quote History',
       noQuotes: 'This client has no quotes yet.',
       carrier: 'Carrier:',
@@ -57,8 +61,7 @@ export default function ClientsPage() {
       renews: 'Renews:',
       visitLog: 'Visit & Activity Log',
       noVisits: 'No visits registered for this client.',
-      dataError: 'Error loading data',
-      editClient: 'Edit Client'
+      dataError: 'Error loading data'
     }
   }[lang]
 
@@ -67,26 +70,16 @@ export default function ClientsPage() {
   const [search, setSearch] = useState('')
   const [selectedClient, setSelectedClient] = useState<any | null>(null)
   const [userRole, setUserRole] = useState<string>('')
+  const [agents, setAgents] = useState<any[]>([])
+  const [user, setUser] = useState<any>(null)
   
   // Modals State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false)
+  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   
   const [expandedVisits, setExpandedVisits] = useState<Record<string, boolean>>({})
-  const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [visitForm, setVisitForm] = useState({
-    visit_date: '',
-    representatives: { receptionist: '', manager: '', owner: '' },
-    policies_needed: [] as string[],
-    business_hours: '',
-    detected_requirements: '',
-    conversation_notes: '',
-    additional_notes: '',
-    next_visit_date: ''
-  })
-
-  const policyOptions = ['General liability', 'Commercial auto', 'Workers compensation', 'Professional liability', 'Commercial property']
 
   const supabase = createClient()
 
@@ -101,10 +94,18 @@ export default function ClientsPage() {
       setLoading(false)
       return
     }
-    const { data: userProfile } = await supabase.from('profiles').select('agency_id, role').eq('id', user.id).single()
+    const { data: profile } = await supabase.from('profiles').select('agency_id, role').eq('id', user.id).single()
     
-    if (userProfile?.agency_id) {
-      setUserRole(userProfile.role)
+    if (profile) {
+      setUserRole(profile.role)
+      setUser(user)
+      if (profile.role !== 'AGENT') {
+        const agts = await supabase.from('profiles').select('id, name, role').eq('agency_id', profile.agency_id)
+        if (agts.data) setAgents(agts.data)
+      } else {
+        setAgents([profile])
+      }
+      
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select(`
@@ -119,18 +120,18 @@ export default function ClientsPage() {
           contact,
           created_at
         `)
-        .eq('agency_id', userProfile.agency_id)
+        .eq('agency_id', profile.agency_id)
         .order('name')
 
       const { data: quotesData, error: quotesError } = await supabase
         .from('quote_requests')
         .select(`id, status, created_at, accepted_at, sold_premium, carrier_id, coverage_requested, client_name`)
-        .eq('agency_id', userProfile.agency_id)
+        .eq('agency_id', profile.agency_id)
 
       const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
         .select(`*`)
-        .eq('agency_id', userProfile.agency_id)
+        .eq('agency_id', profile.agency_id)
 
       if (clientsError || quotesError || visitsError) {
         toast.error(t.dataError)
@@ -149,17 +150,6 @@ export default function ClientsPage() {
     setLoading(false)
   }
 
-  const handlePolicyToggle = (policy: string) => {
-    setVisitForm(prev => {
-      const exists = prev.policies_needed.includes(policy)
-      if (exists) {
-        return { ...prev, policies_needed: prev.policies_needed.filter(p => p !== policy) }
-      } else {
-        return { ...prev, policies_needed: [...prev.policies_needed, policy] }
-      }
-    })
-  }
-
   const handleDelete = async (id: string) => {
     if (!confirm('¿Estás seguro de que deseas eliminar este cliente? Se eliminarán también cotizaciones asociadas.')) return;
     const res = await deleteClient(id);
@@ -170,34 +160,6 @@ export default function ClientsPage() {
     } else {
       toast.error(res.error || 'Error');
     }
-  }
-
-  const handleSubmitVisit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedClient) return
-    setIsSubmitting(true)
-    
-    const res = await createVisit({
-      client_id: selectedClient.id,
-      visit_date: visitForm.visit_date ? new Date(visitForm.visit_date).toISOString() : new Date().toISOString(),
-      representatives: visitForm.representatives,
-      policies_needed: visitForm.policies_needed,
-      business_hours: visitForm.business_hours,
-      detected_requirements: visitForm.detected_requirements,
-      conversation_notes: visitForm.conversation_notes,
-      additional_notes: visitForm.additional_notes,
-      next_visit_date: visitForm.next_visit_date ? new Date(visitForm.next_visit_date).toISOString() : null,
-      status: 'COMPLETED'
-    })
-
-    if (res.success) {
-      toast.success("Visita registrada correctamente")
-      setIsVisitModalOpen(false)
-      loadClients() // reload to show new visit
-    } else {
-      toast.error(res.error || "Error al registrar visita")
-    }
-    setIsSubmitting(false)
   }
 
   const filteredClients = clients.filter(c => c.name.toLowerCase().includes(search.toLowerCase()))
@@ -323,6 +285,13 @@ export default function ClientsPage() {
                       <Plus className="w-4 h-4" />
                       {t.logVisit}
                     </button>
+                    <button 
+                      onClick={() => setIsTaskModalOpen(true)}
+                      className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2"
+                    >
+                      <ListTodo className="w-4 h-4" />
+                      {t.newTask}
+                    </button>
                   </div>
                 </div>
               </div>
@@ -364,7 +333,7 @@ export default function ClientsPage() {
                               </div>
                             ) : (
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Calendar className="h-3.5 w-3.5" />
+                                <Clock className="h-3.5 w-3.5" />
                                 {new Date(quote.created_at).toLocaleDateString()}
                               </div>
                             )}
@@ -405,20 +374,6 @@ export default function ClientsPage() {
                                 visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
                               }`}>{visit.status}</span>
                             </div>
-                            {(visit.contact_method || visit.contact_reason) && (
-                              <div className="flex gap-2 mb-2">
-                                {visit.contact_method && (
-                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                                    {visit.contact_method === 'OTHER' ? visit.contact_method_other : visit.contact_method}
-                                  </span>
-                                )}
-                                {visit.contact_reason && (
-                                  <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded">
-                                    {visit.contact_reason === 'OTHER' ? visit.contact_reason_other : visit.contact_reason}
-                                  </span>
-                                )}
-                              </div>
-                            )}
                             {visit.conversation_notes && (
                               <p className={`text-base text-foreground/90 mb-3 ${expandedVisits[visit.id] ? '' : 'line-clamp-3'}`}>{visit.conversation_notes}</p>
                             )}
@@ -451,6 +406,19 @@ export default function ClientsPage() {
           loadClients()
         }}
         clients={clients}
+        preselectedClientId={selectedClient?.id}
+      />
+
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => setIsTaskModalOpen(false)} 
+        onSuccess={() => {
+          setIsTaskModalOpen(false)
+          loadClients()
+        }}
+        clients={clients}
+        agents={agents}
+        userProfile={{ id: user?.id, role: userRole }}
         preselectedClientId={selectedClient?.id}
       />
 

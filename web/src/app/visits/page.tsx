@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Calendar, User, Clock, CheckCircle2, ChevronRight, Briefcase, Plus, Filter, Users, History } from "lucide-react"
+import { Calendar, User, Clock, CheckCircle2, ChevronRight, Briefcase, Plus, Filter, Users, History, ListTodo } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getVisits, getAgencyAgents, updateVisit } from "@/app/actions/visits"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
 import { VisitModal } from "@/components/visits/VisitModal"
+import { TaskModal } from "@/components/tasks/TaskModal"
 import { ActivityLogsModal } from "@/components/logs/ActivityLogsModal"
 
 export default function VisitsPage() {
@@ -16,6 +17,7 @@ export default function VisitsPage() {
   const [userProfile, setUserProfile] = useState<any>(null)
   
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
   const [logsVisit, setLogsVisit] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   
@@ -67,6 +69,7 @@ export default function VisitsPage() {
       unassigned: 'Unassigned',
       canceled: 'Canceled',
       registerVisit: 'Log Visit',
+      newTask: 'New Task',
       clientDeleted: 'Deleted Client',
       registeredBy: 'Registered by:'
     }
@@ -135,13 +138,22 @@ export default function VisitsPage() {
             <h2 className="text-3xl font-bold tracking-tight">{t.title}</h2>
             <p className="text-muted-foreground text-sm mt-1">{t.subtitle}</p>
         </div>
-        <button 
-          onClick={() => setIsVisitModalOpen(true)}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          {t.registerVisit}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <button 
+            onClick={() => setIsTaskModalOpen(true)}
+            className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2"
+          >
+            <ListTodo className="w-4 h-4" />
+            {t.newTask}
+          </button>
+          <button 
+            onClick={() => setIsVisitModalOpen(true)}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center justify-center gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            {t.registerVisit}
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -219,6 +231,18 @@ export default function VisitsPage() {
           loadData()
         }}
         clients={clients}
+      />
+
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => setIsTaskModalOpen(false)} 
+        onSuccess={() => {
+          setIsTaskModalOpen(false)
+          loadData()
+        }}
+        clients={clients}
+        agents={agents}
+        userProfile={userProfile}
       />
 
       <ActivityLogsModal

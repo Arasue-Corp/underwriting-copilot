@@ -41,6 +41,7 @@ import MobileNav from "@/components/layout/MobileNav";
 import SidebarNav from "@/components/layout/SidebarNav";
 import LayoutWrapper from "@/components/layout/LayoutWrapper";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { Users } from "lucide-react";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -81,7 +82,8 @@ export default async function RootLayout({
       carriers: 'Carriers',
       users: 'User Management',
       myAgency: 'My Agency',
-      settings: 'Settings'
+      settings: 'Settings',
+      calendar: 'Calendar'
     },
     es: {
       dashboard: 'Dashboard',
@@ -96,7 +98,8 @@ export default async function RootLayout({
       carriers: 'Aseguradoras',
       users: 'Gestión de Usuarios',
       myAgency: 'Mi Agencia',
-      settings: 'Configuración'
+      settings: 'Configuración',
+      calendar: 'Calendario'
     }
   }[lang];
 
@@ -107,8 +110,9 @@ export default async function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <LanguageProvider lang={lang}>
-        <div className="flex flex-col md:flex-row min-h-screen flex-1 w-full">
-          <LayoutWrapper
+            <NotificationProvider>
+              <div className="flex flex-col md:flex-row min-h-screen flex-1 w-full">
+                <LayoutWrapper
             sidebar={
               <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
                 <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
@@ -145,9 +149,10 @@ export default async function RootLayout({
             }
           >
             {children}
-          </LayoutWrapper>
-        </div>
-          <Toaster position="top-right" richColors />
+              </LayoutWrapper>
+            </div>
+            <Toaster position="top-right" richColors />
+            </NotificationProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
