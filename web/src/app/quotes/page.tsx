@@ -1633,9 +1633,16 @@ export default function QuotesPage() {
               </button>
             </div>
           </div>
-        </div>
+    </div>
       )}
 
+      <ActivityLogsModal
+        isOpen={!!logsQuote}
+        onClose={() => setLogsQuote(null)}
+        entityType="quote_requests"
+        entityId={logsQuote?.id}
+        entityName={`${logsQuote?.client_name} - ${logsQuote?.coverage_requested}`}
+      />
     </div>
   )
 }
