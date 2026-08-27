@@ -367,7 +367,7 @@ export default function QuotesPage() {
     }
   }
 
-  const sendProposalToAgent = async () => {
+  const handleProcessSubmit = async () => {
     if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
       if (!p.carrier || !p.commission_percentage) return toast.error("Completa Aseguradora y % de comisión para todas las propuestas")
