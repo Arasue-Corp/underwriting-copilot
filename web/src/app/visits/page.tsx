@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Calendar, User, Clock, CheckCircle2, ChevronRight, Briefcase, Plus, Filter, Users } from "lucide-react"
+import { Calendar, User, Clock, CheckCircle2, ChevronRight, Briefcase, Plus, Filter, Users, History } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { getVisits, getAgencyAgents, updateVisit } from "@/app/actions/visits"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
 import { VisitModal } from "@/components/visits/VisitModal"
+import { ActivityLogsModal } from "@/components/logs/ActivityLogsModal"
 
 export default function VisitsPage() {
   const [visits, setVisits] = useState<any[]>([])
@@ -15,6 +16,7 @@ export default function VisitsPage() {
   const [userProfile, setUserProfile] = useState<any>(null)
   
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
+  const [logsVisit, setLogsVisit] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   
   const supabase = createClient()
@@ -170,6 +172,7 @@ export default function VisitsPage() {
                 userProfile={userProfile}
                 onStatusChange={handleStatusChange}
                 onAssignChange={handleAssignChange}
+                onShowLogs={() => setLogsVisit(visit)}
               />
             ))
           )}
@@ -201,6 +204,7 @@ export default function VisitsPage() {
                 userProfile={userProfile}
                 onStatusChange={handleStatusChange}
                 onAssignChange={handleAssignChange}
+                onShowLogs={() => setLogsVisit(visit)}
               />
             ))
           )}
@@ -216,11 +220,19 @@ export default function VisitsPage() {
         }}
         clients={clients}
       />
+
+      <ActivityLogsModal
+        isOpen={!!logsVisit}
+        onClose={() => setLogsVisit(null)}
+        entityType="visits"
+        entityId={logsVisit?.id}
+        entityName={logsVisit?.client?.name || 'Visita'}
+      />
     </div>
   )
 }
 
-function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChange }: any) {
+function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChange, onShowLogs }: any) {
   const isManager = userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN'
 
   return (
@@ -235,19 +247,30 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
             {visit.visit_date ? new Date(visit.visit_date).toLocaleString() : new Date(visit.created_at).toLocaleString()}
           </div>
         </div>
-        <select 
-            value={visit.status}
-            onChange={(e) => onStatusChange(visit.id, e.target.value)}
-            className={`text-xs font-bold px-2.5 py-1 rounded-md border outline-none cursor-pointer ${
-              visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
-              visit.status === 'CANCELED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
-              'bg-amber-500/10 text-amber-600 border-amber-500/30'
-            }`}
-          >
-            <option value="PENDING">{t.pending}</option>
-            <option value="COMPLETED">{t.completed}</option>
-            <option value="CANCELED">{t.canceled}</option>
-        </select>
+        <div className="flex flex-col items-end gap-2">
+          <select 
+              value={visit.status}
+              onChange={(e) => onStatusChange(visit.id, e.target.value)}
+              className={`text-xs font-bold px-2.5 py-1 rounded-md border outline-none cursor-pointer ${
+                visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
+                visit.status === 'CANCELED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
+                'bg-amber-500/10 text-amber-600 border-amber-500/30'
+              }`}
+            >
+              <option value="PENDING">{t.pending}</option>
+              <option value="COMPLETED">{t.completed}</option>
+              <option value="CANCELED">{t.canceled}</option>
+          </select>
+          {userProfile?.role === 'ADMIN' && (
+            <button 
+              onClick={onShowLogs}
+              title="Ver registro de actividad"
+              className="p-1.5 bg-muted text-muted-foreground hover:bg-muted/80 rounded-md border border-border"
+            >
+              <History className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
       
       {(visit.contact_method || visit.contact_reason) && (

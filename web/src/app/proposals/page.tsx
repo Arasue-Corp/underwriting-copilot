@@ -1,17 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Eye, FileText, CheckCircle2, XCircle, RefreshCw } from "lucide-react"
+import { Eye, FileText, CheckCircle2, XCircle, RefreshCw, History } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import Link from "next/link"
 import { updateQuoteStatus } from "@/app/actions/quote"
 import { toast } from "sonner"
 import { useLanguage } from "@/components/language-provider"
+import { ActivityLogsModal } from "@/components/logs/ActivityLogsModal"
 
 export default function ProposalsPage() {
   const [proposals, setProposals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
+  const [logsQuote, setLogsQuote] = useState<any>(null)
   
   const supabase = createClient()
   const langContext = useLanguage()
@@ -185,10 +187,19 @@ export default function ProposalsPage() {
                     </div>
                   </div>
 
-                  <div className="pt-2 pl-2">
+                  <div className="pt-2 pl-2 flex gap-2">
+                    {userProfile?.role === 'ADMIN' && (
+                      <button 
+                        onClick={() => setLogsQuote(quote)}
+                        title="Ver registro de actividad"
+                        className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-4 py-3 rounded-lg transition-colors flex items-center justify-center shadow-sm"
+                      >
+                        <History className="w-5 h-5" />
+                      </button>
+                    )}
                     <Link 
                         href={`/proposals/${quote.id}`}
-                        className="w-full text-center bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center shadow-sm"
+                        className="flex-1 text-center bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-3 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center shadow-sm"
                     >
                       <Eye className="w-4 h-4 mr-2" />
                       {t.viewPresentation}
@@ -242,7 +253,16 @@ export default function ProposalsPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-right">
+                      <td className="px-6 py-4 text-right flex justify-end space-x-2">
+                        {userProfile?.role === 'ADMIN' && (
+                          <button 
+                            onClick={() => setLogsQuote(quote)}
+                            title="Ver registro de actividad"
+                            className="bg-secondary text-secondary-foreground hover:bg-secondary/80 px-3 py-2 rounded-md transition-colors inline-flex items-center"
+                          >
+                            <History className="w-4 h-4" />
+                          </button>
+                        )}
                         <Link 
                             href={`/proposals/${quote.id}`}
                             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md text-sm font-medium transition-colors inline-flex items-center"
@@ -259,6 +279,14 @@ export default function ProposalsPage() {
           </>
         )}
       </div>
+
+      <ActivityLogsModal
+        isOpen={!!logsQuote}
+        onClose={() => setLogsQuote(null)}
+        entityType="quote_requests"
+        entityId={logsQuote?.id}
+        entityName={`${logsQuote?.client_name} - ${logsQuote?.coverage_requested}`}
+      />
     </div>
   )
 }

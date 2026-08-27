@@ -3,14 +3,14 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from "@/lib/supabase/client"
-import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar, Clock, Plus, X, Building } from 'lucide-react'
+import { PlusCircle, Search, FileText, ChevronRight, CheckCircle2, Calendar, Clock, Plus, X, Building, Trash2, Edit, History } from 'lucide-react'
 import { toast } from 'sonner'
 import { createVisit } from '@/app/actions/visits'
 import { deleteClient } from '@/app/actions/clients'
 import { useLanguage } from '@/components/language-provider'
 import { VisitModal } from '@/components/visits/VisitModal'
 import { EditClientModal } from '@/components/clients/EditClientModal'
-import { Edit, Trash2 } from 'lucide-react'
+import { ActivityLogsModal } from '@/components/logs/ActivityLogsModal'
 
 export default function ClientsPage() {
   const langContext = useLanguage()
@@ -70,6 +70,8 @@ export default function ClientsPage() {
   
   // Modals State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isLogsModalOpen, setIsLogsModalOpen] = useState(false)
+  
   const [expandedVisits, setExpandedVisits] = useState<Record<string, boolean>>({})
   const [isVisitModalOpen, setIsVisitModalOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -288,6 +290,15 @@ export default function ClientsPage() {
                   </div>
                   <div className="flex gap-2">
                     {userRole === 'ADMIN' && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setIsLogsModalOpen(true); }}
+                        className="bg-muted text-muted-foreground hover:bg-muted/80 p-2 rounded-lg shadow-sm border border-border flex items-center justify-center"
+                        title="Ver registro de actividad"
+                      >
+                        <History className="w-5 h-5" />
+                      </button>
+                    )}
+                    {userRole === 'ADMIN' && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDelete(selectedClient.id); }}
                           className="bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-rose-500/20"
@@ -452,6 +463,14 @@ export default function ClientsPage() {
           loadClients()
         }}
         client={selectedClient}
+      />
+
+      <ActivityLogsModal
+        isOpen={isLogsModalOpen}
+        onClose={() => setIsLogsModalOpen(false)}
+        entityType="clients"
+        entityId={selectedClient?.id}
+        entityName={selectedClient?.name}
       />
     </div>
   )

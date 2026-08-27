@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShieldCheck, Plus, Building, FileText, Upload, Save, X, Trash2 } from "lucide-react"
+import { ShieldCheck, Plus, Building, FileText, Upload, Save, X, Trash2, History } from "lucide-react"
+import { ActivityLogsModal } from "@/components/logs/ActivityLogsModal"
 import { getCarriers, addCarrier, updateCarrier, getCarrierStats, deleteCarrier } from "@/app/actions/carriers"
 import { createClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
@@ -80,6 +81,8 @@ export default function CarriersPage() {
   // Modal states
   const [isAdding, setIsAdding] = useState(false)
   const [editingCarrier, setEditingCarrier] = useState<any>(null)
+  const [logsCarrier, setLogsCarrier] = useState<any>(null)
+  const [userProfile, setUserProfile] = useState<any>(null)
   
   // Form states
   const [carrierName, setCarrierName] = useState("")
@@ -98,6 +101,14 @@ export default function CarriersPage() {
 
   async function loadCarriers() {
     setLoading(true)
+    
+    // Check if user is admin just in case
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+      setUserProfile(profile)
+    }
+
     const data = await getCarriers()
     setCarriers(data)
     setLoading(false)
@@ -260,8 +271,17 @@ export default function CarriersPage() {
                       {new Date(carrier.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
                     </td>
                     <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
+                      {userProfile?.role === 'ADMIN' && (
                         <button 
-                          onClick={() => handleDelete(carrier.id)}
+                          onClick={() => setLogsCarrier(carrier)}
+                          title="Ver registro de actividad"
+                          className="bg-secondary text-secondary-foreground hover:bg-secondary/80 p-1.5 rounded-md transition-colors"
+                        >
+                          <History className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleDelete(carrier.id)}
                           className="text-rose-500 hover:text-rose-700 p-1.5 hover:bg-rose-500/10 rounded-md transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -392,6 +412,14 @@ export default function CarriersPage() {
           </div>
         </div>
       )}
+
+      <ActivityLogsModal
+        isOpen={!!logsCarrier}
+        onClose={() => setLogsCarrier(null)}
+        entityType="carriers"
+        entityId={logsCarrier?.id}
+        entityName={logsCarrier?.name}
+      />
     </div>
   )
 }

@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil, ArrowRightLeft, Copy } from "lucide-react"
+import { CheckCircle2, Eye, FileText, UserPlus, X, Plus, Upload, Check, Pencil, ArrowRightLeft, Copy, History } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
 import { processMultipleQuotes, assignQuoteRequest, updateQuoteStatus, transferQuoteOwnership, duplicateQuoteRequest } from "@/app/actions/quote"
 import { QuoteModal } from "@/components/appetite/QuoteModal"
 import { EditQuoteRequestModal } from "@/components/quotes/EditQuoteRequestModal"
+import { ActivityLogsModal } from '@/components/logs/ActivityLogsModal'
 import { useLanguage } from "@/components/language-provider"
 
 export default function QuotesPage() {
@@ -209,6 +210,8 @@ export default function QuotesPage() {
   const [editQuoteRequest, setEditQuoteRequest] = useState<any>(null)
   const [acceptQuote, setAcceptQuote] = useState<any>(null)
   const [selectedAcceptQuotes, setSelectedAcceptQuotes] = useState<boolean[]>([])
+  
+  const [logsQuote, setLogsQuote] = useState<any>(null)
   
   // Process State
   const [proposals, setProposals] = useState<{product: string, carrier: string, premium: string, commission_percentage: string, agent_commission_percentage: string, monthly_payment: string, downpayment: string, payment_options: string, coverages: string, included: string, excluded: string, notes: string, description: string, file: File | null, file_url?: string, is_annual?: boolean, is_monthly?: boolean, is_bundled?: boolean}[]>([])
@@ -574,6 +577,15 @@ export default function QuotesPage() {
                   </div>
 
                   <div className="pt-2 pl-2 flex gap-2">
+                    {userProfile?.role === 'ADMIN' && (
+                      <button 
+                        onClick={() => setLogsQuote(quote)}
+                        title="Ver registro de actividad"
+                        className="p-2.5 bg-secondary/50 text-secondary-foreground rounded-lg hover:bg-secondary transition-colors"
+                      >
+                        <History className="w-5 h-5" />
+                      </button>
+                    )}
                     <button 
                       onClick={() => setDetailsQuote(quote)}
                       title={t.detailsTitle}
@@ -671,6 +683,15 @@ export default function QuotesPage() {
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end space-x-2">
+                        {userProfile?.role === 'ADMIN' && (
+                          <button 
+                            onClick={() => setLogsQuote(quote)}
+                            title="Ver registro de actividad"
+                            className="p-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80"
+                          >
+                            <History className="w-4 h-4" />
+                          </button>
+                        )}
                         <button 
                           onClick={() => setDetailsQuote(quote)}
                           title={t.detailsTitle}
