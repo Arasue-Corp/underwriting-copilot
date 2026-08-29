@@ -370,7 +370,7 @@ export default function QuotesPage() {
   const handleProcessSubmit = async () => {
     if (proposals.length === 0) return toast.error("Agrega al menos una propuesta")
     for (const p of proposals) {
-      if (!p.carrier || !p.commission_percentage) return toast.error("Completa Aseguradora y % de comisión para todas las propuestas")
+      if (!p.carrier || (!p.commission_percentage && userProfile?.role !== 'AGENT')) return toast.error(userProfile?.role === 'AGENT' ? "Completa Aseguradora para todas las propuestas" : "Completa Aseguradora y % de comisión para todas las propuestas")
       if (!p.is_bundled) {
         if (!p.is_annual && !p.is_monthly) return toast.error("Debes seleccionar al menos una opción de pago (Anual o Mensual) para productos principales")
         if (p.is_annual && !p.premium) return toast.error("Ingresa la Prima Total para la opción de {t.annualPayment}")
@@ -406,7 +406,8 @@ export default function QuotesPage() {
           product: p.product,
           carrier: p.carrier,
           premium: parseFloat(p.premium),
-          commission_percentage: parseFloat(p.commission_percentage),
+          commission_percentage: p.commission_percentage ? parseFloat(p.commission_percentage) : 0,
+          agent_commission_percentage: p.agent_commission_percentage ? parseFloat(p.agent_commission_percentage) : undefined,
           monthly_payment: p.monthly_payment && !p.is_bundled ? parseFloat(p.monthly_payment) : undefined,
           downpayment: p.downpayment && !p.is_bundled ? parseFloat(p.downpayment) : undefined,
           payment_options: p.is_bundled ? "Incluido en Paquete Principal" : p.payment_options,
@@ -460,7 +461,7 @@ export default function QuotesPage() {
       acceptQuote.id, 
       'ACCEPTED', 
       parseFloat(soldPremium), 
-      parseFloat(commissionPercentage),
+      commissionPercentage ? parseFloat(commissionPercentage) : undefined,
       selectedAcceptQuotes
     )
     if (res.success) {
@@ -1204,7 +1205,8 @@ export default function QuotesPage() {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>
-              <div className="space-y-2">
+              {userProfile?.role !== 'AGENT' && (
+                <div className="space-y-2">
                 <label className="text-sm font-medium">{t.commissionPercentage}</label>
                 <input 
                   type="number" 
@@ -1215,6 +1217,7 @@ export default function QuotesPage() {
                   className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                 />
               </div>
+              )}
               <div className="flex justify-end gap-3 pt-4">
                 <button type="button" onClick={() => setAcceptQuote(null)} className="px-4 py-2 text-sm font-medium hover:bg-muted rounded-md" disabled={isUploading}>
                   Cancelar
@@ -1531,7 +1534,9 @@ export default function QuotesPage() {
                       </div>
                     )}
                     
-                    <div>
+                    {userProfile?.role !== 'AGENT' && (
+                      <>
+                        <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.commissionInternal}</label>
                       <input 
                         type="number" 
@@ -1560,6 +1565,8 @@ export default function QuotesPage() {
                         placeholder="Ej: 20"
                       />
                     </div>
+                      </>
+                    )}
                     
                     <div className="md:col-span-2">
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.coveragesLimits}</label>
