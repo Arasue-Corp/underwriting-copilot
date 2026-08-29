@@ -218,7 +218,7 @@ export default function QuotesPage() {
   const [availableCarriers, setAvailableCarriers] = useState<string[]>([])
   const [isUploading, setIsUploading] = useState(false)
   const [jsonImportText, setJsonImportText] = useState("")
-  const [isJsonImportOpen, setIsJsonImportOpen] = useState(false)
+  const [jsonImportIndex, setJsonImportIndex] = useState<number | null>(null)
   const [soldPremium, setSoldPremium] = useState("")
   const [commissionPercentage, setCommissionPercentage] = useState("")
   
@@ -335,33 +335,47 @@ export default function QuotesPage() {
   const handleJsonImport = () => {
     try {
       const parsed = JSON.parse(jsonImportText)
-      if (Array.isArray(parsed)) {
-        const newProposals = parsed.map((p: any) => ({
-          product: p.product || "N/A",
-          carrier: p.carrier || "",
-          premium: p.premium || "",
-          commission_percentage: p.commission_percentage || "",
-          agent_commission_percentage: p.agent_commission_percentage || "",
-          monthly_payment: p.monthly_payment || "",
-          downpayment: p.downpayment || "",
-          payment_options: p.payment_options || "",
-          coverages: p.coverages || "",
-          included: p.included || "",
-          excluded: p.excluded || "",
-          notes: p.notes || "",
-          description: p.description || "",
-          file: null,
-          is_annual: p.is_annual ?? true,
-          is_monthly: p.is_monthly ?? false,
-          is_bundled: p.is_bundled ?? false
-        }))
-        setProposals([...proposals, ...newProposals])
-        setIsJsonImportOpen(false)
-        setJsonImportText("")
-        toast.success(lang === 'es' ? "JSON importado correctamente" : "JSON imported successfully")
+      const dataArray = Array.isArray(parsed) ? parsed : [parsed]
+      
+      const newProposals = dataArray.map((p: any) => ({
+        product: p.product || "N/A",
+        carrier: p.carrier || "",
+        premium: p.premium || "",
+        commission_percentage: p.commission_percentage || "",
+        agent_commission_percentage: p.agent_commission_percentage || "",
+        monthly_payment: p.monthly_payment || "",
+        downpayment: p.downpayment || "",
+        payment_options: p.payment_options || "",
+        coverages: p.coverages || "",
+        included: p.included || "",
+        excluded: p.excluded || "",
+        notes: p.notes || "",
+        description: p.description || "",
+        file: null,
+        is_annual: p.is_annual ?? true,
+        is_monthly: p.is_monthly ?? false,
+        is_bundled: p.is_bundled ?? false
+      }))
+
+      if (jsonImportIndex !== null && jsonImportIndex >= 0 && jsonImportIndex < proposals.length) {
+         const next = [...proposals]
+         next[jsonImportIndex] = {
+           ...next[jsonImportIndex],
+           ...newProposals[0],
+           product: newProposals[0].product !== "N/A" ? newProposals[0].product : next[jsonImportIndex].product,
+           carrier: newProposals[0].carrier ? newProposals[0].carrier : next[jsonImportIndex].carrier,
+         }
+         if (newProposals.length > 1) {
+           next.push(...newProposals.slice(1))
+         }
+         setProposals(next)
       } else {
-        toast.error(lang === 'es' ? "El JSON debe ser un arreglo (Array) de propuestas" : "JSON must be an array of proposals")
+         setProposals([...proposals, ...newProposals])
       }
+      
+      setJsonImportIndex(null)
+      setJsonImportText("")
+      toast.success(lang === 'es' ? "JSON importado correctamente" : "JSON imported successfully")
     } catch (e) {
       toast.error(lang === 'es' ? "JSON inválido. Revisa la sintaxis." : "Invalid JSON. Check syntax.")
     }
@@ -1355,12 +1369,7 @@ export default function QuotesPage() {
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-2xl font-bold">{t.sendQuotes}</h3>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => setIsJsonImportOpen(true)}
-                  className="px-3 py-1.5 text-sm bg-primary/10 text-primary font-medium rounded-lg hover:bg-primary/20 transition-colors"
-                >
-                  {lang === 'es' ? 'Importar JSON ✨' : 'Import JSON ✨'}
-                </button>
+
                 <button onClick={() => setProcessQuote(null)} className="p-2 hover:bg-muted rounded-full">
                   <X className="w-5 h-5" />
                 </button>
@@ -1370,7 +1379,14 @@ export default function QuotesPage() {
             <div className="space-y-6">
               {proposals.map((prop, idx) => (
                 <div key={idx} className="flex flex-col gap-4 p-5 border border-border rounded-lg bg-muted/10 relative">
-                  <div className="absolute right-2 top-2">
+                  <div className="absolute right-2 top-2 flex items-center gap-2">
+                    <button 
+                      onClick={() => setJsonImportIndex(idx)}
+                      className="px-2 py-1 text-xs bg-primary/10 text-primary font-medium rounded hover:bg-primary/20 transition-colors"
+                      title="Importar JSON"
+                    >
+                      JSON ✨
+                    </button>
                     <button 
                       onClick={() => setProposals(proposals.filter((_, i) => i !== idx))}
                       className="p-1.5 border border-red-500/20 text-red-500 rounded-md hover:bg-red-500/10"
@@ -1695,7 +1711,7 @@ export default function QuotesPage() {
         entityId={logsQuote?.id}
         entityName={`${logsQuote?.client_name} - ${logsQuote?.coverage_requested}`}
       />
-      {isJsonImportOpen && (
+      {jsonImportIndex !== null && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-card w-full max-w-lg rounded-xl shadow-lg border border-border p-6">
             <h3 className="text-xl font-bold mb-4">{lang === 'es' ? 'Importar Propuestas (JSON)' : 'Import Proposals (JSON)'}</h3>
@@ -1710,7 +1726,7 @@ export default function QuotesPage() {
             />
             <div className="flex justify-end gap-3">
               <button 
-                onClick={() => setIsJsonImportOpen(false)}
+                onClick={() => setJsonImportIndex(null)}
                 className="px-4 py-2 text-sm text-muted-foreground hover:bg-muted rounded-lg font-medium transition-colors"
               >
                 {lang === 'es' ? 'Cancelar' : 'Cancel'}
