@@ -4,14 +4,43 @@ import { useState } from "react"
 import { ShieldCheck } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect } from "react"
+import { useLanguage } from "@/components/language-provider"
 
 export default function LoginPage() {
+  const lang = useLanguage()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [resetSuccess, setResetSuccess] = useState(false)
   const supabase = createClient()
+
+  const t = {
+    es: {
+      portalAccess: "Acceso al Portal",
+      enterCredentials: "Ingresa tus credenciales para continuar",
+      email: "Correo Electrónico",
+      password: "Contraseña",
+      forgotPassword: "¿Olvidaste tu contraseña?",
+      authenticating: "Autenticando...",
+      login: "Iniciar Sesión",
+      enterEmailError: "Por favor, ingresa tu correo electrónico arriba para recuperar tu contraseña",
+      resetSuccessMessage: "Se ha enviado un correo con las instrucciones para recuperar tu contraseña. Revisa tu bandeja de entrada o spam."
+    },
+    en: {
+      portalAccess: "Portal Access",
+      enterCredentials: "Enter your credentials to continue",
+      email: "Email Address",
+      password: "Password",
+      forgotPassword: "Forgot your password?",
+      authenticating: "Authenticating...",
+      login: "Sign In",
+      enterEmailError: "Please enter your email address above to reset your password",
+      resetSuccessMessage: "An email has been sent with instructions to reset your password. Check your inbox or spam folder."
+    }
+  }
+
+  const currentLang = t[lang as keyof typeof t] || t.en
 
   useEffect(() => {
     // Intercept Supabase implicit flow hash fragments (recovery or invite)
@@ -44,7 +73,7 @@ export default function LoginPage() {
 
   const handleResetPassword = async () => {
     if (!email) {
-      setError("Por favor, ingresa tu correo electrónico arriba para recuperar tu contraseña")
+      setError(currentLang.enterEmailError)
       return
     }
     
@@ -69,8 +98,8 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
         <div className="flex flex-col items-center">
           <img src="/logo-crisol.png" alt="Crisol Logo" className="h-64 w-auto -mt-6 mb-2 object-contain" />
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Acceso al Portal</h2>
-          <p className="text-sm text-muted-foreground mt-2">Ingresa tus credenciales para continuar</p>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">{currentLang.portalAccess}</h2>
+          <p className="text-sm text-muted-foreground mt-2">{currentLang.enterCredentials}</p>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -81,11 +110,11 @@ export default function LoginPage() {
           )}
           {resetSuccess && (
             <div className="bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-sm p-3 rounded-md border border-emerald-500/30 animate-in fade-in slide-in-from-top-2">
-              Se ha enviado un correo con las instrucciones para recuperar tu contraseña. Revisa tu bandeja de entrada o spam.
+              {currentLang.resetSuccessMessage}
             </div>
           )}
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none text-foreground">Correo Electrónico</label>
+            <label className="text-sm font-medium leading-none text-foreground">{currentLang.email}</label>
             <input 
               type="email" 
               required
@@ -96,14 +125,14 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium leading-none text-foreground">Contraseña</label>
+              <label className="text-sm font-medium leading-none text-foreground">{currentLang.password}</label>
               <button 
                 type="button" 
                 onClick={handleResetPassword}
                 disabled={loading}
                 className="text-xs font-medium text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm disabled:opacity-50"
               >
-                ¿Olvidaste tu contraseña?
+                {currentLang.forgotPassword}
               </button>
             </div>
             <input 
@@ -119,7 +148,7 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 disabled:opacity-50"
           >
-            {loading ? "Autenticando..." : "Iniciar Sesión"}
+            {loading ? currentLang.authenticating : currentLang.login}
           </button>
         </form>
       </div>

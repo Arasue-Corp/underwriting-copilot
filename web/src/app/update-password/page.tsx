@@ -4,8 +4,10 @@ import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { CheckCircle2 } from "lucide-react"
 import { useEffect } from "react"
+import { useLanguage } from "@/components/language-provider"
 
 export default function UpdatePasswordPage() {
+  const lang = useLanguage()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -14,6 +16,45 @@ export default function UpdatePasswordPage() {
   const [isInvite, setIsInvite] = useState(false)
   const [name, setName] = useState("")
   const supabase = createClient()
+
+  const t = {
+    es: {
+      welcome: "Bienvenido a Crisol",
+      updatePassword: "Actualizar Contraseña",
+      inviteDesc: "Completa tus datos para activar tu cuenta en la plataforma.",
+      updateDesc: "Establece tu nueva contraseña para acceder a la plataforma.",
+      passwordMatchError: "Las contraseñas no coinciden",
+      passwordLengthError: "La contraseña debe tener al menos 6 caracteres",
+      nameRequired: "Por favor, ingresa tu nombre completo",
+      updatedSuccess: "¡Contraseña actualizada!",
+      redirecting: "Tu contraseña se guardó exitosamente. Redirigiendo a tu cuenta...",
+      fullName: "Nombre Completo",
+      newPassword: "Nueva Contraseña",
+      confirmPassword: "Confirmar Contraseña",
+      saving: "Guardando...",
+      activateAccount: "Activar Cuenta",
+      savePassword: "Guardar Contraseña"
+    },
+    en: {
+      welcome: "Welcome to Crisol",
+      updatePassword: "Update Password",
+      inviteDesc: "Complete your details to activate your account.",
+      updateDesc: "Set your new password to access the platform.",
+      passwordMatchError: "Passwords do not match",
+      passwordLengthError: "Password must be at least 6 characters long",
+      nameRequired: "Please enter your full name",
+      updatedSuccess: "Password updated!",
+      redirecting: "Your password was saved successfully. Redirecting to your account...",
+      fullName: "Full Name",
+      newPassword: "New Password",
+      confirmPassword: "Confirm Password",
+      saving: "Saving...",
+      activateAccount: "Activate Account",
+      savePassword: "Save Password"
+    }
+  }
+
+  const currentLang = t[lang as keyof typeof t] || t.en
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -27,17 +68,17 @@ export default function UpdatePasswordPage() {
     e.preventDefault()
     
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden")
+      setError(currentLang.passwordMatchError)
       return
     }
 
     if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres")
+      setError(currentLang.passwordLengthError)
       return
     }
 
     if (isInvite && !name.trim()) {
-      setError("Por favor, ingresa tu nombre completo")
+      setError(currentLang.nameRequired)
       return
     }
 
@@ -66,18 +107,18 @@ export default function UpdatePasswordPage() {
       <div className="w-full max-w-md space-y-8 bg-card p-8 rounded-xl border border-border shadow-lg">
         <div className="flex flex-col items-center">
           <img src="/logo-crisol.png" alt="Crisol Logo" className="h-32 w-auto mb-6 object-contain" />
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">{isInvite ? "Bienvenido a Crisol" : "Actualizar Contraseña"}</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-foreground">{isInvite ? currentLang.welcome : currentLang.updatePassword}</h2>
           <p className="text-sm text-muted-foreground mt-2 text-center">
-            {isInvite ? "Completa tus datos para activar tu cuenta en la plataforma." : "Establece tu nueva contraseña para acceder a la plataforma."}
+            {isInvite ? currentLang.inviteDesc : currentLang.updateDesc}
           </p>
         </div>
 
         {success ? (
           <div className="flex flex-col items-center space-y-4 py-4 animate-in fade-in zoom-in duration-300">
             <CheckCircle2 className="w-16 h-16 text-emerald-500" />
-            <h3 className="text-xl font-bold text-foreground">¡Contraseña actualizada!</h3>
+            <h3 className="text-xl font-bold text-foreground">{currentLang.updatedSuccess}</h3>
             <p className="text-sm text-muted-foreground text-center">
-              Tu contraseña se guardó exitosamente. Redirigiendo a tu cuenta...
+              {currentLang.redirecting}
             </p>
           </div>
         ) : (
@@ -89,7 +130,7 @@ export default function UpdatePasswordPage() {
             )}
             {isInvite && (
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none text-foreground">Nombre Completo</label>
+                <label className="text-sm font-medium leading-none text-foreground">{currentLang.fullName}</label>
                 <input 
                   type="text" 
                   required
@@ -101,7 +142,7 @@ export default function UpdatePasswordPage() {
               </div>
             )}
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none text-foreground">Nueva Contraseña</label>
+              <label className="text-sm font-medium leading-none text-foreground">{currentLang.newPassword}</label>
               <input 
                 type="password" 
                 required
@@ -111,7 +152,7 @@ export default function UpdatePasswordPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium leading-none text-foreground">Confirmar Contraseña</label>
+              <label className="text-sm font-medium leading-none text-foreground">{currentLang.confirmPassword}</label>
               <input 
                 type="password" 
                 required
@@ -125,7 +166,7 @@ export default function UpdatePasswordPage() {
               disabled={loading}
               className="w-full flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 disabled:opacity-50"
             >
-              {loading ? "Guardando..." : (isInvite ? "Activar Cuenta" : "Guardar Contraseña")}
+              {loading ? currentLang.saving : (isInvite ? currentLang.activateAccount : currentLang.savePassword)}
             </button>
           </form>
         )}
