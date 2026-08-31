@@ -117,7 +117,7 @@ export default function ClientsPage() {
           address,
           contact,
           created_at
-        \)
+        `)
         
       let quotesQuery = supabase
         .from('quote_requests')

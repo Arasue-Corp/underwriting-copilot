@@ -239,8 +239,7 @@ export default function QuotesPage() {
       .single()
       
     setUserProfile(profile)
-
-    if (profile && (profile.role === 'MANAGER' || profile.(role === 'ADMIN' || role === 'DEMO'))) {
+    if (profile && (profile.role === 'MANAGER' || profile.role === 'ADMIN' || profile.role === 'DEMO')) {
       const { data: members } = await supabase
         .from("profiles")
         .select("id, name")
