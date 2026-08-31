@@ -72,7 +72,7 @@ export async function updateClient(id: string, data: any) {
       .eq("id", user.id)
       .single()
       
-    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'MANAGER')) {
+    if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'MANAGER' && profile.role !== 'DEMO')) {
       return { success: false, error: "Unauthorized role" }
     }
 

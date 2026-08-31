@@ -172,7 +172,7 @@ export async function assignQuoteRequest(quoteId: string, assigneeId: string) {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
+  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN" && profile.role !== "DEMO")) {
     return { success: false, error: "Only managers and admins can assign quotes." }
   }
 
@@ -198,7 +198,7 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN', 'AGENT'].includes(profile.role)) {
+  if (!profile || !['MANAGER', 'ADMIN', 'AGENT', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "Unauthorized role." }
   }
 
@@ -307,7 +307,7 @@ export async function updateQuoteRequestData(quoteId: string, formData: any) {
   
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
   
-  if (!quote || (quote.agent_id !== user.id && profile?.role !== 'ADMIN' && profile?.role !== 'MANAGER')) {
+  if (!quote || (quote.agent_id !== user.id && profile?.role !== 'ADMIN' && profile?.role !== 'MANAGER' && profile?.role !== 'DEMO')) {
     return { success: false, error: "Unauthorized to edit this quote" }
   }
 
@@ -332,7 +332,7 @@ export async function transferQuoteOwnership(quoteId: string, newOwnerId: string
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN")) {
+  if (!profile || (profile.role !== "MANAGER" && profile.role !== "ADMIN" && profile.role !== "DEMO")) {
     return { success: false, error: "Only managers and admins can transfer property." }
   }
 

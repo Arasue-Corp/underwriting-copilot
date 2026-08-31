@@ -153,12 +153,14 @@ export default function UsersPage() {
                         className={`pl-9 pr-8 py-1.5 border border-input rounded-md text-sm outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer disabled:opacity-50 font-medium ${
                           user.role === 'ADMIN' ? 'bg-rose-500/10 text-rose-500' :
                           user.role === 'MANAGER' ? 'bg-amber-500/10 text-amber-600 dark:text-amber-500' :
+                          user.role === 'DEMO' ? 'bg-purple-500/10 text-purple-600 dark:text-purple-500' :
                           'bg-blue-500/10 text-blue-600 dark:text-blue-500'
                         }`}
                       >
                         <option value="AGENT">Agente (Base)</option>
                         <option value="MANAGER">Manager (Agencia)</option>
                         <option value="ADMIN">Admin (Global)</option>
+                        <option value="DEMO">Demo (Lectura)</option>
                       </select>
                     </div>
                   </td>

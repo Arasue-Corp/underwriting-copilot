@@ -15,7 +15,7 @@ export default async function AdminLayout({
 
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   
-  if (!profile || profile.role !== 'ADMIN') {
+  if (!profile || profile.role !== 'ADMIN' && profile.role !== 'DEMO') {
     return (
       <div className="flex-1 p-8 flex items-center justify-center">
         <div className="max-w-md text-center space-y-4">
