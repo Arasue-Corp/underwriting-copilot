@@ -192,21 +192,38 @@ export default function ClientsPage() {
           <div className="overflow-y-auto flex-1 p-2">
             {loading ? (
               <div className="p-4 text-center text-muted-foreground">{t.loading}</div>
-            ) : filteredClients.map(client => (
+            ) : filteredClients.map(client => {
+              let statusBorder = 'border-transparent'
+              let statusDot = 'bg-gray-400'
+              if (client.status === 'CLIENTE') {
+                statusBorder = 'border-green-500/50 bg-green-500/5'
+                statusDot = 'bg-green-500'
+              } else if (client.status === 'SEGUIMIENTO') {
+                statusBorder = 'border-yellow-500/50 bg-yellow-500/5'
+                statusDot = 'bg-yellow-500'
+              } else if (client.status === 'RECHAZO') {
+                statusBorder = 'border-red-500/50 bg-red-500/5'
+                statusDot = 'bg-red-500'
+              }
+              
+              return (
               <div 
                 key={client.id}
                 onClick={() => setSelectedClient(client)}
-                className={`p-3 rounded-lg cursor-pointer transition-colors flex items-center justify-between mb-1 ${selectedClient?.id === client.id ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted border border-transparent'}`}
+                className={`p-3 rounded-lg cursor-pointer transition-colors flex items-center justify-between mb-2 border ${selectedClient?.id === client.id ? 'ring-2 ring-primary border-primary/50' : 'hover:bg-muted'} ${statusBorder}`}
               >
                 <div>
-                  <h4 className={`font-semibold ${selectedClient?.id === client.id ? 'text-primary' : 'text-foreground'}`}>{client.name}</h4>
+                  <h4 className={`font-semibold flex items-center gap-2 ${selectedClient?.id === client.id ? 'text-primary' : 'text-foreground'}`}>
+                    <span className={`w-2.5 h-2.5 rounded-full ${statusDot}`}></span>
+                    {client.name}
+                  </h4>
                   <div className="text-xs text-muted-foreground mt-1">
                     {client.quote_requests?.length || 0} quotes • {client.visits?.length || 0} {t.visits}
                   </div>
                 </div>
                 <ChevronRight className={`h-4 w-4 ${selectedClient?.id === client.id ? 'text-primary' : 'text-muted-foreground'}`} />
               </div>
-            ))}
+            )})}
           </div>
         </div>
 
@@ -232,7 +249,19 @@ export default function ClientsPage() {
                       </div>
                     )}
                     <div>
-                      <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-2xl font-bold">{selectedClient.name}</h2>
+                        {selectedClient.status && (
+                          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider
+                            ${selectedClient.status === 'CLIENTE' ? 'bg-green-500/10 text-green-600 border border-green-500/20' : 
+                              selectedClient.status === 'SEGUIMIENTO' ? 'bg-yellow-500/10 text-yellow-600 border border-yellow-500/20' : 
+                              selectedClient.status === 'RECHAZO' ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 
+                              'bg-muted text-muted-foreground'}`}
+                          >
+                            {selectedClient.status}
+                          </span>
+                        )}
+                      </div>
                       {(selectedClient.first_name || selectedClient.last_name) && (
                         <div className="text-sm font-medium text-muted-foreground mt-1">
                           {selectedClient.first_name} {selectedClient.last_name}

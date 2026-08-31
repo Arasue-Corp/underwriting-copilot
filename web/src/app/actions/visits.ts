@@ -19,6 +19,7 @@ export async function createVisit(data: any) {
     if (!profile) throw new Error("Perfil no encontrado")
 
     let clientId = data.client_id
+    const clientStatus = data.client_status || 'SEGUIMIENTO'
 
     // Si viene información de un nuevo cliente, lo creamos primero
     if (!clientId && data.new_client_name) {
@@ -28,7 +29,8 @@ export async function createVisit(data: any) {
           agency_id: profile.agency_id,
           name: data.new_client_name,
           address: data.new_client_address || null,
-          contact: data.new_client_contact || null
+          contact: data.new_client_contact || null,
+          status: clientStatus
         })
         .select('id')
         .single()
@@ -39,8 +41,13 @@ export async function createVisit(data: any) {
 
     if (!clientId) throw new Error("Se requiere un cliente para registrar la visita")
 
+    // Actualizar el estado si es cliente existente
+    if (data.client_id && clientStatus) {
+      await supabase.from('clients').update({ status: clientStatus }).eq('id', data.client_id)
+    }
+
     // Eliminar los campos extra antes de insertar en visits
-    const { new_client_name, new_client_address, new_client_contact, ...visitData } = data
+    const { new_client_name, new_client_address, new_client_contact, client_status, ...visitData } = data
 
     const { error } = await supabase.from('visits').insert({
       ...visitData,

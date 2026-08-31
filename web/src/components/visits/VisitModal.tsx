@@ -64,6 +64,12 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
         OTHER: 'Otro'
       },
       otherSpecifyLabel: 'Especificar Otro',
+      statusLabel: 'Estado del Cliente',
+      statusOptions: {
+        CLIENTE: 'Cliente',
+        SEGUIMIENTO: 'Seguimiento',
+        RECHAZO: 'Rechazo'
+      },
       cancelBtn: 'Cancelar',
       saveBtn: 'Guardar Reporte',
       savingBtn: 'Guardando...'
@@ -114,6 +120,12 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
         OTHER: 'Other'
       },
       otherSpecifyLabel: 'Specify Other',
+      statusLabel: 'Client Status',
+      statusOptions: {
+        CLIENTE: 'Client',
+        SEGUIMIENTO: 'Follow-up',
+        RECHAZO: 'Rejection'
+      },
       cancelBtn: 'Cancel',
       saveBtn: 'Save Report',
       savingBtn: 'Saving...'
@@ -124,6 +136,7 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
   const [mode, setMode] = useState<'EXISTING' | 'NEW'>(preselectedClientId ? 'EXISTING' : 'EXISTING')
   
   const [selectedClientId, setSelectedClientId] = useState<string>(preselectedClientId || '')
+  const [clientStatus, setClientStatus] = useState<string>('SEGUIMIENTO')
   
   const [newClientData, setNewClientData] = useState({
     name: '',
@@ -151,11 +164,32 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       if (preselectedClientId) {
         setMode('EXISTING')
         setSelectedClientId(preselectedClientId)
+        const client = clients.find(c => c.id === preselectedClientId)
+        if (client && client.status) {
+          setClientStatus(client.status)
+        }
       } else {
+        setMode('EXISTING')
         setSelectedClientId('')
+        setClientStatus('SEGUIMIENTO')
       }
+      setNewClientData({ name: '', address: '', contact: '' })
+      setVisitForm({
+        visit_date: new Date().toISOString().split('T')[0],
+        representatives: { receptionist: '', manager: '', owner: '' },
+        policies_needed: [],
+        business_hours: '',
+        detected_requirements: '',
+        conversation_notes: '',
+        additional_notes: '',
+        next_visit_date: '',
+        contact_method: '',
+        contact_method_other: '',
+        contact_reason: '',
+        contact_reason_other: ''
+      })
     }
-  }, [isOpen, preselectedClientId])
+  }, [isOpen, preselectedClientId, clients])
 
   const policyOptions = lang === 'es' ? [
     'Responsabilidad Civil', 'Auto Comercial', 'Workers Comp', 'Responsabilidad Profesional', 'Propiedad Comercial'
@@ -194,6 +228,7 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
       new_client_name: mode === 'NEW' ? newClientData.name : undefined,
       new_client_address: mode === 'NEW' ? newClientData.address : undefined,
       new_client_contact: mode === 'NEW' ? newClientData.contact : undefined,
+      client_status: clientStatus,
 
       visit_date: visitForm.visit_date ? new Date(visitForm.visit_date).toISOString() : new Date().toISOString(),
       representatives: visitForm.representatives,
@@ -258,7 +293,16 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
                 <select 
                   className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
                   value={selectedClientId}
-                  onChange={e => setSelectedClientId(e.target.value)}
+                  onChange={e => {
+                    const id = e.target.value;
+                    setSelectedClientId(id);
+                    const client = clients.find(c => c.id === id);
+                    if (client && client.status) {
+                      setClientStatus(client.status);
+                    } else {
+                      setClientStatus('SEGUIMIENTO');
+                    }
+                  }}
                   disabled={!!preselectedClientId} // If opened from a client profile, lock it
                 >
                   <option value="">{t.selectClientPlaceholder}</option>
@@ -286,6 +330,18 @@ export function VisitModal({ isOpen, onClose, onSuccess, clients, preselectedCli
                 </div>
               </div>
             )}
+          </div>
+          <div className="mb-4">
+            <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.statusLabel}</label>
+            <select 
+              className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+              value={clientStatus}
+              onChange={e => setClientStatus(e.target.value)}
+            >
+              <option value="CLIENTE">{t.statusOptions.CLIENTE}</option>
+              <option value="SEGUIMIENTO">{t.statusOptions.SEGUIMIENTO}</option>
+              <option value="RECHAZO">{t.statusOptions.RECHAZO}</option>
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
