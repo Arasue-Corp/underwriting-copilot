@@ -267,7 +267,7 @@ export default function ClientsPage() {
                           {selectedClient.first_name} {selectedClient.last_name}
                         </div>
                       )}
-                      <div className="flex flex-col gap-1 mt-2 text-sm text-muted-foreground">
+                      <div className="flex flex-col gap-1 mt-2 text-base text-muted-foreground">
                         <div className="flex gap-4">
                           <span><strong className="text-foreground/70 font-medium">FEIN:</strong> {selectedClient.fein || t.notRegistered}</span>
                           <span><strong className="text-foreground/70 font-medium">{t.structure}</strong> {selectedClient.legal_structure || t.notRegistered}</span>
@@ -341,8 +341,8 @@ export default function ClientsPage() {
                         <Link href={`/proposals/${quote.id}`} key={quote.id} className="block border border-border rounded-xl p-5 bg-card hover:bg-muted/50 transition-colors shadow-sm flex flex-col justify-between gap-4 cursor-pointer group">
                           <div>
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="font-bold text-base text-foreground group-hover:text-primary transition-colors">{quote.coverage_requested}</span>
-                              <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full border font-bold ${
+                              <span className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">{quote.coverage_requested}</span>
+                              <span className={`text-xs uppercase px-2 py-0.5 rounded-full border font-bold ${
                                 quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
                                 quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
                                 'bg-amber-500/10 text-amber-600 border-amber-500/30'
@@ -350,24 +350,24 @@ export default function ClientsPage() {
                                 {quote.status}
                               </span>
                             </div>
-                            <div className="text-sm text-muted-foreground">
+                            <div className="text-base text-muted-foreground">
                               {t.carrier} <span className="font-medium text-foreground">{quote.carrier_id || t.tbd}</span>
                             </div>
                           </div>
                           <div className="flex flex-col items-start gap-1">
                             {quote.status === 'ACCEPTED' && quote.accepted_at ? (
-                              <div className="flex items-center gap-1 text-xs text-emerald-600 font-medium">
+                              <div className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
                                 <CheckCircle2 className="h-3.5 w-3.5" />
                                 {t.renews} {new Date(new Date(quote.accepted_at).setFullYear(new Date(quote.accepted_at).getFullYear() + 1)).toLocaleDateString()}
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
                                 <Clock className="h-3.5 w-3.5" />
                                 {new Date(quote.created_at).toLocaleDateString()}
                               </div>
                             )}
                             {quote.sold_premium && (
-                              <div className="text-sm font-bold">${parseFloat(quote.sold_premium).toLocaleString()} USD</div>
+                              <div className="text-base font-bold">${parseFloat(quote.sold_premium).toLocaleString()} USD</div>
                             )}
                           </div>
                         </Link>
@@ -392,24 +392,23 @@ export default function ClientsPage() {
                             <Building className="w-4 h-4" />
                           </div>
                           <div 
-                              className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border border-border p-5 rounded-2xl shadow-sm hover:shadow-md transition-all cursor-pointer"
-                              onClick={() => setExpandedVisits(prev => ({ ...prev, [visit.id]: !prev[visit.id] }))}
+                              className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-card border border-border p-5 rounded-2xl shadow-sm hover:shadow-md transition-all"
                             >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-sm font-bold text-muted-foreground">
+                              <span className="text-base font-bold text-muted-foreground">
                                 {new Date(visit.visit_date || visit.created_at).toLocaleDateString()}
                               </span>
-                              <span className={`text-[9px] uppercase px-2 py-0.5 rounded-full font-bold ${
+                              <span className={`text-xs uppercase px-2 py-0.5 rounded-full font-bold ${
                                 visit.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'
                               }`}>{visit.status}</span>
                             </div>
                             {visit.conversation_notes && (
-                              <p className={`text-base text-foreground/90 mb-3 ${expandedVisits[visit.id] ? '' : 'line-clamp-3'}`}>{visit.conversation_notes}</p>
+                              <p className={`text-lg text-foreground/90 mb-3 ${expandedVisits[visit.id] ? '' : 'line-clamp-3'}`}>{visit.conversation_notes}</p>
                             )}
                             {visit.policies_needed && visit.policies_needed.length > 0 && (
                               <div className="flex flex-wrap gap-1 mt-2">
-                                {visit.policies_needed.slice(0,3).map((p:string, i:number) => (
-                                  <span key={i} className="text-xs font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-md">{p}</span>
+                                {visit.policies_needed.map((p:string, i:number) => (
+                                  <span key={i} className="text-sm font-medium bg-primary/10 text-primary px-2.5 py-1 rounded-md">{p}</span>
                                 ))}
                               </div>
                             )}

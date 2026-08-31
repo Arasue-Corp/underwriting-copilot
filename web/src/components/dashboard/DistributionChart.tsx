@@ -20,9 +20,17 @@ export function DistributionChart({ data }: { data?: any[] }) {
           dataKey="value"
           stroke="none"
         >
-          {chartData.map((entry, index) => (
-            <Cell key={`cell-${index}`} fill={`var(--chart-${index + 1})`} />
-          ))}
+          {chartData.map((entry, index) => {
+            const COLORS = [
+              'var(--chart-1, #162D59)', 
+              'var(--chart-2, #A65E44)', 
+              'var(--chart-3, #F2D3AC)', 
+              'var(--chart-4, #64748b)', 
+              'var(--chart-5, #0511F2)',
+              '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'
+            ];
+            return <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+          })}
         </Pie>
         <Tooltip 
           contentStyle={{ backgroundColor: "var(--card)", borderColor: "var(--border)", borderRadius: "8px", color: "var(--foreground)" }}

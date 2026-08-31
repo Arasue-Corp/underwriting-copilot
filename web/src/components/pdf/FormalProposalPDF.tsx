@@ -10,15 +10,6 @@ import {
   Path,
 } from '@react-pdf/renderer';
 
-// Register a font for a clean, professional look
-Font.register({
-  family: 'Inter',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff' }, // Regular
-    { src: 'https://fonts.gstatic.com/s/inter/v12/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff', fontWeight: 700 }, // Bold
-  ]
-});
-
 const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
 
 Font.register({
@@ -36,7 +27,7 @@ Font.register({
 
 const styles = StyleSheet.create({
   coverPage: {
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     backgroundColor: '#0B1120',
     color: '#ffffff',
     display: 'flex',
@@ -117,7 +108,7 @@ const styles = StyleSheet.create({
     paddingTop: 110,
     paddingBottom: 90,
     paddingHorizontal: 40,
-    fontFamily: 'Inter',
+    fontFamily: 'Helvetica',
     backgroundColor: '#ffffff',
     color: '#334155', // slate-700
   },
@@ -331,7 +322,7 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
   return (
     <Document>
       {/* 1. COVER PAGE */}
-      <Page size="LETTER" style={{ fontFamily: 'Inter', color: '#ffffff' }}>
+      <Page size="LETTER" style={{ fontFamily: 'Helvetica', color: '#ffffff' }}>
         {/* Background Layer */}
         <Image src="/alex-assets/Wallpaper-1.jpeg" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         <View style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: '#009CFF', opacity: 0.45 }} />
@@ -350,7 +341,7 @@ export const FormalProposalPDF = ({ quote, selectedModules, disclaimer }: Formal
       </Page>
 
       {/* 1.5. SUMMARY COVER PAGE */}
-      <Page size="LETTER" style={{ fontFamily: 'Inter', backgroundColor: '#ffffff', position: 'relative' }}>
+      <Page size="LETTER" style={{ fontFamily: 'Helvetica', backgroundColor: '#ffffff', position: 'relative' }}>
         {/* Top Blue Section */}
         <View style={{ backgroundColor: '#108ee9', height: '60%', width: '100%', position: 'relative', padding: 50, paddingTop: 60 }}>
           <Text style={{ fontSize: 46, color: '#ffffff', fontWeight: 'bold', lineHeight: 1.1, width: '80%' }}>
