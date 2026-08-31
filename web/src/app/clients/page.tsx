@@ -105,9 +105,11 @@ export default function ClientsPage() {
       } else {
         setAgents([profile])
       }
-      let clientsQuery = supabase
+      
+      const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
-        .select(          id,
+        .select(`
+          id,
           name,
           first_name,
           last_name,
@@ -118,25 +120,18 @@ export default function ClientsPage() {
           contact,
           created_at
         `)
-        
-      let quotesQuery = supabase
+        .eq('agency_id', profile.agency_id)
+        .order('name')
+
+      const { data: quotesData, error: quotesError } = await supabase
         .from('quote_requests')
-        .select('id, status, created_at, accepted_at, sold_premium, carrier_id, coverage_requested, client_name')
-        
-      let visitsQuery = supabase
+        .select(`id, status, created_at, accepted_at, sold_premium, carrier_id, coverage_requested, client_name`)
+        .eq('agency_id', profile.agency_id)
+
+      const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
-        .select('*')
-
-      if (profile.role !== 'ADMIN' && profile.role !== 'DEMO') {
-        clientsQuery = clientsQuery.eq('agency_id', profile.agency_id)
-        quotesQuery = quotesQuery.eq('agency_id', profile.agency_id)
-        visitsQuery = visitsQuery.eq('agency_id', profile.agency_id)
-      }
-
-      const { data: clientsData, error: clientsError } = await clientsQuery.order('name')
-      const { data: quotesData, error: quotesError } = await quotesQuery
-      const { data: visitsData, error: visitsError } = await visitsQuery
-
+        .select(`*`)
+        .eq('agency_id', profile.agency_id)
 
       if (clientsError || quotesError || visitsError) {
         toast.error(t.dataError)
