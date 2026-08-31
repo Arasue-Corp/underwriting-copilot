@@ -71,7 +71,7 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
           {t.calendar}
         </Link>
       </li>
-      {role === 'ADMIN' && (
+      {(role === 'ADMIN' || role === 'DEMO') && (
         <>
           <li className="pt-6 pb-2 px-3 text-[11px] font-bold text-muted-foreground/70 uppercase tracking-widest">
             {t.admin}
@@ -102,7 +102,7 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
           </li>
         </>
       )}
-      {(role === 'MANAGER' || role === 'ADMIN') && (
+      {(role === 'MANAGER' || (role === 'ADMIN' || role === 'DEMO')) && (
         <li>
           <Link href="/agency" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/agency")}`}>
             <Users className={`h-4 w-4 ${getIconClasses("/agency")}`} />

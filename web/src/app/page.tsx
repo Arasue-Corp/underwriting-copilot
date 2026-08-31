@@ -76,7 +76,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   let agencies: { id: string; name: string }[] = [];
   let agents: { id: string; name: string; agency_id?: string }[] = [];
   
-  if (role === 'ADMIN') {
+  if ((role === 'ADMIN' || role === 'DEMO')) {
     const { data: ags } = await supabase.from('agencies').select('id, name');
     agencies = ags || [];
     
@@ -93,7 +93,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   if (startDate) quotesQuery = quotesQuery.gte('created_at', `${startDate}T00:00:00.000Z`);
   if (endDate) quotesQuery = quotesQuery.lte('created_at', `${endDate}T23:59:59.999Z`);
   
-  if (role === 'ADMIN') {
+  if ((role === 'ADMIN' || role === 'DEMO')) {
     if (agencyId) quotesQuery = quotesQuery.eq('agency_id', agencyId);
     if (agentId) {
       if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
@@ -110,7 +110,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   const { data: quotes, error: quotesError } = await quotesQuery;
   
   let visits: any[] = [];
-  if (role === 'ADMIN' || role === 'MANAGER') {
+  if ((role === 'ADMIN' || role === 'DEMO') || role === 'MANAGER') {
     visits = await getVisits({ 
       startDate: startDate as string | undefined, 
       endDate: endDate as string | undefined, 
@@ -231,7 +231,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   let agentsCountQuery = supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'AGENT');
   if (role === 'MANAGER' && userAgencyId) {
     agentsCountQuery = agentsCountQuery.eq('agency_id', userAgencyId);
-  } else if (role === 'ADMIN' && agencyId) {
+  } else if ((role === 'ADMIN' || role === 'DEMO') && agencyId) {
     agentsCountQuery = agentsCountQuery.eq('agency_id', agencyId);
   }
   const { count: agentsCount } = await agentsCountQuery;
@@ -362,7 +362,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
       </div>
 
       {/* Visits Section (Admin/Manager only) */}
-      {(role === 'ADMIN' || role === 'MANAGER') && (
+      {((role === 'ADMIN' || role === 'DEMO') || role === 'MANAGER') && (
         <VisitsDashboardSection visits={visits} />
       )}
     </div>

@@ -271,7 +271,7 @@ export default function CarriersPage() {
                       {new Date(carrier.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
                     </td>
                     <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
-                      {userProfile?.role === 'ADMIN' && (
+                      {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
                         <button 
                           onClick={() => setLogsCarrier(carrier)}
                           title="Ver registro de actividad"

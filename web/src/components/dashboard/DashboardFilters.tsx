@@ -145,7 +145,7 @@ export function DashboardFilters({ role, lang, agencies, agents }: DashboardFilt
         />
       </div>
 
-      {!isAgent && role === 'ADMIN' && (
+      {!isAgent && (role === 'ADMIN' || role === 'DEMO') && (
         <div className="flex flex-col gap-1.5 flex-1 min-w-[160px]">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{t.agency}</label>
           <select 

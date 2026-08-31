@@ -257,7 +257,7 @@ export default function VisitsPage() {
 }
 
 function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChange, onShowLogs }: any) {
-  const isManager = userProfile?.role === 'MANAGER' || userProfile?.role === 'ADMIN'
+  const isManager = userProfile?.role === 'MANAGER' || userProfile?.(role === 'ADMIN' || role === 'DEMO')
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 shadow-sm space-y-4 hover:border-primary/20 transition-colors">
@@ -285,7 +285,7 @@ function VisitCard({ visit, t, agents, userProfile, onStatusChange, onAssignChan
               <option value="COMPLETED">{t.completed}</option>
               <option value="CANCELED">{t.canceled}</option>
           </select>
-          {userProfile?.role === 'ADMIN' && (
+          {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
             <button 
               onClick={onShowLogs}
               title="Ver registro de actividad"

@@ -104,7 +104,7 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
                 {t.visits}
               </Link>
             </li>
-            {role === 'ADMIN' && (
+            {(role === 'ADMIN' || role === 'DEMO') && (
               <>
                 <li className="pt-6 pb-2 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   {t.admin}
@@ -129,7 +129,7 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
                 </li>
               </>
             )}
-            {(role === 'MANAGER' || role === 'ADMIN') && (
+            {(role === 'MANAGER' || (role === 'ADMIN' || role === 'DEMO')) && (
               <li>
                 <Link href="/agency" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/agency")}`}>
                   <Users className="h-5 w-5" />

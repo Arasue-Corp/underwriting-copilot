@@ -105,11 +105,9 @@ export default function ClientsPage() {
       } else {
         setAgents([profile])
       }
-      
-      const { data: clientsData, error: clientsError } = await supabase
+      let clientsQuery = supabase
         .from('clients')
-        .select(`
-          id,
+        .select(          id,
           name,
           first_name,
           last_name,
@@ -119,19 +117,26 @@ export default function ClientsPage() {
           address,
           contact,
           created_at
-        `)
-        .eq('agency_id', profile.agency_id)
-        .order('name')
-
-      const { data: quotesData, error: quotesError } = await supabase
+        \)
+        
+      let quotesQuery = supabase
         .from('quote_requests')
-        .select(`id, status, created_at, accepted_at, sold_premium, carrier_id, coverage_requested, client_name`)
-        .eq('agency_id', profile.agency_id)
-
-      const { data: visitsData, error: visitsError } = await supabase
+        .select('id, status, created_at, accepted_at, sold_premium, carrier_id, coverage_requested, client_name')
+        
+      let visitsQuery = supabase
         .from('visits')
-        .select(`*`)
-        .eq('agency_id', profile.agency_id)
+        .select('*')
+
+      if (profile.role !== 'ADMIN' && profile.role !== 'DEMO') {
+        clientsQuery = clientsQuery.eq('agency_id', profile.agency_id)
+        quotesQuery = quotesQuery.eq('agency_id', profile.agency_id)
+        visitsQuery = visitsQuery.eq('agency_id', profile.agency_id)
+      }
+
+      const { data: clientsData, error: clientsError } = await clientsQuery.order('name')
+      const { data: quotesData, error: quotesError } = await quotesQuery
+      const { data: visitsData, error: visitsError } = await visitsQuery
+
 
       if (clientsError || quotesError || visitsError) {
         toast.error(t.dataError)
@@ -251,7 +256,7 @@ export default function ClientsPage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {userRole === 'ADMIN' && (
+                    {(userRole === 'ADMIN' || userRole === 'DEMO') && (
                       <button 
                         onClick={(e) => { e.stopPropagation(); setIsLogsModalOpen(true); }}
                         className="bg-muted text-muted-foreground hover:bg-muted/80 p-2 rounded-lg shadow-sm border border-border flex items-center justify-center"
@@ -260,7 +265,7 @@ export default function ClientsPage() {
                         <History className="w-5 h-5" />
                       </button>
                     )}
-                    {userRole === 'ADMIN' && (
+                    {(userRole === 'ADMIN' || userRole === 'DEMO') && (
                         <button 
                           onClick={(e) => { e.stopPropagation(); handleDelete(selectedClient.id); }}
                           className="bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-rose-500/20"
@@ -269,7 +274,7 @@ export default function ClientsPage() {
                           {'Eliminar'}
                         </button>
                     )}
-                    {(userRole === 'ADMIN' || userRole === 'MANAGER') && (
+                    {((userRole === 'ADMIN' || userRole === 'DEMO') || userRole === 'MANAGER') && (
                       <button 
                         onClick={() => setIsEditModalOpen(true)}
                         className="bg-muted text-muted-foreground hover:bg-muted/80 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-border"

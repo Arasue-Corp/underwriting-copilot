@@ -188,7 +188,7 @@ export default function ProposalsPage() {
                   </div>
 
                   <div className="pt-2 pl-2 flex gap-2">
-                    {userProfile?.role === 'ADMIN' && (
+                    {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
                       <button 
                         onClick={() => setLogsQuote(quote)}
                         title="Ver registro de actividad"
@@ -254,7 +254,7 @@ export default function ProposalsPage() {
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end space-x-2">
-                        {userProfile?.role === 'ADMIN' && (
+                        {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
                           <button 
                             onClick={() => setLogsQuote(quote)}
                             title="Ver registro de actividad"
