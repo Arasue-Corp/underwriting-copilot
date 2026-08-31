@@ -1341,6 +1341,7 @@ export default function QuotesPage() {
         }} 
         rule={null}
         language={lang}
+        userRole={userProfile?.role}
       />
 
       {/* Edit Quote Request Modal */}
@@ -1353,6 +1354,7 @@ export default function QuotesPage() {
         }}
         quote={editQuoteRequest}
         language={lang}
+        userRole={userProfile?.role}
       />
 
       {/* Process Modal */}

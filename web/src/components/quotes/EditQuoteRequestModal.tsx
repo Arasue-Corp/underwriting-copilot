@@ -12,9 +12,10 @@ interface EditQuoteRequestModalProps {
   onSuccess: () => void
   quote: any
   language?: 'en' | 'es'
+  userRole?: string
 }
 
-export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, language = 'es' }: EditQuoteRequestModalProps) {
+export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, language = 'es', userRole }: EditQuoteRequestModalProps) {
   const [isPending, startTransition] = useTransition()
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [error, setError] = useState<string | null>(null)
@@ -229,6 +230,32 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
           )}
 
           <div className="space-y-8">
+            {userRole === 'ADMIN' && (
+              <div className="mb-4 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-4">
+                <h4 className="text-sm font-semibold text-primary">{language === 'es' ? 'Opciones de Administrador' : 'Admin Options'}</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{language === 'es' ? 'Fecha de Creación (Cotización)' : 'Creation Date (Quote)'}</label>
+                    <input 
+                      type="date" 
+                      value={formData.admin_created_at || (quote?.created_at ? new Date(quote.created_at).toISOString().split('T')[0] : '')}
+                      onChange={(e) => handleInputChange('admin_created_at', e.target.value)}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">{language === 'es' ? 'Fecha de Aceptación (Propuesta)' : 'Accepted Date (Proposal)'}</label>
+                    <input 
+                      type="date" 
+                      value={formData.admin_accepted_at || (quote?.accepted_at ? new Date(quote.accepted_at).toISOString().split('T')[0] : '')}
+                      onChange={(e) => handleInputChange('admin_accepted_at', e.target.value)}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* General Info */}
             <div>
               <h3 className="text-lg font-semibold mb-4 border-b pb-2">

@@ -13,9 +13,10 @@ interface QuoteModalProps {
   rule: any
   language?: 'en' | 'es'
   initialClientId?: string | null
+  userRole?: string
 }
 
-export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClientId = null }: QuoteModalProps) {
+export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClientId = null, userRole }: QuoteModalProps) {
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [quoteCategory, setQuoteCategory] = useState<'commercial' | 'personal'>('commercial')
@@ -186,6 +187,9 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
           return p ? p.name : id
         })))
         submitData.append("form_data", JSON.stringify({ ...formData, general_quote_category: quoteCategory }))
+        if (userRole === 'ADMIN' && formData.general_created_at) {
+          submitData.append("created_at", formData.general_created_at)
+        }
 
         // Append files
         Object.entries(files).forEach(([key, file]) => {
@@ -383,6 +387,20 @@ export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClie
                     Personal
                   </button>
                 </div>
+                
+                {userRole === 'ADMIN' && (
+                  <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                    <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                      {language === 'es' ? 'Fecha de Creación (Opcional - Solo Admin)' : 'Creation Date (Optional - Admin Only)'}
+                    </label>
+                    <input 
+                      type="date" 
+                      value={formData.general_created_at || ''}
+                      onChange={(e) => handleInputChange('general_created_at', e.target.value)}
+                      className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    />
+                  </div>
+                )}
                 
                 {/* Client Selection */}
                 <div className="mb-6 p-4 bg-muted/20 border border-border/40 rounded-xl space-y-3">

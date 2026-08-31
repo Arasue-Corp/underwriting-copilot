@@ -311,9 +311,19 @@ export async function updateQuoteRequestData(quoteId: string, formData: any) {
     return { success: false, error: "Unauthorized to edit this quote" }
   }
 
+  const updates: any = { form_data: formData }
+  if (profile?.role === 'ADMIN') {
+    if (formData.admin_created_at) {
+      updates.created_at = formData.admin_created_at
+    }
+    if (formData.admin_accepted_at) {
+      updates.accepted_at = formData.admin_accepted_at
+    }
+  }
+
   const { error } = await supabase
     .from("quote_requests")
-    .update({ form_data: formData })
+    .update(updates)
     .eq("id", quoteId)
 
   if (error) {
