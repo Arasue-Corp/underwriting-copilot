@@ -151,7 +151,7 @@ export function TaskModal({ isOpen, onClose, onSuccess, clients, agents, userPro
     }
   }
 
-  const isManagerOrAdmin = userProfile?.role === 'MANAGER' || userProfile?.(role === 'ADMIN' || role === 'DEMO')
+  const isManagerOrAdmin = userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')
 
   return (
     <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">

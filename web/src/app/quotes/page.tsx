@@ -628,7 +628,7 @@ export default function QuotesPage() {
                   </div>
 
                   <div className="pt-2 pl-2 flex gap-2">
-                    {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
+                    {(userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO') && (
                       <button 
                         onClick={() => setLogsQuote(quote)}
                         title="Ver registro de actividad"
@@ -645,7 +645,7 @@ export default function QuotesPage() {
                       <Eye className="w-5 h-5" />
                     </button>
                     
-                    {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.(role === 'ADMIN' || role === 'DEMO')) && (
+                    {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
                       <button 
                         onClick={() => setAssignQuote(quote)}
                         title={t.reassignTitle}
@@ -734,7 +734,7 @@ export default function QuotesPage() {
                         </select>
                       </td>
                       <td className="px-6 py-4 text-right flex justify-end space-x-2">
-                        {userProfile?.(role === 'ADMIN' || role === 'DEMO') && (
+                        {(userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO') && (
                           <button 
                             onClick={() => setLogsQuote(quote)}
                             title="Ver registro de actividad"
@@ -751,7 +751,7 @@ export default function QuotesPage() {
                           <Eye className="w-4 h-4" />
                         </button>
                         
-                        {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || userProfile?.(role === 'ADMIN' || role === 'DEMO')) && (
+                        {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
                           <div className="inline-flex space-x-2">
                             <button 
                               onClick={() => setAssignQuote(quote)}
@@ -769,7 +769,7 @@ export default function QuotesPage() {
                             </button>
                           </div>
                         )}
-                        {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || userProfile?.(role === 'ADMIN' || role === 'DEMO')) && (
+                        {(quote.agent_id === userProfile?.id || userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
                           <div className="inline-flex space-x-2">
                             <button 
                               onClick={() => setEditQuoteRequest(quote)}
@@ -805,7 +805,7 @@ export default function QuotesPage() {
                              </button>
                            </div>
                         ) : (
-                          (userProfile?.(role === 'ADMIN' || role === 'DEMO') || userProfile?.role === 'MANAGER' || quote.assigned_to === userProfile?.id) && (
+                          ((userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO') || userProfile?.role === 'MANAGER' || quote.assigned_to === userProfile?.id) && (
                             <button 
                               onClick={() => {
                                 setProcessQuote(quote)
