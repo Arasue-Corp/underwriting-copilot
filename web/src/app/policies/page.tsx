@@ -3,9 +3,11 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { getPolicies, deletePolicy } from "@/app/actions/policies"
-import { ShieldCheck, Plus, Search, Edit2, Trash2 } from "lucide-react"
+import { ShieldCheck, Plus, Search, Edit2, Trash2, Eye, FileText } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
 import { PolicyModal } from "@/components/policies/PolicyModal"
+import { PolicyDetailsModal } from "@/components/policies/PolicyDetailsModal"
+import { PolicyDocumentsModal } from "@/components/policies/PolicyDocumentsModal"
 
 export default function PoliciesPage() {
   const lang = useLanguage()
@@ -15,6 +17,8 @@ export default function PoliciesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingPolicy, setEditingPolicy] = useState<any | null>(null)
+  const [viewingPolicy, setViewingPolicy] = useState<any | null>(null)
+  const [documentsPolicy, setDocumentsPolicy] = useState<any | null>(null)
 
   const t = {
     es: {
@@ -30,6 +34,11 @@ export default function PoliciesPage() {
       carrier: "Compañía",
       premium: "Premium",
       commission: "Comisión (Agencia)",
+      agent: "Vendedor",
+      coverage: "Cobertura",
+      state: "Estado",
+      city: "Ciudad",
+      zip: "Zip Code",
       actions: "Acciones",
       edit: "Editar",
       delete: "Eliminar",
@@ -50,6 +59,11 @@ export default function PoliciesPage() {
       carrier: "Carrier",
       premium: "Premium",
       commission: "Commission (Agency)",
+      agent: "Agent",
+      coverage: "Coverage",
+      state: "State",
+      city: "City",
+      zip: "Zip Code",
       actions: "Actions",
       edit: "Edit",
       delete: "Delete",
@@ -152,6 +166,11 @@ export default function PoliciesPage() {
                 <th className="px-6 py-4 font-medium">{t.client}</th>
                 <th className="px-6 py-4 font-medium">{t.type}</th>
                 <th className="px-6 py-4 font-medium">{t.carrier}</th>
+                <th className="px-6 py-4 font-medium hidden xl:table-cell">{t.coverage}</th>
+                <th className="px-6 py-4 font-medium hidden xl:table-cell">{t.agent}</th>
+                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.state}</th>
+                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.city}</th>
+                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.zip}</th>
                 <th className="px-6 py-4 font-medium">{t.premium}</th>
                 <th className="px-6 py-4 font-medium">{t.commission}</th>
                 <th className="px-6 py-4 font-medium text-right">{t.actions}</th>
@@ -184,6 +203,11 @@ export default function PoliciesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium">{policy.carrier_id}</td>
+                    <td className="px-6 py-4 text-muted-foreground hidden xl:table-cell">{policy.coverage}</td>
+                    <td className="px-6 py-4 text-muted-foreground hidden xl:table-cell">{policy.agent?.name}</td>
+                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.state}</td>
+                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.city}</td>
+                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.zip_code}</td>
                     <td className="px-6 py-4 font-semibold text-foreground">
                       ${Number(policy.premium_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
                     </td>
@@ -193,6 +217,20 @@ export default function PoliciesPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => setViewingPolicy(policy)}
+                          className="p-2 hover:bg-blue-500/10 rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={() => setDocumentsPolicy(policy)}
+                          className="p-2 hover:bg-violet-500/10 rounded-lg text-muted-foreground hover:text-violet-600 transition-colors"
+                          title="Documents"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </button>
                         <button
                           onClick={() => { setEditingPolicy(policy); setIsModalOpen(true) }}
                           className="p-2 hover:bg-muted rounded-lg text-muted-foreground hover:text-foreground transition-colors"
@@ -223,6 +261,22 @@ export default function PoliciesPage() {
         onSuccess={() => { setIsModalOpen(false); loadPolicies() }}
         policy={editingPolicy}
       />
+      
+      {viewingPolicy && (
+        <PolicyDetailsModal 
+          isOpen={!!viewingPolicy}
+          onClose={() => setViewingPolicy(null)}
+          policy={viewingPolicy}
+        />
+      )}
+
+      {documentsPolicy && (
+        <PolicyDocumentsModal 
+          isOpen={!!documentsPolicy}
+          onClose={() => setDocumentsPolicy(null)}
+          policy={documentsPolicy}
+        />
+      )}
     </div>
   )
 }

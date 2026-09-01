@@ -1,0 +1,95 @@
+--- web/src/app/policies/page.tsx
++++ web/src/app/policies/page.tsx
+@@ -6,7 +6,7 @@
+-import { ShieldCheck, Plus, Search, Edit2, Trash2 } from "lucide-react"
++import { ShieldCheck, Plus, Search, Edit2, Trash2, Eye, FileText } from "lucide-react"
+ import { useLanguage } from "@/components/language-provider"
+ import { PolicyModal } from "@/components/policies/PolicyModal"
++import { PolicyDetailsModal } from "@/components/policies/PolicyDetailsModal"
++import { PolicyDocumentsModal } from "@/components/policies/PolicyDocumentsModal"
+ 
+ export default function PoliciesPage() {
+   const lang = useLanguage()
+@@ -16,6 +16,8 @@
+   const [searchTerm, setSearchTerm] = useState("")
+   const [isModalOpen, setIsModalOpen] = useState(false)
+   const [editingPolicy, setEditingPolicy] = useState<any | null>(null)
++  const [viewingPolicy, setViewingPolicy] = useState<any | null>(null)
++  const [documentsPolicy, setDocumentsPolicy] = useState<any | null>(null)
+ 
+   const t = {
+     es: {
+@@ -31,6 +33,11 @@
+       carrier: "Compañía",
+       premium: "Premium",
+       commission: "Comisión (Agencia)",
++      agent: "Vendedor",
++      coverage: "Cobertura",
++      state: "Estado",
++      city: "Ciudad",
++      zip: "Zip Code",
+       actions: "Acciones",
+       edit: "Editar",
+@@ -53,6 +60,11 @@
+       carrier: "Carrier",
+       premium: "Premium",
+       commission: "Commission (Agency)",
++      agent: "Agent",
++      coverage: "Coverage",
++      state: "State",
++      city: "City",
++      zip: "Zip Code",
+       actions: "Actions",
+       edit: "Edit",
+@@ -155,6 +167,11 @@
+                 <th className="px-6 py-4 font-medium">{t.carrier}</th>
++                <th className="px-6 py-4 font-medium hidden xl:table-cell">{t.coverage}</th>
++                <th className="px-6 py-4 font-medium hidden xl:table-cell">{t.agent}</th>
++                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.state}</th>
++                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.city}</th>
++                <th className="px-6 py-4 font-medium hidden 2xl:table-cell">{t.zip}</th>
+                 <th className="px-6 py-4 font-medium">{t.premium}</th>
+                 <th className="px-6 py-4 font-medium">{t.commission}</th>
+@@ -187,6 +204,11 @@
+                     <td className="px-6 py-4 font-medium">{policy.carrier_id}</td>
++                    <td className="px-6 py-4 text-muted-foreground hidden xl:table-cell">{policy.coverage}</td>
++                    <td className="px-6 py-4 text-muted-foreground hidden xl:table-cell">{policy.agent?.name}</td>
++                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.state}</td>
++                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.city}</td>
++                    <td className="px-6 py-4 text-muted-foreground hidden 2xl:table-cell">{policy.zip_code}</td>
+                     <td className="px-6 py-4 font-semibold text-foreground">
+@@ -194,6 +216,16 @@
+                     <td className="px-6 py-4 text-right">
+                       <div className="flex items-center justify-end gap-2">
++                        <button
++                          onClick={() => setViewingPolicy(policy)}
++                          className="p-2 hover:bg-blue-500/10 rounded-lg text-muted-foreground hover:text-blue-600 transition-colors"
++                        >
++                          <Eye className="h-4 w-4" />
++                        </button>
++                        <button
++                          onClick={() => setDocumentsPolicy(policy)}
++                          className="p-2 hover:bg-violet-500/10 rounded-lg text-muted-foreground hover:text-violet-600 transition-colors"
++                        >
++                          <FileText className="h-4 w-4" />
++                        </button>
+                         <button
+@@ -226,6 +258,16 @@
+         onSuccess={() => { setIsModalOpen(false); loadPolicies() }}
+         policy={editingPolicy}
+       />
++      
++      <PolicyDetailsModal 
++        isOpen={!!viewingPolicy}
++        onClose={() => setViewingPolicy(null)}
++        policy={viewingPolicy}
++      />
++
++      <PolicyDocumentsModal 
++        isOpen={!!documentsPolicy}
++        onClose={() => setDocumentsPolicy(null)}
++        policy={documentsPolicy}
++      />
+     </div>
+   )
+ }
