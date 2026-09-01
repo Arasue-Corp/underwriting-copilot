@@ -7,9 +7,10 @@ import UploadLogo from "../UploadLogo"
 
 interface ClientDirectoryProps {
   clients: any[]
+  userRole?: string
 }
 
-export function ClientDirectory({ clients }: ClientDirectoryProps) {
+export function ClientDirectory({ clients, userRole }: ClientDirectoryProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null)
 
   return (
@@ -78,6 +79,7 @@ export function ClientDirectory({ clients }: ClientDirectoryProps) {
         isOpen={!!selectedClientId} 
         onClose={() => setSelectedClientId(null)} 
         initialClientId={selectedClientId} 
+        userRole={userRole}
       />
     </>
   )

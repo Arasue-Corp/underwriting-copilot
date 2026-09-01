@@ -12,9 +12,10 @@ interface GenericQuoteModalProps {
   onClose: () => void
   language?: 'en' | 'es'
   initialClientId?: string | null
+  userRole?: string
 }
 
-export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialClientId = null }: GenericQuoteModalProps) {
+export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialClientId = null, userRole }: GenericQuoteModalProps) {
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [quoteCategory, setQuoteCategory] = useState<'commercial' | 'personal'>('commercial')
@@ -360,6 +361,21 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
           {/* Step 1: General Info & Product Selection */}
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+              
+              {userRole === 'ADMIN' && (
+                <div className="mb-6 p-4 bg-primary/5 border border-primary/20 rounded-xl space-y-3">
+                  <label className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                    {language === 'es' ? 'Fecha de Solicitud (Administrador)' : 'Request Date (Admin)'}
+                  </label>
+                  <input 
+                    type="date" 
+                    value={formData.general_created_at || ''}
+                    onChange={(e) => setFormData({ ...formData, general_created_at: e.target.value })}
+                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+              )}
+
               <div>
                 <h3 className="text-lg font-semibold mb-4">
                   {language === 'es' ? 'Información General (Obligatoria)' : 'General Information (Required)'}

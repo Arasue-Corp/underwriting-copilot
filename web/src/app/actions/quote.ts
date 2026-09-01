@@ -26,6 +26,7 @@ export async function submitQuoteRequest(formData: FormData) {
 
     let clientName = formData.get("client_name") as string
     const carrierId = formData.get("carrier_name") as string
+    const createdAt = formData.get("created_at") as string
     
     const products = JSON.parse((formData.get("products") as string) || "[]")
     const rawFormData = JSON.parse((formData.get("form_data") as string) || "{}")
@@ -82,7 +83,7 @@ export async function submitQuoteRequest(formData: FormData) {
       }
     }
 
-    const { error } = await supabase.from("quote_requests").insert({
+    const insertData: any = {
       agent_id: user.id,
       agency_id: profile.agency_id,
       client_name: clientName,
@@ -92,7 +93,13 @@ export async function submitQuoteRequest(formData: FormData) {
       products: products,
       form_data: rawFormData,
       status: "PENDING_MANAGER"
-    })
+    }
+    
+    if (createdAt) {
+      insertData.created_at = createdAt
+    }
+
+    const { error } = await supabase.from("quote_requests").insert(insertData)
 
     if (error) {
       console.error("Error submitting quote:", error)
