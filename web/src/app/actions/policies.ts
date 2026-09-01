@@ -10,8 +10,8 @@ export async function getPolicies() {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role, agency_id").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN', 'DEMO'].includes(profile.role)) {
-    return { success: false, error: "Unauthorized role." }
+  if (!profile) {
+    return { success: false, error: "Profile not found." }
   }
 
   const { data, error } = await supabase
