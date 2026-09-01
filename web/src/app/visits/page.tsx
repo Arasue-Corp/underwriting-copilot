@@ -87,6 +87,14 @@ export default function VisitsPage() {
       .single()
       
     setUserProfile(profile)
+    
+    if (profile?.role === 'DEMO') {
+      const { demoVisits, demoClients } = await import('@/lib/demo-data');
+      setVisits(demoVisits);
+      setClients(demoClients);
+      setLoading(false);
+      return;
+    }
 
     const [vData, aData, cDataRes] = await Promise.all([
       getVisits(),

@@ -79,11 +79,30 @@ export default function CalendarPage() {
     const loadData = async () => {
       setLoading(true)
       try {
-        const [tasks, visits] = await Promise.all([
-          getTasks(),
-          getVisits()
-        ])
+        const { createClient } = await import('@/lib/supabase/client')
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        let isDemo = false;
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+          if (profile?.role === 'DEMO') isDemo = true;
+        }
 
+        let tasks = [];
+        let visits = [];
+
+        if (isDemo) {
+          const { demoTasks, demoVisits } = await import('@/lib/demo-data');
+          tasks = demoTasks;
+          visits = demoVisits;
+        } else {
+          const results = await Promise.all([
+            getTasks(),
+            getVisits()
+          ]);
+          tasks = results[0];
+          visits = results[1];
+        }
         const taskEvents = tasks.map((task: any) => ({
           id: `task-${task.id}`,
           title: `[Tarea] ${task.client?.name || 'Sin Cliente'}: ${task.note}`,

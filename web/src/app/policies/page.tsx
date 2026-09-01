@@ -65,9 +65,23 @@ export default function PoliciesPage() {
 
   async function loadPolicies() {
     setLoading(true)
-    const res = await getPolicies()
-    if (res.success && res.policies) {
-      setPolicies(res.policies)
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    let isDemo = false;
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      if (profile?.role === 'DEMO') isDemo = true;
+    }
+    
+    if (isDemo) {
+      const { demoPolicies } = await import('@/lib/demo-data');
+      setPolicies(demoPolicies);
+    } else {
+      const res = await getPolicies()
+      if (res.success && res.policies) {
+        setPolicies(res.policies)
+      }
     }
     setLoading(false)
   }

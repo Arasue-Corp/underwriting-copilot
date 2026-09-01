@@ -93,7 +93,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   if (startDate) quotesQuery = quotesQuery.gte('created_at', `${startDate}T00:00:00.000Z`);
   if (endDate) quotesQuery = quotesQuery.lte('created_at', `${endDate}T23:59:59.999Z`);
   
-  if ((role === 'ADMIN' || role === 'DEMO')) {
+  if (role === 'ADMIN') {
     if (agencyId) quotesQuery = quotesQuery.eq('agency_id', agencyId);
     if (agentId) {
       if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
@@ -107,16 +107,26 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
     }
   }
   
-  const { data: quotes, error: quotesError } = await quotesQuery;
-  
+  let quotes: any[] = [];
+  let quotesError = null;
   let visits: any[] = [];
-  if ((role === 'ADMIN' || role === 'DEMO') || role === 'MANAGER') {
-    visits = await getVisits({ 
-      startDate: startDate as string | undefined, 
-      endDate: endDate as string | undefined, 
-      agencyId: agencyId as string | undefined, 
-      agentId: agentId as string | string[] | undefined 
-    });
+  
+  if (role === 'DEMO') {
+    const { demoQuotes, demoVisits } = await import('@/lib/demo-data');
+    quotes = demoQuotes;
+    visits = demoVisits;
+  } else {
+    const { data: dbQuotes, error } = await quotesQuery;
+    quotes = dbQuotes || [];
+    quotesError = error;
+    if (role === 'ADMIN' || role === 'MANAGER') {
+      visits = await getVisits({ 
+        startDate: startDate as string | undefined, 
+        endDate: endDate as string | undefined, 
+        agencyId: agencyId as string | undefined, 
+        agentId: agentId as string | string[] | undefined 
+      });
+    }
   }
   
   if (quotesError) {

@@ -106,6 +106,13 @@ export default function ClientsPage() {
         setAgents([profile])
       }
       
+      if (profile.role === 'DEMO') {
+        const { demoClients } = await import('@/lib/demo-data');
+        setClients(demoClients);
+        setLoading(false);
+        return;
+      }
+      
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select(`

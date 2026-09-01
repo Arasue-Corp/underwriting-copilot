@@ -247,15 +247,23 @@ export default function QuotesPage() {
       if (members) setAgencyMembers(members)
     }
 
-    const { data } = await supabase
-      .from("quote_requests")
-      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
-      .order("created_at", { ascending: false })
-      
     const { data: carriersData } = await supabase.from('carriers').select('name').order('name')
     if (carriersData) {
       setAvailableCarriers(Array.from(new Set(carriersData.map(c => c.name))).sort())
     }
+    
+    if (profile?.role === 'DEMO') {
+      const { demoQuotes } = await import('@/lib/demo-data');
+      setQuotes(demoQuotes.filter((q: any) => !['REJECTED'].includes(q.status)));
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await supabase
+      .from("quote_requests")
+      .select(`*, profiles!agent_id(name, agency_id), assignee:profiles!assigned_to(name), agencies(name, logo_url), quote_documents(id, file_name, file_url, created_at)`)
+      .order("created_at", { ascending: false })
+
     if (data) {
       setQuotes(data.filter((q: any) => !['REJECTED'].includes(q.status)))
     }
