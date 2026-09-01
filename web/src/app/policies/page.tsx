@@ -184,9 +184,12 @@ export default function PoliciesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 font-medium">{policy.carrier_id}</td>
-                    <td className="px-6 py-4"></td>
+                    <td className="px-6 py-4 font-semibold text-foreground">
+                      ${Number(policy.premium_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
                     <td className="px-6 py-4 text-emerald-600 font-semibold">
-                       <span className="text-xs text-muted-foreground">({policy.agency_commission_percentage || 0}%)</span>
+                       ${Number(policy.agency_commission_amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                       <span className="text-xs text-muted-foreground ml-1">({policy.agency_commission_percentage || 0}%)</span>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
