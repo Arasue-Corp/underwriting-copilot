@@ -10,13 +10,13 @@ export async function getPolicies() {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role, agency_id").eq("id", user.id).single()
-  if (!profile) {
-    return { success: false, error: "Profile not found." }
+  if (!profile || !['MANAGER', 'ADMIN'].includes(profile.role)) {
+    return { success: false, error: "Unauthorized role." }
   }
 
   const { data, error } = await supabase
     .from("policies")
-    .select("*, agent:agent_id(first_name, last_name, email)")
+    .select("*, agent:agent_id(name, email)")
     .eq("agency_id", profile.agency_id)
     .order("created_at", { ascending: false })
 
