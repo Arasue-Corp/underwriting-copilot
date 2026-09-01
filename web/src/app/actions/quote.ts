@@ -233,6 +233,10 @@ export async function updateQuoteStatus(quoteId: string, status: string, soldPre
     .update(updates)
     .eq("id", quoteId)
 
+  if (!error && status === "ACCEPTED") {
+    await autoCreatePolicies(quoteId, supabase)
+  }
+
   if (error) {
     console.error("Error updating quote status:", error)
     return { success: false, error: error.message }
@@ -280,6 +284,10 @@ export async function acceptClientQuote(quoteId: string, soldPremium: number, se
     .from("quote_requests")
     .update(updates)
     .eq("id", quoteId)
+
+  if (!error) {
+    await autoCreatePolicies(quoteId, supabase)
+  }
 
   if (error) {
     console.error("Error updating quote status:", error)
@@ -332,6 +340,7 @@ export async function updateQuoteRequestData(quoteId: string, formData: any) {
     .from("quote_requests")
     .update(updates)
     .eq("id", quoteId)
+
 
   if (error) {
     console.error("Error updating quote form data:", error)
