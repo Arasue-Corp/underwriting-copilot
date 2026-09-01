@@ -2,10 +2,12 @@
 
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import { useLanguage } from "@/components/language-provider"
 import { Home, Search, FileText, Users, Database, Building2, ShieldCheck, Layers, Calendar, CalendarDays, History } from "lucide-react"
 
 export default function SidebarNav({ role, t }: { role: string, t: any }) {
   const pathname = usePathname()
+  const lang = useLanguage()
 
   const getActiveClasses = (path: string) => {
     // If path is exactly "/"
