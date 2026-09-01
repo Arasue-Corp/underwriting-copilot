@@ -103,12 +103,20 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
         </>
       )}
       {(role === 'MANAGER' || (role === 'ADMIN' || role === 'DEMO')) && (
-        <li>
-          <Link href="/agency" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/agency")}`}>
-            <Users className={`h-4 w-4 ${getIconClasses("/agency")}`} />
-            {t.myAgency}
-          </Link>
-        </li>
+        <>
+          <li>
+            <Link href="/policies" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/policies")}`}>
+              <ShieldCheck className={`h-4 w-4 ${getIconClasses("/policies")}`} />
+              {lang === 'es' ? 'Pólizas' : 'Policies'}
+            </Link>
+          </li>
+          <li>
+            <Link href="/agency" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/agency")}`}>
+              <Users className={`h-4 w-4 ${getIconClasses("/agency")}`} />
+              {t.myAgency}
+            </Link>
+          </li>
+        </>
       )}
     </ul>
   )
