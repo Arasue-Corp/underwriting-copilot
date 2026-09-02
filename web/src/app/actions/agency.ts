@@ -39,7 +39,7 @@ export async function getAgencyData() {
   // Fetch quote statistics for these agents
   const { data: quotes, error: quotesError } = await supabase
     .from('quote_requests')
-    .select('agent_id, assigned_to, premium_amount, commission_amount, status')
+    .select('agent_id, assigned_to, premium_amount, commission_amount, status, sold_premium, commission_percentage, quotes_provided')
     .eq('agency_id', myProfile.agency_id)
 
   if (quotesError) {
@@ -53,8 +53,14 @@ export async function getAgencyData() {
     const totalQuotes = agentQuotes.length
     const boundQuotes = agentQuotes.filter(q => q.status === 'ACCEPTED')
     
-    const totalPremium = boundQuotes.reduce((acc, q) => acc + (q.premium_amount || 0), 0)
-    const totalCommission = boundQuotes.reduce((acc, q) => acc + (q.commission_amount || 0), 0)
+    let totalPremium = 0;
+    let totalCommission = 0;
+
+    boundQuotes.forEach(q => {
+      totalPremium += q.sold_premium || q.premium_amount || 0;
+      let commAmount = ((q.sold_premium || 0) * (q.commission_percentage || 0)) / 100;
+      totalCommission += commAmount;
+    });
 
     return {
       ...agent,
