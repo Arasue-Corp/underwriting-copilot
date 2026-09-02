@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, useRef } from 'react'
 import { X, Check, AlertCircle } from "lucide-react"
 import { toast } from "sonner"
 import { updateQuoteRequestData } from "@/app/actions/quote"
+import { createClient } from "@/lib/supabase/client"
 import { INSURANCE_PRODUCTS, ProductField } from "@/lib/constants/insuranceProducts"
 
 interface EditQuoteRequestModalProps {
@@ -19,6 +20,7 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
   const [isPending, startTransition] = useTransition()
   const [formData, setFormData] = useState<Record<string, any>>({})
   const [error, setError] = useState<string | null>(null)
+  const [uploadingFiles, setUploadingFiles] = useState<Record<string, boolean>>({})
   const [invalidFields, setInvalidFields] = useState<string[]>([])
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -102,13 +104,82 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
     })
   }
 
+  const handleFileUpload = async (fieldId: string, file: File) => {
+    try {
+      setUploadingFiles(prev => ({ ...prev, [fieldId]: true }))
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("Not authenticated")
+
+      const { data: profile } = await supabase.from("profiles").select("agency_id").eq("id", user.id).single()
+      if (!profile) throw new Error("Profile not found")
+
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${profile.agency_id}/${fileName}`
+
+      const { error: uploadError } = await supabase.storage.from('quote-attachments').upload(filePath, file)
+      if (uploadError) throw uploadError
+
+      // Register attachment in DB
+      await supabase.from('quote-attachments').insert({
+        quote_id: quote.id,
+        file_path: filePath,
+        uploaded_by: user.id
+      })
+
+      // Update form data
+      handleInputChange(fieldId, filePath)
+      toast.success(language === 'es' ? "Archivo subido exitosamente" : "File uploaded successfully")
+    } catch (error: any) {
+      console.error("Upload error:", error)
+      toast.error(language === 'es' ? "Error al subir archivo" : "Error uploading file")
+    } finally {
+      setUploadingFiles(prev => ({ ...prev, [fieldId]: false }))
+    }
+  }
+
   const renderField = (field: ProductField | any) => {
-    // Skip file inputs for editing to avoid complexity of re-uploading
     if (field.type === 'file') {
       const fileValue = formData[field.id]
+      const isUploading = uploadingFiles[field.id]
       return (
-        <div className="space-y-1 w-full p-3 bg-muted/30 rounded-md border text-sm text-muted-foreground">
-          {fileValue ? (language === 'es' ? 'Archivo adjunto previamente.' : 'File previously attached.') : (language === 'es' ? 'Sin archivo adjunto.' : 'No file attached.')}
+        <div className="space-y-2 w-full p-3 bg-muted/30 rounded-md border border-input text-sm text-muted-foreground">
+          {fileValue ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                  {language === 'es' ? '✓ Archivo adjunto' : '✓ File attached'}
+                </span>
+                <button 
+                  type="button" 
+                  onClick={() => handleInputChange(field.id, '')}
+                  className="text-destructive hover:underline text-xs font-medium bg-destructive/10 px-2 py-1 rounded-md"
+                >
+                  {language === 'es' ? 'Eliminar / Cambiar' : 'Remove / Change'}
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground break-all">{fileValue}</p>
+            </div>
+          ) : (
+            <div>
+              <input
+                type="file"
+                disabled={isUploading}
+                onChange={(e) => {
+                  if (e.target.files && e.target.files[0]) {
+                    handleFileUpload(field.id, e.target.files[0])
+                  }
+                }}
+                className="w-full text-sm text-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              {isUploading && (
+                <p className="text-xs text-primary mt-2 flex items-center gap-2">
+                  <span className="animate-spin">⏳</span> {language === 'es' ? 'Subiendo archivo...' : 'Uploading file...'}
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )
     }
