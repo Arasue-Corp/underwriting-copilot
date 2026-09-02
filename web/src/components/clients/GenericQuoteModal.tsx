@@ -39,36 +39,38 @@ export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialCli
   }, [isOpen])
 
   useEffect(() => {
-    if (selectedClientId && clients.length > 0) {
-      const client = clients.find(c => c.id === selectedClientId)
-      if (client) {
+      if (selectedClientId && clients.length > 0) {
+        const client = clients.find(c => c.id === selectedClientId)
+        if (client) {
+          setFormData(prev => ({
+            ...prev,
+            general_first_name: client.first_name || "",
+            general_last_name: client.last_name || "",
+            general_dob: client.dob || "",
+            general_client_name: client.name,
+            general_legal_structure: client.legal_structure || "",
+            general_fein: client.fein || "",
+            general_contact: client.contact || "",
+            general_address: client.address || ""
+          }))
+          // clear errors for these fields
+          setInvalidFields(prev => prev.filter(f => !['general_first_name', 'general_last_name', 'general_dob', 'general_client_name', 'general_legal_structure', 'general_fein', 'general_contact', 'general_address'].includes(f)))
+        }
+      } else if (selectedClientId === 'new') {
+        // Clear specific fields if "new client" is selected
         setFormData(prev => ({
           ...prev,
-          general_first_name: client.first_name || "",
-          general_last_name: client.last_name || "",
-          general_client_name: client.name,
-          general_legal_structure: client.legal_structure || "",
-          general_fein: client.fein || "",
-          general_contact: client.contact || "",
-          general_address: client.address || ""
+          general_first_name: "",
+          general_last_name: "",
+          general_dob: "",
+          general_client_name: "",
+          general_legal_structure: "",
+          general_fein: "",
+          general_contact: "",
+          general_address: ""
         }))
-        // clear errors for these fields
-        setInvalidFields(prev => prev.filter(f => !['general_first_name', 'general_last_name', 'general_client_name', 'general_legal_structure', 'general_fein', 'general_contact', 'general_address'].includes(f)))
       }
-    } else if (selectedClientId === 'new') {
-      // Clear specific fields if "new client" is selected
-      setFormData(prev => ({
-        ...prev,
-        general_first_name: "",
-        general_last_name: "",
-        general_client_name: "",
-        general_legal_structure: "",
-        general_fein: "",
-        general_contact: "",
-        general_address: ""
-      }))
-    }
-  }, [selectedClientId, clients])
+    }, [selectedClientId, clients])
 
   if (!isOpen) return null
 

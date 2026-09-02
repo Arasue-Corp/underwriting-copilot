@@ -42,6 +42,7 @@ export async function submitQuoteRequest(formData: FormData) {
     const clientContact = rawFormData.general_contact || null;
     const clientFirstName = rawFormData.general_first_name || null;
     const clientLastName = rawFormData.general_last_name || null;
+    const clientDob = rawFormData.general_dob || null;
     
     // Upsert client
     if (clientName) {
@@ -52,6 +53,7 @@ export async function submitQuoteRequest(formData: FormData) {
           name: clientName,
           first_name: clientFirstName,
           last_name: clientLastName,
+          dob: clientDob,
           legal_structure: clientLegalStructure,
           fein: clientFein,
           address: clientAddress,

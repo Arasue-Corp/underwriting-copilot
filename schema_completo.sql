@@ -858,3 +858,5 @@ CREATE POLICY "Users can view quote attachments"
 CREATE POLICY "Users can insert quote attachments"
     ON public.quote_attachments FOR INSERT
     WITH CHECK (auth.role() = 'authenticated');
+ALTER TABLE public.clients
+ADD COLUMN dob text;
