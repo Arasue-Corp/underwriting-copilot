@@ -1,5 +1,4 @@
--- ===== 00000000000000_initial_schema.sql =====
--- Initial Schema for Underwriting Co-Pilot
+﻿-- Initial Schema for Underwriting Co-Pilot
 
 -- Create Enums
 CREATE TYPE profile_role AS ENUM ('ADMIN', 'MANAGER', 'AGENT');
@@ -196,9 +195,6 @@ CREATE POLICY "Managers can update agency quotes"
         get_user_role() = 'MANAGER' 
         AND agency_id = get_user_agency()
     );
-
-
--- ===== 00000000000001_storage_rules.sql =====
 -- Create quotes-bucket
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('quotes-bucket', 'quotes-bucket', false)
@@ -233,9 +229,6 @@ USING (
     )
 );
 -- Note: A more strict storage policy would parse the path, e.g. (storage.foldername(name))[1] = public.get_user_agency()::text
-
-
--- ===== 00000000000002_appetite_enrichment.sql =====
 -- Add new columns to appetite_rules for richer data extraction
 
 ALTER TABLE public.appetite_rules 
@@ -245,9 +238,6 @@ ADD COLUMN IF NOT EXISTS mandatory_endorsements JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS key_exclusions JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS underwriting_guidelines JSONB DEFAULT '[]'::jsonb,
 ADD COLUMN IF NOT EXISTS deductibles JSONB DEFAULT '[]'::jsonb;
-
-
--- ===== 00000000000003_appetite_matrix.sql =====
 CREATE TABLE public.appetite_matrix (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     carrier_name TEXT NOT NULL,
@@ -282,9 +272,6 @@ CREATE POLICY "Everyone can read appetite matrix"
 CREATE POLICY "Admins can insert appetite matrix"
     ON public.appetite_matrix FOR INSERT
     WITH CHECK (get_user_role() = 'ADMIN');
-
-
--- ===== 00000000000004_auth_trigger.sql =====
 -- Trigger to automatically create a profile when a new user signs up
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
@@ -306,14 +293,11 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
 
--- Opcional: Backfill para arreglar los usuarios huérfanos que ya creaste antes del trigger
+-- Opcional: Backfill para arreglar los usuarios huÃ©rfanos que ya creaste antes del trigger
 INSERT INTO public.profiles (id, email, name, role)
 SELECT id, email, split_part(email, '@', 1), 'AGENT'
 FROM auth.users
 WHERE id NOT IN (SELECT id FROM public.profiles);
-
-
--- ===== 00000000000005_quote_dynamic_fields.sql =====
 -- 1. Update quote_requests table
 ALTER TABLE public.quote_requests
 ADD COLUMN products JSONB DEFAULT '[]'::jsonb,
@@ -347,9 +331,6 @@ USING (
         OR public.get_user_role() = 'AGENT'
     )
 );
-
-
--- ===== 00000000000006_quote_improvements.sql =====
 -- 1. Add new columns to quote_requests table
 ALTER TABLE public.quote_requests
 ADD COLUMN assigned_to UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
@@ -363,9 +344,6 @@ CREATE POLICY "Assigned users can read their assigned quotes"
 CREATE POLICY "Assigned users can update their assigned quotes"
     ON public.quote_requests FOR UPDATE
     USING (assigned_to = auth.uid());
-
-
--- ===== 00000000000007_clients_table.sql =====
 -- Crear la tabla clients
 CREATE TABLE IF NOT EXISTS public.clients (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -395,7 +373,7 @@ CREATE TRIGGER handle_clients_updated_at BEFORE UPDATE ON public.clients
 -- Habilitar RLS
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 
--- Políticas
+-- PolÃ­ticas
 CREATE POLICY "Users can view clients from their agency"
     ON public.clients FOR SELECT
     USING (
@@ -425,9 +403,6 @@ CREATE POLICY "Users can update clients from their agency"
             AND profiles.agency_id = clients.agency_id
         )
     );
-
-
--- ===== 00000000000008_requests_improvements.sql =====
 -- Crear el bucket de quote-attachments si no existe
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('quote-attachments', 'quote-attachments', true)
@@ -458,21 +433,18 @@ ALTER TYPE quote_status ADD VALUE IF NOT EXISTS 'PENDING_AGENT';
 ALTER TYPE quote_status ADD VALUE IF NOT EXISTS 'SUBMITTED_TO_CARRIER';
 ALTER TYPE quote_status ADD VALUE IF NOT EXISTS 'REJECTED';
 ALTER TYPE quote_status ADD VALUE IF NOT EXISTS 'ACCEPTED';
-
-
--- ===== 00000000000009_fix_quotes_bucket.sql =====
--- Arreglar el quotes-bucket (hacerlo público y asegurar que exista)
+-- Arreglar el quotes-bucket (hacerlo pÃºblico y asegurar que exista)
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('quotes-bucket', 'quotes-bucket', true)
 ON CONFLICT (id) DO UPDATE SET public = true;
 
--- Limpiar políticas anteriores
+-- Limpiar polÃ­ticas anteriores
 DROP POLICY IF EXISTS "Managers can upload quotes" ON storage.objects;
 DROP POLICY IF EXISTS "Users can view relevant quotes" ON storage.objects;
 DROP POLICY IF EXISTS "Users can upload to quotes-bucket" ON storage.objects;
 DROP POLICY IF EXISTS "Public can view quotes-bucket" ON storage.objects;
 
--- Crear política de subida para Managers y Admins
+-- Crear polÃ­tica de subida para Managers y Admins
 CREATE POLICY "Users can upload to quotes-bucket"
 ON storage.objects FOR INSERT
 WITH CHECK (
@@ -481,25 +453,19 @@ WITH CHECK (
     AND (public.get_user_role() = 'MANAGER' OR public.get_user_role() = 'ADMIN')
 );
 
--- Crear política de lectura pública (para que getPublicUrl funcione sin problemas)
+-- Crear polÃ­tica de lectura pÃºblica (para que getPublicUrl funcione sin problemas)
 CREATE POLICY "Public can view quotes-bucket"
 ON storage.objects FOR SELECT
 USING ( bucket_id = 'quotes-bucket' );
-
-
--- ===== 00000000000010_agent_admin_quote_update.sql =====
 -- Permitir a los agentes actualizar el estatus de sus propias cotizaciones
 CREATE POLICY "Agents can update their own quotes"
     ON public.quote_requests FOR UPDATE
     USING (agent_id = auth.uid());
 
--- Permitir a los admins actualizar cualquier cotización
+-- Permitir a los admins actualizar cualquier cotizaciÃ³n
 CREATE POLICY "Admins can update all quotes"
     ON public.quote_requests FOR UPDATE
     USING (get_user_role() = 'ADMIN');
-
-
--- ===== 00000000000011_add_client_logo.sql =====
 -- Add logo_url to clients table
 ALTER TABLE public.clients
 ADD COLUMN logo_url TEXT;
@@ -527,14 +493,11 @@ USING (
     bucket_id = 'logos'
     AND auth.role() = 'authenticated'
 );
-
-
--- ===== 00000000000012_kpi_clients_documents.sql =====
--- Agregar fecha de aceptación a la tabla quote_requests
+-- Agregar fecha de aceptaciÃ³n a la tabla quote_requests
 ALTER TABLE public.quote_requests
 ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ;
 
--- Crear tabla para los documentos adjuntos de la cotización
+-- Crear tabla para los documentos adjuntos de la cotizaciÃ³n
 CREATE TABLE IF NOT EXISTS public.quote_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     quote_id UUID NOT NULL REFERENCES public.quote_requests(id) ON DELETE CASCADE,
@@ -547,7 +510,7 @@ CREATE TABLE IF NOT EXISTS public.quote_documents (
 -- Habilitar RLS en quote_documents
 ALTER TABLE public.quote_documents ENABLE ROW LEVEL SECURITY;
 
--- Políticas para quote_documents
+-- PolÃ­ticas para quote_documents
 CREATE POLICY "Public can view quote documents"
     ON public.quote_documents FOR SELECT
     USING (true);
@@ -559,9 +522,6 @@ CREATE POLICY "Authenticated users can insert quote documents"
 CREATE POLICY "Authenticated users can delete quote documents"
     ON public.quote_documents FOR DELETE
     USING (auth.role() = 'authenticated');
-
-
--- ===== 00000000000013_manager_admin_quote_insert.sql =====
 -- Allow Managers to insert quotes on behalf of their agents (e.g. duplicating)
 CREATE POLICY "Managers can insert quotes for their agency"
     ON public.quote_requests FOR INSERT
@@ -576,31 +536,19 @@ CREATE POLICY "Admins can insert any quote"
     WITH CHECK (
         get_user_role() = 'ADMIN'
     );
-
-
--- ===== 00000000000014_add_client_names.sql =====
 -- Add first_name and last_name to clients table
 ALTER TABLE public.clients ADD COLUMN first_name TEXT;
 ALTER TABLE public.clients ADD COLUMN last_name TEXT;
-
-
--- ===== 00000000000015_add_agency_details.sql =====
 -- Add address and phone to agencies
 ALTER TABLE public.agencies
 ADD COLUMN IF NOT EXISTS address TEXT,
 ADD COLUMN IF NOT EXISTS phone TEXT;
-
-
--- ===== 00000000000017_add_visit_contact_fields.sql =====
 -- Add contact details to visits table
 ALTER TABLE public.visits 
 ADD COLUMN IF NOT EXISTS contact_method TEXT,
 ADD COLUMN IF NOT EXISTS contact_method_other TEXT,
 ADD COLUMN IF NOT EXISTS contact_reason TEXT,
 ADD COLUMN IF NOT EXISTS contact_reason_other TEXT;
-
-
--- ===== 00000000000018_activity_logs.sql =====
 CREATE TABLE IF NOT EXISTS public.activity_logs (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     entity_type TEXT NOT NULL,
@@ -671,9 +619,6 @@ DROP TRIGGER IF EXISTS log_carriers ON public.carriers;
 CREATE TRIGGER log_carriers
 AFTER INSERT OR UPDATE OR DELETE ON public.carriers
 FOR EACH ROW EXECUTE FUNCTION log_activity();
-
-
--- ===== 00000000000019_tasks_and_notifications.sql =====
 CREATE TABLE IF NOT EXISTS public.tasks (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     client_id UUID REFERENCES public.clients(id) ON DELETE CASCADE,
@@ -764,14 +709,7 @@ DROP TRIGGER IF EXISTS log_tasks ON public.tasks;
 CREATE TRIGGER log_tasks
 AFTER INSERT OR UPDATE OR DELETE ON public.tasks
 FOR EACH ROW EXECUTE FUNCTION log_activity();
-
-
--- ===== 00000000000020_add_demo_role.sql =====
-A L T E R   T Y P E   p r o f i l e _ r o l e   A D D   V A L U E   I F   N O T   E X I S T S   ' D E M O ' ; 
- 
- 
-
--- ===== 00000000000021_demo_read_policies.sql =====
+ALTER TYPE profile_role ADD VALUE IF NOT EXISTS 'DEMO';
 CREATE POLICY "Demo can view all agencies" ON public.agencies FOR SELECT USING (get_user_role() = 'DEMO');
 CREATE POLICY "Demo can view all profiles" ON public.profiles FOR SELECT USING (get_user_role() = 'DEMO');
 CREATE POLICY "Demo can read all quotes" ON public.quote_requests FOR SELECT USING (get_user_role() = 'DEMO');
@@ -780,16 +718,9 @@ CREATE POLICY "Demo can read all clients" ON public.clients FOR SELECT USING (ge
 CREATE POLICY "Demo can view all tasks" ON public.tasks FOR SELECT USING (get_user_role() = 'DEMO');
 CREATE POLICY "Demo can view all visits" ON public.visits FOR SELECT USING (get_user_role() = 'DEMO');
 CREATE POLICY "Demo can view all carriers" ON public.carriers FOR SELECT USING (get_user_role() = 'DEMO');
-
-
--- ===== 00000000000022_add_client_status.sql =====
-C R E A T E   T Y P E   c l i e n t _ s t a t u s   A S   E N U M   ( ' C L I E N T E ' ,   ' S E G U I M I E N T O ' ,   ' R E C H A Z O ' ) ; 
- A L T E R   T A B L E   p u b l i c . c l i e n t s   A D D   C O L U M N   I F   N O T   E X I S T S   s t a t u s   c l i e n t _ s t a t u s   D E F A U L T   ' S E G U I M I E N T O ' ; 
- 
- 
-
--- ===== 00000000000022_policies_module.sql =====
-﻿-- Create policies table
+CREATE TYPE client_status AS ENUM ('CLIENTE', 'SEGUIMIENTO', 'RECHAZO');
+ALTER TABLE public.clients ADD COLUMN IF NOT EXISTS status client_status DEFAULT 'SEGUIMIENTO';
+-- Create policies table
 CREATE TABLE IF NOT EXISTS public.policies (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     policy_number TEXT,
@@ -830,9 +761,6 @@ USING (get_user_role() = 'MANAGER');
 CREATE POLICY "Demo can read policies" 
 ON public.policies FOR SELECT 
 USING (get_user_role() = 'DEMO');
-
-
--- ===== 00000000000023_demo_sandboxed_policies.sql =====
 -- Drop old open policies
 DROP POLICY IF EXISTS "Demo can view all agencies" ON public.agencies;
 DROP POLICY IF EXISTS "Demo can view all profiles" ON public.profiles;
@@ -892,9 +820,6 @@ CREATE POLICY "Demo can view all carriers"
 ON public.carriers FOR SELECT 
 USING (get_user_role() = 'DEMO');
 
-
-
--- ===== 00000000000024_policy_documents_bucket.sql =====
 -- Create policy-documents bucket if it doesn't exist
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('policy-documents', 'policy-documents', false)
@@ -916,5 +841,20 @@ CREATE POLICY "Demo users can read policy-documents"
 ON storage.objects FOR SELECT
 USING ( bucket_id = 'policy-documents' AND public.get_user_role() = 'DEMO' );
 
+CREATE TABLE IF NOT EXISTS public.quote_attachments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    quote_id UUID REFERENCES public.quote_requests(id) ON DELETE CASCADE,
+    file_path TEXT NOT NULL,
+    uploaded_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 
+ALTER TABLE public.quote_attachments ENABLE ROW LEVEL SECURITY;
 
+CREATE POLICY "Users can view quote attachments"
+    ON public.quote_attachments FOR SELECT
+    USING (true);
+
+CREATE POLICY "Users can insert quote attachments"
+    ON public.quote_attachments FOR INSERT
+    WITH CHECK (auth.role() = 'authenticated');

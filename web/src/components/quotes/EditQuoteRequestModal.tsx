@@ -134,7 +134,7 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
       if (uploadError) throw uploadError
 
       // Register attachment in DB
-      await supabase.from('quote-attachments').insert({
+      await supabase.from('quote_attachments').insert({
         quote_id: quote.id,
         file_path: filePath,
         uploaded_by: user.id
