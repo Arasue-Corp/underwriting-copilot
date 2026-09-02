@@ -57,18 +57,30 @@ export function EditQuoteRequestModal({ isOpen, onClose, onSuccess, quote, langu
       }
     }
 
+    const quoteCategory = formData.general_quote_category || 'commercial'
+
     // Step 1 general fields
-    const requiredStep1 = [
-      { id: 'general_first_name', label: language === 'es' ? 'Nombre del Solicitante' : 'Applicant First Name', type: 'text', required: true },
-      { id: 'general_last_name', label: language === 'es' ? 'Apellido del Solicitante' : 'Applicant Last Name', type: 'text', required: true },
-      { id: 'general_client_name', label: language === 'es' ? 'Nombre Legal de la Empresa y DBA' : 'Legal Business Name and DBA', type: 'text', required: true },
-      { id: 'general_legal_structure', label: language === 'es' ? 'Estructura Legal' : 'Legal Structure', type: 'select', required: true },
-      { id: 'general_fein', label: 'FEIN', type: 'text', required: true },
-      { id: 'general_contact', label: language === 'es' ? 'Medio de Contacto (Tel o Email)' : 'Contact Method (Phone or Email)', type: 'text', required: true },
-      { id: 'general_address', label: language === 'es' ? 'Dirección Física' : 'Physical Address', type: 'text', required: true },
-      { id: 'general_operations', label: language === 'es' ? 'Descripción Detallada de las Operaciones' : 'Detailed Operations Description', type: 'textarea', required: true },
-      { id: 'general_experience_years', label: language === 'es' ? 'Años de Experiencia en la Industria' : 'Years of Industry Experience', type: 'number', required: true },
+    const requiredStep1: any[] = [
+      { id: 'general_first_name', type: 'text', required: true },
+      { id: 'general_last_name', type: 'text', required: true },
+      { id: 'general_contact', type: 'text', required: true },
+      { id: 'general_address', type: 'text', required: true },
     ]
+
+    if (quoteCategory === 'commercial') {
+      requiredStep1.push(
+        { id: 'general_client_name', type: 'text', required: true },
+        { id: 'general_legal_structure', type: 'select', required: true },
+        { id: 'general_fein', type: 'text', required: true },
+        { id: 'general_operations', type: 'textarea', required: true },
+        { id: 'general_experience_years', type: 'number', required: true },
+      )
+    } else {
+      requiredStep1.push(
+        { id: 'general_dob', type: 'text', required: true }
+      )
+    }
+    
     requiredStep1.forEach(checkRequired)
 
     // Product specific fields
