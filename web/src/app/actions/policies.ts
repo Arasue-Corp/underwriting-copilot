@@ -39,10 +39,12 @@ export async function createPolicy(formData: any) {
     return { success: false, error: "Unauthorized role." }
   }
 
-  const { error } = await supabase.from("policies").insert({
-    ...formData,
-    agency_id: profile.agency_id
-  })
+  const insertData = { ...formData, agency_id: profile.agency_id }
+  if (insertData.agent_id === "") {
+    insertData.agent_id = null
+  }
+
+  const { error } = await supabase.from("policies").insert(insertData)
 
   if (error) {
     console.error("Error creating policy:", error)
@@ -64,9 +66,14 @@ export async function updatePolicy(policyId: string, formData: any) {
     return { success: false, error: "Unauthorized role." }
   }
 
+  const updateData = { ...formData }
+  if (updateData.agent_id === "") {
+    updateData.agent_id = null
+  }
+
   const { error } = await supabase
     .from("policies")
-    .update(formData)
+    .update(updateData)
     .eq("id", policyId)
 
   if (error) {

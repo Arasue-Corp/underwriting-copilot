@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createPolicy, updatePolicy } from "@/app/actions/policies"
 import { X } from "lucide-react"
 import { useLanguage } from "@/components/language-provider"
+import { createClient } from "@/lib/supabase/client"
 
 export function PolicyModal({ isOpen, onClose, onSuccess, policy }: { 
   isOpen: boolean; 
@@ -13,10 +14,12 @@ export function PolicyModal({ isOpen, onClose, onSuccess, policy }: {
 }) {
   const lang = useLanguage()
   const [loading, setLoading] = useState(false)
+  const [agents, setAgents] = useState<any[]>([])
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1,
     policy_number: "",
+      agent_id: "",
     insurance_type: "Personal",
     carrier_id: "",
     coverage: "",
@@ -32,12 +35,31 @@ export function PolicyModal({ isOpen, onClose, onSuccess, policy }: {
     client_company_name: ""
   })
 
+
+  useEffect(() => {
+    if (isOpen) {
+      const loadAgents = async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase.from('profiles').select('agency_id').eq('id', user.id).single()
+          if (profile?.agency_id) {
+            const { data: agnts } = await supabase.from('profiles').select('id, name').eq('agency_id', profile.agency_id).eq('role', 'AGENT')
+            if (agnts) setAgents(agnts)
+          }
+        }
+      }
+      loadAgents()
+    }
+  }, [isOpen])
+
   useEffect(() => {
     if (policy) {
       setFormData({
         year: policy.year || new Date().getFullYear(),
         month: policy.month || (new Date().getMonth() + 1),
         policy_number: policy.policy_number || "",
+          agent_id: policy.agent_id || "",
         insurance_type: policy.insurance_type || "Personal",
         carrier_id: policy.carrier_id || "",
         coverage: policy.coverage || "",
@@ -57,6 +79,7 @@ export function PolicyModal({ isOpen, onClose, onSuccess, policy }: {
         year: new Date().getFullYear(),
         month: new Date().getMonth() + 1,
         policy_number: "",
+      agent_id: "",
         insurance_type: "Personal",
         carrier_id: "",
         coverage: "",
@@ -132,7 +155,7 @@ export function PolicyModal({ isOpen, onClose, onSuccess, policy }: {
         <div className="p-6 overflow-y-auto flex-1">
           <form id="policy-form" onSubmit={handleSubmit} className="space-y-6">
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">{lang === 'es' ? 'Año' : 'Year'}</label>
                 <input type="number" name="year" value={formData.year} onChange={handleChange} required className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm" />
@@ -144,6 +167,13 @@ export function PolicyModal({ isOpen, onClose, onSuccess, policy }: {
               <div>
                 <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">{lang === 'es' ? 'Número Póliza' : 'Policy Number'}</label>
                 <input type="text" name="policy_number" value={formData.policy_number} onChange={handleChange} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1 uppercase tracking-wider">{lang === 'es' ? 'Agente' : 'Agent'}</label>
+                <select name="agent_id" value={formData.agent_id} onChange={handleChange} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-sm">
+                  <option value="">{lang === 'es' ? 'Ninguno' : 'None'}</option>
+                  {agents.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
               </div>
             </div>
 
