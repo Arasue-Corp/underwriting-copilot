@@ -701,9 +701,9 @@ export default function QuotesPage() {
                   <tr>
                     <th className="px-6 py-3 font-medium">{t.client}</th>
                     <th className="px-6 py-3 font-medium">{t.carrier}</th>
-                    <th className="px-6 py-3 font-medium">Coberturas</th>
-                    <th className="px-6 py-3 font-medium">Creador</th>
-                    <th className="px-6 py-3 font-medium">Asignado a</th>
+                    <th className="px-6 py-3 font-medium">{t.coverage}</th>
+                    <th className="px-6 py-3 font-medium">{t.createdBy}</th>
+                    <th className="px-6 py-3 font-medium">{t.assignee}</th>
                     <th className="px-6 py-3 font-medium">{t.status}</th>
                     <th className="px-6 py-3 font-medium text-right">{t.action}</th>
                   </tr>
