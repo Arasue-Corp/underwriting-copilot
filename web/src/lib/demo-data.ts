@@ -25,3 +25,20 @@ export const demoTasks = [
   { id: 'demo-task-1', note: 'Llamar a Maria para seguimiento de Homeowners', due_date: new Date(Date.now() + 86400000).toISOString(), status: 'PENDING', client: {name: 'Maria Garcia'} },
   { id: 'demo-task-2', note: 'Revisar renovación Liability 2027', due_date: new Date(Date.now() + 86400000 * 180).toISOString(), status: 'PENDING', client: {name: 'Tech Solutions LLC'} }
 ]
+
+
+export const demoAgencyData = {
+  agencyId: 'demo-agency-1',
+  agencyName: 'Demo Agency',
+  agencyLogo: null,
+  agents: [
+    {
+      id: 'demo-agent-1',
+      name: 'Agent Demo',
+      email: 'agent@demo.com',
+      role: 'AGENT',
+      commission_rate: 10,
+      stats: { totalQuotes: 3, boundQuotes: 2, totalPremium: 5700.00, totalCommission: 570.00 }
+    }
+  ]
+}

@@ -11,11 +11,18 @@ export async function getAgencyData() {
 
   const { data: myProfile } = await supabase
     .from('profiles')
-    .select('agency_id, agencies(name, logo_url)')
+    .select('agency_id, role, agencies(name, logo_url)')
     .eq('id', user.id)
     .single()
     
-  if (!myProfile || !myProfile.agency_id) return null
+  if (!myProfile) return null
+
+  if (myProfile.role === 'DEMO') {
+    const { demoAgencyData } = await import('@/lib/demo-data');
+    return demoAgencyData;
+  }
+
+  if (!myProfile.agency_id) return null
 
   // Fetch all profiles in this agency
   const { data: agents, error: agentsError } = await supabase
@@ -44,7 +51,7 @@ export async function getAgencyData() {
     const agentQuotes = (quotes || []).filter(q => q.agent_id === agent.id)
     
     const totalQuotes = agentQuotes.length
-    const boundQuotes = agentQuotes.filter(q => q.status === 'BOUND')
+    const boundQuotes = agentQuotes.filter(q => q.status === 'ACCEPTED')
     
     const totalPremium = boundQuotes.reduce((acc, q) => acc + (q.premium_amount || 0), 0)
     const totalCommission = boundQuotes.reduce((acc, q) => acc + (q.commission_amount || 0), 0)
