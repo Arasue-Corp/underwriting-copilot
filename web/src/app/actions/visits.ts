@@ -141,9 +141,10 @@ export async function getVisits(filters?: { startDate?: string, endDate?: string
     }
     if (filters?.agentId) {
       if (Array.isArray(filters.agentId)) {
-        query = query.in('assigned_to', filters.agentId)
+        const ids = filters.agentId.join(',')
+        query = query.or(`created_by.in.(${ids}),assigned_to.in.(${ids})`)
       } else {
-        query = query.eq('assigned_to', filters.agentId)
+        query = query.or(`created_by.eq.${filters.agentId},assigned_to.eq.${filters.agentId}`)
       }
     }
 

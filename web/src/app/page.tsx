@@ -98,14 +98,22 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   if (role === 'ADMIN') {
     if (agencyId) quotesQuery = quotesQuery.eq('agency_id', agencyId);
     if (agentId) {
-      if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
-      else quotesQuery = quotesQuery.eq('agent_id', agentId);
+      if (Array.isArray(agentId)) {
+        const ids = agentId.join(',');
+        quotesQuery = quotesQuery.or(`agent_id.in.(${ids}),assigned_to.in.(${ids})`);
+      } else {
+        quotesQuery = quotesQuery.or(`agent_id.eq.${agentId},assigned_to.eq.${agentId}`);
+      }
     }
   } else if (role === 'MANAGER') {
     if (userAgencyId) quotesQuery = quotesQuery.eq('agency_id', userAgencyId);
     if (agentId) {
-      if (Array.isArray(agentId)) quotesQuery = quotesQuery.in('agent_id', agentId);
-      else quotesQuery = quotesQuery.eq('agent_id', agentId);
+      if (Array.isArray(agentId)) {
+        const ids = agentId.join(',');
+        quotesQuery = quotesQuery.or(`agent_id.in.(${ids}),assigned_to.in.(${ids})`);
+      } else {
+        quotesQuery = quotesQuery.or(`agent_id.eq.${agentId},assigned_to.eq.${agentId}`);
+      }
     }
   }
   
