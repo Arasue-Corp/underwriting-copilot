@@ -15,8 +15,7 @@ interface AssignGoalModalProps {
 
 export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGoalModalProps) {
   const [isPending, startTransition] = useTransition()
-  const { language } = useLanguage()
-  const lang = language
+  const lang = useLanguage()
 
   const t = {
     es: {
