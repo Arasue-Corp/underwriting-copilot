@@ -2,11 +2,10 @@ import { Activity, CircleDollarSign, Files, Users, TrendingUp, TrendingDown, Ale
 import { OverviewChart } from "@/components/dashboard/OverviewChart"
 import { DistributionChart } from "@/components/dashboard/DistributionChart"
 import { CrisolPulse } from "@/components/dashboard/CrisolPulse"
-import { LanguageToggle } from "@/components/LanguageToggle"
 import { VisitsDashboardSection } from "@/components/dashboard/VisitsDashboardSection"
+import { DashboardFilters } from "@/components/dashboard/DashboardFilters"
 import { GoalsDashboardSection } from "@/components/dashboard/GoalsDashboardSection"
 import { getAgencyGoals } from "@/app/actions/goals"
-import { DashboardFilters } from "@/components/dashboard/DashboardFilters"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { getVisits } from "@/app/actions/visits"
@@ -249,23 +248,14 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   }
   const { count: agentsCount } = await agentsCountQuery;
   const activeAgents = agentsCount || 0;
-  const { data: visitsData } = await visitsQuery;
-  const { data: quoteLogs } = await supabase
-    .from('activity_logs')
-    .select('id, actor_id, entity_type, action, created_at, metadata')
-    .eq('entity_type', 'QUOTE')
-    .order('created_at', { ascending: false });
-
+  
   const goals = await getAgencyGoals(true);
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
 
   return (
-    <div className="flex-1 space-y-8 p-8 pt-6 max-w-[1600px] mx-auto overflow-x-hidden">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
-        <h2 className="font-playfair text-4xl font-bold tracking-tight text-foreground/90">{t.title}</h2>
-      </div>
-
+    <div className="flex-1 space-y-8 p-4 md:p-8 pt-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      
       <GoalsDashboardSection goals={goals} userRole={role} currentUserId={user?.id || ''} />
 
       <DashboardFilters role={role} lang={lang} agencies={agencies} agents={agents} />
