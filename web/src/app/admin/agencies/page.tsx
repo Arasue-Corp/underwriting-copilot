@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Building2, Plus, Users, Trash2, Edit, X, Upload } from "lucide-react"
 import { getAgencies, createAgency, deleteAgency, updateAgency } from "@/app/actions/admin"
 import { createClient } from "@/lib/supabase/client"
+import { useLanguage } from "@/components/language-provider"
 
 export default function AgenciesPage() {
   const [agencies, setAgencies] = useState<any[]>([])
@@ -19,7 +20,70 @@ export default function AgenciesPage() {
   const [editLogoUrl, setEditLogoUrl] = useState("")
   const [isUploadingLogo, setIsUploadingLogo] = useState(false)
   const supabase = createClient()
+  const language = useLanguage()
 
+  const t = {
+    es: {
+      title: "Directorio de Agencias",
+      description: "Gestiona las compañías registradas en la plataforma.",
+      newAgency: "Nueva Agencia",
+      agencyName: "Nombre de la Agencia",
+      agencyNamePlaceholder: "Ej. Acme Insurance Group",
+      createBtn: "Registrar Agencia",
+      creatingBtn: "Creando...",
+      editTitle: "Editar Agencia",
+      nameLabel: "Nombre",
+      addressLabel: "Dirección",
+      phoneLabel: "Teléfono",
+      logoLabel: "Logo",
+      uploadingLogo: "Subiendo...",
+      uploadLogoBtn: "Subir Logo",
+      cancel: "Cancelar",
+      saveChanges: "Guardar Cambios",
+      saving: "Guardando...",
+      colName: "Nombre de Agencia",
+      colUsers: "Usuarios Asignados",
+      colId: "ID Interno",
+      colActions: "Acciones",
+      loading: "Cargando...",
+      noAgencies: "No hay agencias registradas.",
+      deleteConfirm: "¿Estás seguro de que deseas eliminar esta agencia? Esto podría afectar a los usuarios y clientes asociados.",
+      errorDelete: "Error al eliminar",
+      errorUpdate: "Error al actualizar",
+      errorCreate: "Error al crear agencia",
+      errorUpload: "Error al subir el logo"
+    },
+    en: {
+      title: "Agencies Directory",
+      description: "Manage the companies registered in the platform.",
+      newAgency: "New Agency",
+      agencyName: "Agency Name",
+      agencyNamePlaceholder: "E.g. Acme Insurance Group",
+      createBtn: "Register Agency",
+      creatingBtn: "Creating...",
+      editTitle: "Edit Agency",
+      nameLabel: "Name",
+      addressLabel: "Address",
+      phoneLabel: "Phone",
+      logoLabel: "Logo",
+      uploadingLogo: "Uploading...",
+      uploadLogoBtn: "Upload Logo",
+      cancel: "Cancel",
+      saveChanges: "Save Changes",
+      saving: "Saving...",
+      colName: "Agency Name",
+      colUsers: "Assigned Users",
+      colId: "Internal ID",
+      colActions: "Actions",
+      loading: "Loading...",
+      noAgencies: "No agencies registered.",
+      deleteConfirm: "Are you sure you want to delete this agency? This could affect associated users and clients.",
+      errorDelete: "Error deleting",
+      errorUpdate: "Error updating",
+      errorCreate: "Error creating agency",
+      errorUpload: "Error uploading logo"
+    }
+  }[language]
 
   useEffect(() => {
     loadAgencies()
@@ -33,16 +97,15 @@ export default function AgenciesPage() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("¿Estás seguro de que deseas eliminar esta agencia? Esto podría afectar a los usuarios y clientes asociados.")) return;
+    if (!confirm(t.deleteConfirm)) return;
     const res = await deleteAgency(id);
     if (res.success) {
       loadAgencies();
     } else {
-      setError(res.error || "Error al eliminar");
+      setError(res.error || t.errorDelete);
     }
   }
 
-  
   async function handleEditSave(e: React.FormEvent) {
     e.preventDefault()
     if (!editingAgency) return
@@ -60,7 +123,7 @@ export default function AgenciesPage() {
       setEditingAgency(null)
       loadAgencies()
     } else {
-      setError(res.error || "Error al actualizar")
+      setError(res.error || t.errorUpdate)
     }
     setIsCreating(false)
   }
@@ -88,7 +151,7 @@ export default function AgenciesPage() {
       setEditLogoUrl(publicUrl)
     } catch (err: any) {
       console.error(err)
-      setError("Error al subir el logo")
+      setError(t.errorUpload)
     } finally {
       setIsUploadingLogo(false)
     }
@@ -112,7 +175,7 @@ export default function AgenciesPage() {
       setNewName("")
       loadAgencies()
     } else {
-      setError(res.error || "Error al crear agencia")
+      setError(res.error || t.errorCreate)
     }
     setIsCreating(false)
   }
@@ -122,27 +185,27 @@ export default function AgenciesPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Building2 className="h-8 w-8 text-primary" />
-          Directorio de Agencias
+          {t.title}
         </h2>
         <p className="text-muted-foreground mt-2">
-          Gestiona las compañías registradas en la plataforma.
+          {t.description}
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-6">
           <div className="rounded-xl border bg-card p-6 shadow-sm">
-            <h3 className="font-semibold text-lg mb-4">Nueva Agencia</h3>
+            <h3 className="font-semibold text-lg mb-4">{t.newAgency}</h3>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Nombre de la Agencia
+                  {t.agencyName}
                 </label>
                 <input 
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Ej. Acme Insurance Group"
+                  placeholder={t.agencyNamePlaceholder}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background focus:ring-2 focus:ring-primary outline-none"
                   required
                 />
@@ -154,7 +217,7 @@ export default function AgenciesPage() {
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
-                {isCreating ? 'Creando...' : 'Registrar Agencia'}
+                {isCreating ? t.creatingBtn : t.createBtn}
               </button>
             </form>
           </div>
@@ -166,20 +229,20 @@ export default function AgenciesPage() {
               <table className="w-full text-sm text-left whitespace-nowrap md:whitespace-normal">
                 <thead className="bg-muted/10 border-b border-border text-muted-foreground">
                 <tr>
-                  <th className="px-6 py-3 font-medium">Nombre de Agencia</th>
-                  <th className="px-6 py-3 font-medium">Usuarios Asignados</th>
-                  <th className="px-6 py-3 font-medium text-right">ID Interno</th>
-                  <th className="px-6 py-3 font-medium text-right">Acciones</th>
+                  <th className="px-6 py-3 font-medium">{t.colName}</th>
+                  <th className="px-6 py-3 font-medium">{t.colUsers}</th>
+                  <th className="px-6 py-3 font-medium text-right">{t.colId}</th>
+                  <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">Cargando...</td>
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">{t.loading}</td>
                   </tr>
                 ) : agencies.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">No hay agencias registradas.</td>
+                    <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">{t.noAgencies}</td>
                   </tr>
                 ) : (
                   agencies.map(agency => (
@@ -220,7 +283,7 @@ export default function AgenciesPage() {
             <div className="flex justify-between items-center p-6 border-b border-border/50">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-primary" />
-                Editar Agencia
+                {t.editTitle}
               </h3>
               <button 
                 onClick={() => setEditingAgency(null)}
@@ -238,7 +301,7 @@ export default function AgenciesPage() {
               )}
               
               <div>
-                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <label className="block text-sm font-medium mb-1">{t.nameLabel}</label>
                 <input 
                   type="text" 
                   value={editName}
@@ -249,7 +312,7 @@ export default function AgenciesPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Dirección</label>
+                <label className="block text-sm font-medium mb-1">{t.addressLabel}</label>
                 <input 
                   type="text" 
                   value={editAddress}
@@ -259,7 +322,7 @@ export default function AgenciesPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Teléfono</label>
+                <label className="block text-sm font-medium mb-1">{t.phoneLabel}</label>
                 <input 
                   type="text" 
                   value={editPhone}
@@ -269,7 +332,7 @@ export default function AgenciesPage() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">Logo</label>
+                <label className="block text-sm font-medium mb-1">{t.logoLabel}</label>
                 <div className="flex items-center gap-4">
                   {editLogoUrl && (
                     <img src={editLogoUrl} alt="Logo" className="h-12 w-12 object-contain bg-white rounded border" />
@@ -277,7 +340,7 @@ export default function AgenciesPage() {
                   <label className="flex items-center justify-center gap-2 px-4 py-2 border border-input rounded-md cursor-pointer hover:bg-muted/50 transition-colors">
                     <Upload className="w-4 h-4 text-muted-foreground" />
                     <span className="text-sm font-medium text-muted-foreground">
-                      {isUploadingLogo ? 'Subiendo...' : 'Subir Logo'}
+                      {isUploadingLogo ? t.uploadingLogo : t.uploadLogoBtn}
                     </span>
                     <input 
                       type="file" 
@@ -296,14 +359,14 @@ export default function AgenciesPage() {
                   onClick={() => setEditingAgency(null)}
                   className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-muted transition-colors"
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
                 <button 
                   type="submit"
                   disabled={isCreating || isUploadingLogo}
                   className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  {isCreating ? 'Guardando...' : 'Guardar Cambios'}
+                  {isCreating ? t.saving : t.saveChanges}
                 </button>
               </div>
             </form>
@@ -313,4 +376,3 @@ export default function AgenciesPage() {
     </div>
   )
 }
-

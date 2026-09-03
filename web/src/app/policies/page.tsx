@@ -130,7 +130,7 @@ export default function PoliciesPage() {
               <ShieldCheck className="h-6 w-6" />
             </div>
           </div>
-          <h1 className="text-4xl font-playfair font-bold tracking-tight text-foreground">{t.title}</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">{t.title}</h1>
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
         

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Users, Shield, Building2, Loader2, CheckCircle2, Edit, Trash2, X } from "lucide-react"
 import { getUsers, getAgencies, updateUserAdmin, deleteUser } from "@/app/actions/admin"
+import { useLanguage } from "@/components/language-provider"
 
 export default function UsersPage() {
   const [users, setUsers] = useState<any[]>([])
@@ -17,7 +18,68 @@ export default function UsersPage() {
   const [editingUser, setEditingUser] = useState<any>(null)
   const [editName, setEditName] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+  const language = useLanguage()
 
+  const t = {
+    es: {
+      title: "Directorio Global de Usuarios",
+      description: "Administra el nivel de acceso (rol) y la agencia a la que pertenece cada miembro.",
+      colUser: "Usuario",
+      colAgency: "Compañía / Agencia",
+      colRole: "Nivel de Acceso",
+      colStatus: "Estado",
+      colActions: "Acciones",
+      loading: "Cargando usuarios...",
+      noUsers: "No hay usuarios registrados.",
+      noAgency: "-- Sin Agencia --",
+      roleAgent: "Agente (Base)",
+      roleManager: "Manager (Agencia)",
+      roleAdmin: "Admin (Global)",
+      roleDemo: "Demo (Lectura)",
+      statusSaving: "Guardando",
+      statusSaved: "Guardado",
+      statusSynced: "Sincronizado",
+      editTitle: "Editar Usuario",
+      nameLabel: "Nombre",
+      cancel: "Cancelar",
+      saveBtn: "Guardar Cambios",
+      savingBtn: "Guardando...",
+      deleteConfirm: "¿Estás seguro de que deseas eliminar a este usuario?",
+      msgDeleted: "Usuario eliminado",
+      msgUpdated: "Usuario actualizado",
+      errDelete: "Error al eliminar: ",
+      errUpdate: "Error al actualizar: "
+    },
+    en: {
+      title: "Global User Directory",
+      description: "Manage access levels (roles) and agency membership for each user.",
+      colUser: "User",
+      colAgency: "Company / Agency",
+      colRole: "Access Level",
+      colStatus: "Status",
+      colActions: "Actions",
+      loading: "Loading users...",
+      noUsers: "No users registered.",
+      noAgency: "-- No Agency --",
+      roleAgent: "Agent (Base)",
+      roleManager: "Manager (Agency)",
+      roleAdmin: "Admin (Global)",
+      roleDemo: "Demo (Read-Only)",
+      statusSaving: "Saving",
+      statusSaved: "Saved",
+      statusSynced: "Synchronized",
+      editTitle: "Edit User",
+      nameLabel: "Name",
+      cancel: "Cancel",
+      saveBtn: "Save Changes",
+      savingBtn: "Saving...",
+      deleteConfirm: "Are you sure you want to delete this user?",
+      msgDeleted: "User deleted",
+      msgUpdated: "User updated",
+      errDelete: "Error deleting: ",
+      errUpdate: "Error updating: "
+    }
+  }[language]
 
   useEffect(() => {
     loadData()
@@ -31,15 +93,14 @@ export default function UsersPage() {
     setLoading(false)
   }
 
-  
   async function handleDelete(userId: string) {
-    if (!confirm("¿Estás seguro de que deseas eliminar a este usuario?")) return
+    if (!confirm(t.deleteConfirm)) return
     const res = await deleteUser(userId)
     if (res.success) {
       loadData()
-      toast.success("Usuario eliminado")
+      toast.success(t.msgDeleted)
     } else {
-      toast.error("Error al eliminar: " + res.error)
+      toast.error(t.errDelete + res.error)
     }
   }
 
@@ -56,9 +117,9 @@ export default function UsersPage() {
     if (res.success) {
       setUsers(users.map((u: any) => u.id === editingUser.id ? { ...u, name: editName } : u))
       setEditingUser(null)
-      toast.success("Usuario actualizado")
+      toast.success(t.msgUpdated)
     } else {
-      toast.error("Error al actualizar: " + res.error)
+      toast.error(t.errUpdate + res.error)
     }
     setIsSaving(false)
   }
@@ -82,7 +143,7 @@ export default function UsersPage() {
       setSuccessId(userId)
       setTimeout(() => setSuccessId(null), 2000)
     } else {
-      toast.error("Error al actualizar usuario: " + res.error)
+      toast.error(t.errUpdate + res.error)
     }
     setUpdatingId(null)
   }
@@ -92,10 +153,10 @@ export default function UsersPage() {
       <div>
         <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Users className="h-8 w-8 text-primary" />
-          Directorio Global de Usuarios
+          {t.title}
         </h2>
         <p className="text-muted-foreground mt-2">
-          Administra el nivel de acceso (rol) y la agencia a la que pertenece cada miembro.
+          {t.description}
         </p>
       </div>
 
@@ -104,21 +165,21 @@ export default function UsersPage() {
           <table className="w-full text-sm text-left whitespace-nowrap md:whitespace-normal">
             <thead className="bg-muted/10 border-b border-border text-muted-foreground">
             <tr>
-              <th className="px-6 py-3 font-medium w-1/3">Usuario</th>
-              <th className="px-6 py-3 font-medium">Compañía / Agencia</th>
-              <th className="px-6 py-3 font-medium">Nivel de Acceso</th>
-              <th className="px-6 py-3 font-medium text-right">Estado</th>
-              <th className="px-6 py-3 font-medium text-right">Acciones</th>
+              <th className="px-6 py-3 font-medium w-1/3">{t.colUser}</th>
+              <th className="px-6 py-3 font-medium">{t.colAgency}</th>
+              <th className="px-6 py-3 font-medium">{t.colRole}</th>
+              <th className="px-6 py-3 font-medium text-right">{t.colStatus}</th>
+              <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">Cargando usuarios...</td>
+                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">{t.loading}</td>
               </tr>
             ) : users.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">No hay usuarios registrados.</td>
+                <td colSpan={4} className="px-6 py-8 text-center text-muted-foreground">{t.noUsers}</td>
               </tr>
             ) : (
               users.map(user => (
@@ -136,7 +197,7 @@ export default function UsersPage() {
                         disabled={updatingId === user.id}
                         className="pl-9 pr-8 py-1.5 bg-background border border-input rounded-md text-sm outline-none focus:ring-1 focus:ring-primary appearance-none cursor-pointer w-full disabled:opacity-50"
                       >
-                        <option value="NULL">-- Sin Agencia --</option>
+                        <option value="NULL">{t.noAgency}</option>
                         {agencies.map(a => (
                           <option key={a.id} value={a.id}>{a.name}</option>
                         ))}
@@ -157,24 +218,24 @@ export default function UsersPage() {
                           'bg-blue-500/10 text-blue-600 dark:text-blue-500'
                         }`}
                       >
-                        <option value="AGENT">Agente (Base)</option>
-                        <option value="MANAGER">Manager (Agencia)</option>
-                        <option value="ADMIN">Admin (Global)</option>
-                        <option value="DEMO">Demo (Lectura)</option>
+                        <option value="AGENT">{t.roleAgent}</option>
+                        <option value="MANAGER">{t.roleManager}</option>
+                        <option value="ADMIN">{t.roleAdmin}</option>
+                        <option value="DEMO">{t.roleDemo}</option>
                       </select>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     {updatingId === user.id ? (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Guardando
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t.statusSaving}
                       </span>
                     ) : successId === user.id ? (
                       <span className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-500 animate-in fade-in">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Guardado
+                        <CheckCircle2 className="w-3.5 h-3.5" /> {t.statusSaved}
                       </span>
                     ) : (
-                      <span className="text-xs text-muted-foreground">Sincronizado</span>
+                      <span className="text-xs text-muted-foreground">{t.statusSynced}</span>
                     )}
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -199,7 +260,7 @@ export default function UsersPage() {
             <div className="flex justify-between items-center p-6 border-b border-border/50">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
-                Editar Usuario
+                {t.editTitle}
               </h3>
               <button 
                 onClick={() => setEditingUser(null)}
@@ -211,7 +272,7 @@ export default function UsersPage() {
             
             <form onSubmit={handleEditSave} className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Nombre</label>
+                <label className="block text-sm font-medium mb-1">{t.nameLabel}</label>
                 <input 
                   type="text" 
                   value={editName}
@@ -227,14 +288,14 @@ export default function UsersPage() {
                   onClick={() => setEditingUser(null)}
                   className="px-4 py-2 text-sm font-medium border rounded-md hover:bg-muted transition-colors"
                 >
-                  Cancelar
+                  {t.cancel}
                 </button>
                 <button 
                   type="submit"
                   disabled={isSaving}
                   className="px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
                 >
-                  {isSaving ? 'Guardando...' : 'Guardar Cambios'}
+                  {isSaving ? t.savingBtn : t.saveBtn}
                 </button>
               </div>
             </form>
