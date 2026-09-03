@@ -154,6 +154,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   
   const distribution: Record<string, number> = {};
   const quotedDistribution: Record<string, number> = {};
+  const productDistribution: Record<string, number> = {};
+  const quotedProductDistribution: Record<string, number> = {};
   const monthNames = lang === 'es' 
     ? ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] 
     : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -194,9 +196,15 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
         
         if (Array.isArray(q.quotes_provided)) {
           q.quotes_provided.forEach((prop: any, idx: number) => {
-            if ((!q.selected_modules || q.selected_modules[idx]) && prop.carrier) {
-              const carrierName = prop.carrier;
-              distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+            if (!q.selected_modules || q.selected_modules[idx]) {
+              if (prop.carrier) {
+                const carrierName = prop.carrier;
+                distribution[carrierName] = (distribution[carrierName] || 0) + 1;
+              }
+              if (prop.product) {
+                const productName = prop.product;
+                productDistribution[productName] = (productDistribution[productName] || 0) + 1;
+              }
             }
           });
         }
@@ -206,13 +214,20 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
         if (Array.isArray(q.quotes_provided)) {
           // Track unique carriers per quote so we don't double count if a carrier provided multiple options
           const uniqueCarriers = new Set<string>();
+          const uniqueProducts = new Set<string>();
           q.quotes_provided.forEach((prop: any) => {
             if (prop.carrier) {
               uniqueCarriers.add(prop.carrier);
             }
+            if (prop.product) {
+              uniqueProducts.add(prop.product);
+            }
           });
           uniqueCarriers.forEach(carrierName => {
             quotedDistribution[carrierName] = (quotedDistribution[carrierName] || 0) + 1;
+          });
+          uniqueProducts.forEach(productName => {
+            quotedProductDistribution[productName] = (quotedProductDistribution[productName] || 0) + 1;
           });
         }
         
@@ -242,6 +257,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
 
   const distData = Object.entries(distribution).map(([name, value]) => ({ name, value }));
   const quotedDistData = Object.entries(quotedDistribution).map(([name, value]) => ({ name, value }));
+  const productDistData = Object.entries(productDistribution).map(([name, value]) => ({ name, value }));
+  const quotedProductDistData = Object.entries(quotedProductDistribution).map(([name, value]) => ({ name, value }));
   // Filter out months from the future or empty if desired, but here we just show all 12
   const overviewData = monthNames.map(name => ({ name, total: monthlyData[name] }));
   
@@ -382,6 +399,26 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           </div>
           <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
             <DistributionChart data={quotedDistData} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
+          <div className="flex flex-col space-y-1.5 p-6 pb-2">
+            <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{lang === 'es' ? 'Tipos Emitidos' : 'Issued Products'}</h3>
+            <p className="text-sm text-muted-foreground">{lang === 'es' ? 'Distribución de pólizas emitidas por tipo de producto.' : 'Distribution of issued policies by product type.'}</p>
+          </div>
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
+            <DistributionChart data={productDistData} />
+          </div>
+        </div>
+
+        <div className="rounded-2xl glass-panel text-card-foreground flex flex-col overflow-hidden">
+          <div className="flex flex-col space-y-1.5 p-6 pb-2">
+            <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight">{lang === 'es' ? 'Tipos Cotizados' : 'Quoted Products'}</h3>
+            <p className="text-sm text-muted-foreground">{lang === 'es' ? 'Distribución de solicitudes cotizadas por tipo de producto.' : 'Distribution of quoted requests by product type.'}</p>
+          </div>
+          <div className="p-6 pt-4 flex-1 min-h-[350px] flex items-center justify-center text-muted-foreground w-full">
+            <DistributionChart data={quotedProductDistData} />
           </div>
         </div>
       </div>
