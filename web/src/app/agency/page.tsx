@@ -1,9 +1,18 @@
 import { getAgencyData } from "@/app/actions/agency"
+import { getAgencyGoals } from "@/app/actions/goals"
 import { Users, TrendingUp, DollarSign, Target } from "lucide-react"
 import UploadLogo from "@/components/UploadLogo"
+import { GoalsManagementSection } from "@/components/agency/GoalsManagementSection"
+import { createClient } from "@/lib/supabase/server"
 
 export default async function AgencyPage() {
   const data = await getAgencyData()
+  const goals = await getAgencyGoals()
+  
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single()
+  const userRole = profile?.role || 'AGENT'
 
   if (!data) {
     return (
@@ -120,6 +129,8 @@ export default async function AgencyPage() {
         </table>
         </div>
       </div>
+
+      <GoalsManagementSection agents={agents} goals={goals} userRole={userRole} />
     </div>
   )
 }
