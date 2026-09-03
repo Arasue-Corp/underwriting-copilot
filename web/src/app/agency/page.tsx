@@ -4,6 +4,7 @@ import { Users, TrendingUp, DollarSign, Target } from "lucide-react"
 import UploadLogo from "@/components/UploadLogo"
 import { GoalsManagementSection } from "@/components/agency/GoalsManagementSection"
 import { createClient } from "@/lib/supabase/server"
+import { cookies } from "next/headers"
 
 export default async function AgencyPage() {
   const data = await getAgencyData()
@@ -14,10 +15,13 @@ export default async function AgencyPage() {
   const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single()
   const userRole = profile?.role || 'AGENT'
 
+  const cookieStore = await cookies()
+  const lang = cookieStore.get('NEXT_LOCALE')?.value === 'es' ? 'es' : 'en'
+
   if (!data) {
     return (
       <div className="flex-1 p-8 text-center text-muted-foreground mt-20">
-        No se pudo cargar la información de la agencia.
+        {lang === 'es' ? 'No se pudo cargar la información de la agencia.' : 'Failed to load agency information.'}
       </div>
     )
   }
@@ -34,10 +38,10 @@ export default async function AgencyPage() {
         <div>
           <h2 className="text-3xl font-bold tracking-tight flex items-center gap-2">
             <Users className="h-8 w-8 text-primary" />
-            Módulo de Agencia: {agencyName}
+            {lang === 'es' ? 'Módulo de Agencia:' : 'Agency Module:'} {agencyName}
           </h2>
           <p className="text-muted-foreground mt-2">
-            Supervisa el rendimiento y las operaciones de todos los agentes de tu compañía.
+            {lang === 'es' ? 'Supervisa el rendimiento y las operaciones de todos los agentes de tu compañía.' : 'Monitor the performance and operations of all agents in your company.'}
           </p>
         </div>
         <div className="flex-shrink-0 bg-card rounded-xl border p-4 shadow-sm">
@@ -48,7 +52,7 @@ export default async function AgencyPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium">Primas Emitidas (Global)</h3>
+            <h3 className="tracking-tight text-sm font-medium">{lang === 'es' ? 'Primas Emitidas (Global)' : 'Written Premium (Global)'}</h3>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold">
@@ -57,7 +61,7 @@ export default async function AgencyPage() {
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium">Comisiones Generadas</h3>
+            <h3 className="tracking-tight text-sm font-medium">{lang === 'es' ? 'Comisiones Generadas' : 'Generated Commissions'}</h3>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold text-emerald-500">
@@ -66,7 +70,7 @@ export default async function AgencyPage() {
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <h3 className="tracking-tight text-sm font-medium">Cotizaciones Procesadas</h3>
+            <h3 className="tracking-tight text-sm font-medium">{lang === 'es' ? 'Cotizaciones Procesadas' : 'Processed Quotes'}</h3>
             <Target className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-2xl font-bold">
@@ -77,17 +81,17 @@ export default async function AgencyPage() {
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden w-full">
         <div className="bg-muted/30 px-6 py-4 border-b border-border">
-          <h3 className="font-bold text-lg">Directorio de Agentes</h3>
+          <h3 className="font-bold text-lg">{lang === 'es' ? 'Directorio de Agentes' : 'Agents Directory'}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap md:whitespace-normal">
             <thead className="bg-muted/10 border-b border-border text-muted-foreground">
             <tr>
-              <th className="px-6 py-3 font-medium">Nombre Completo</th>
-              <th className="px-6 py-3 font-medium">Correo Electrónico</th>
-              <th className="px-6 py-3 font-medium">Rol</th>
-              <th className="px-6 py-3 font-medium text-center">Cotizaciones</th>
-              <th className="px-6 py-3 font-medium text-right">Primas Cerradas</th>
+              <th className="px-6 py-3 font-medium">{lang === 'es' ? 'Nombre Completo' : 'Full Name'}</th>
+              <th className="px-6 py-3 font-medium">{lang === 'es' ? 'Correo Electrónico' : 'Email Address'}</th>
+              <th className="px-6 py-3 font-medium">{lang === 'es' ? 'Rol' : 'Role'}</th>
+              <th className="px-6 py-3 font-medium text-center">{lang === 'es' ? 'Cotizaciones' : 'Quotes'}</th>
+              <th className="px-6 py-3 font-medium text-right">{lang === 'es' ? 'Primas Cerradas' : 'Bound Premium'}</th>
             </tr>
           </thead>
           <tbody>
@@ -121,7 +125,7 @@ export default async function AgencyPage() {
             {agents.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
-                  No hay agentes registrados en esta agencia.
+                  {lang === 'es' ? 'No hay agentes registrados en esta agencia.' : 'No agents registered in this agency.'}
                 </td>
               </tr>
             )}

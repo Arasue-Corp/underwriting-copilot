@@ -9,13 +9,27 @@ import { QuoteModal } from "@/components/appetite/QuoteModal"
 import { EditQuoteRequestModal } from "@/components/quotes/EditQuoteRequestModal"
 import { ActivityLogsModal } from '@/components/logs/ActivityLogsModal'
 import { useLanguage } from "@/components/language-provider"
+import { INSURANCE_PRODUCTS } from "@/lib/constants/insuranceProducts"
 
 export default function QuotesPage() {
   const [quotes, setQuotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [agencyMembers, setAgencyMembers] = useState<any[]>([])
-  const lang = useLanguage()
+  const [teamUsers, setTeamUsers] = useState<any[]>([])
+  const supabase = createClient()
+  const language = useLanguage()
+  const lang = language
+
+  const translateCoverage = (coverageStr: string | null | undefined) => {
+    if (!coverageStr) return '-'
+    if (language === 'es') return coverageStr
+    
+    return coverageStr.split(', ').map(c => {
+      const product = INSURANCE_PRODUCTS.find(p => p.name === c)
+      return product ? product.nameEn : c
+    }).join(', ')
+  }
 
   const t = {
     es: {
@@ -225,8 +239,6 @@ export default function QuotesPage() {
   // Filter state
   const [filter, setFilter] = useState<'ALL' | 'ASSIGNED_TO_ME' | 'CREATED_BY_ME'>('ALL')
   
-  const supabase = createClient()
-
   const loadData = async () => {
     setLoading(true)
     const { data: { user } } = await supabase.auth.getUser()
@@ -620,7 +632,7 @@ export default function QuotesPage() {
                     </div>
                     <div className="space-y-1">
                       <div className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">{t.coverage}</div>
-                      <div className="text-sm font-medium text-foreground">{quote.coverage_requested}</div>
+                      <div className="text-sm font-medium text-foreground">{translateCoverage(quote.coverage_requested)}</div>
                     </div>
                   </div>
 
@@ -717,7 +729,7 @@ export default function QuotesPage() {
                           ? Array.from(new Set(quote.quotes_provided.map((p: any) => p.carrier).filter(Boolean))).join(', ') 
                           : (quote.carrier_id || '-')}
                       </td>
-                      <td className="px-6 py-4">{quote.coverage_requested}</td>
+                      <td className="px-6 py-4">{translateCoverage(quote.coverage_requested)}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.profiles?.name}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.assignee?.name || t.unassigned}</td>
                       <td className="px-6 py-4">

@@ -1,11 +1,11 @@
-﻿DO $ $ 
+﻿DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='clients' AND column_name='dob') THEN
         ALTER TABLE public.clients ADD COLUMN dob text;
     END IF;
-END $ $;
+END $$;
 
-DO $ $
+DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'goal_type') THEN
         CREATE TYPE public.goal_type AS ENUM ('QUOTED_PREMIUM', 'BOUND_PREMIUM', 'COMMISSIONS', 'VISITS');
@@ -14,7 +14,7 @@ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'goal_period') THEN
         CREATE TYPE public.goal_period AS ENUM ('DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY');
     END IF;
-END $ $;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.agency_goals (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS public.agency_goals (
 
 ALTER TABLE public.agency_goals ENABLE ROW LEVEL SECURITY;
 
-DO $ $ 
+DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Users can view goals from their agency' AND tablename = 'agency_goals') THEN
         CREATE POLICY "Users can view goals from their agency" ON public.agency_goals
@@ -79,4 +79,4 @@ BEGIN
                 )
             );
     END IF;
-END $ $;
+END $$;
