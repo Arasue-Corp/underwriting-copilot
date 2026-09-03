@@ -1420,8 +1420,7 @@ export default function QuotesPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">Producto / {t.coverage}</label>
-                      <input 
-                        type="text" 
+                      <select 
                         value={prop.product} 
                         onChange={e => {
                           const next = [...proposals]
@@ -1429,8 +1428,14 @@ export default function QuotesPage() {
                           setProposals(next)
                         }}
                         className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-                        placeholder="Ej. Auto Comercial"
-                      />
+                      >
+                        <option value="">Selecciona un producto</option>
+                        {INSURANCE_PRODUCTS.map(p => (
+                          <option key={p.id} value={p.name}>
+                            {lang === 'es' ? p.name : p.nameEn}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground mb-1 block">{t.carrier}</label>
