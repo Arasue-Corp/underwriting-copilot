@@ -141,7 +141,7 @@ export function NotificationBell() {
 
           <div className="overflow-y-auto flex-1 p-2">
             {loading ? (
-              <div className="py-8 text-center text-sm text-muted-foreground">
+              <div className="p-4 text-center text-sm text-muted-foreground">
                 {language === 'es' ? 'Cargando...' : 'Loading...'}
               </div>
             ) : notifications.length === 0 ? (

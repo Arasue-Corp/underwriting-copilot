@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useTransition, useEffect, useRef } from 'react'
-import { X, ChevronRight, ChevronLeft, Upload, Check, AlertCircle, Users } from "lucide-react"
+import { FileUp, X, Check, Search, Calendar as CalendarIcon, Upload, Trash2, AlertCircle, FileText, ChevronRight, ChevronLeft, Users } from "lucide-react"
 import { toast } from "sonner"
 import { submitQuoteRequest } from "@/app/actions/quote"
 import { getClients } from "@/app/actions/clients"
 import { INSURANCE_PRODUCTS, InsuranceProduct, ProductField } from "@/lib/constants/insuranceProducts"
+import { useLanguage } from "@/components/language-provider"
 
 interface QuoteModalProps {
   isOpen: boolean
@@ -16,7 +17,10 @@ interface QuoteModalProps {
   userRole?: string
 }
 
-export function QuoteModal({ isOpen, onClose, rule, language = 'es', initialClientId = null, userRole }: QuoteModalProps) {
+export function QuoteModal({ isOpen, onClose, rule, language: propLanguage, initialClientId = null, userRole }: QuoteModalProps) {
+  const contextLanguage = useLanguage()
+  const language = propLanguage || contextLanguage
+  
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [quoteCategory, setQuoteCategory] = useState<'commercial' | 'personal'>('commercial')

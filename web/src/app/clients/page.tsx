@@ -27,6 +27,7 @@ export default function ClientsPage() {
       structure: 'Estructura:',
       address: 'Dirección:',
       contact: 'Contacto:',
+      dob: 'DOB:',
       notRegistered: 'No registrado',
       editClient: 'Editar Cliente',
       logVisit: 'Registrar Visita',
@@ -38,10 +39,13 @@ export default function ClientsPage() {
       renews: 'Renueva:',
       visitLog: 'Bitácora de Visitas / Actividad',
       noVisits: 'No hay visitas registradas para este cliente.',
-      dataError: 'Error al cargar datos'
+      dataError: 'Error al cargar datos',
+      newQuote: 'Nueva Cotización',
+      clientVisits: 'Visitas del Cliente',
+      recentQuotes: 'Cotizaciones Recientes'
     },
     en: {
-      title: 'Clients Directory',
+      title: 'Client Directory',
       searchPlaceholder: 'Search client...',
       clientsFound: 'Clients found',
       loading: 'Loading...',
@@ -50,6 +54,7 @@ export default function ClientsPage() {
       structure: 'Structure:',
       address: 'Address:',
       contact: 'Contact:',
+      dob: 'DOB:',
       notRegistered: 'Not registered',
       editClient: 'Edit Client',
       logVisit: 'Log Visit',
@@ -125,6 +130,7 @@ export default function ClientsPage() {
           logo_url,
           address,
           contact,
+          dob,
           created_at
         `)
         .eq('agency_id', profile.agency_id)
@@ -282,6 +288,7 @@ export default function ClientsPage() {
                         <div className="flex gap-4 mt-1">
                           <span><strong className="text-foreground/70 font-medium">{t.address}</strong> {selectedClient.address || t.notRegistered}</span>
                           <span><strong className="text-foreground/70 font-medium">{t.contact}</strong> {selectedClient.contact || t.notRegistered}</span>
+                          <span><strong className="text-foreground/70 font-medium">{t.dob}</strong> {selectedClient.dob || t.notRegistered}</span>
                         </div>
                       </div>
                     </div>

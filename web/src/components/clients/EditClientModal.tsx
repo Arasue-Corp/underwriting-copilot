@@ -27,6 +27,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       feinLabel: 'FEIN',
       addressLabel: 'Dirección Física',
       contactLabel: 'Contacto (Tel / Email)',
+      dobLabel: 'Fecha de Nacimiento',
       cancelBtn: 'Cancelar',
       saveBtn: 'Guardar Cambios',
       savingBtn: 'Guardando...',
@@ -43,6 +44,7 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
       feinLabel: 'FEIN',
       addressLabel: 'Physical Address',
       contactLabel: 'Contact (Phone / Email)',
+      dobLabel: 'Date of Birth',
       cancelBtn: 'Cancel',
       saveBtn: 'Save Changes',
       savingBtn: 'Saving...',
@@ -60,7 +62,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
     legal_structure: '',
     fein: '',
     address: '',
-    contact: ''
+    contact: '',
+    dob: ''
   })
 
   useEffect(() => {
@@ -72,7 +75,8 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
         legal_structure: client.legal_structure || '',
         fein: client.fein || '',
         address: client.address || '',
-        contact: client.contact || ''
+        contact: client.contact || '',
+        dob: client.dob || ''
       })
     }
   }, [client, isOpen])
@@ -171,15 +175,33 @@ export function EditClientModal({ isOpen, onClose, onSuccess, client }: EditClie
               onChange={e => setFormData({...formData, address: e.target.value})} 
             />
           </div>
-          <div>
-            <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.contactLabel}</label>
-            <input 
-              type="text" 
-              className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
-              value={formData.contact} 
-              onChange={e => setFormData({...formData, contact: e.target.value})} 
-            />
-          </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.contactLabel}</label>
+              <input 
+                type="text" 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                value={formData.contact} 
+                onChange={e => setFormData({...formData, contact: e.target.value})} 
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">{t.dobLabel}</label>
+              <input 
+                type="text" 
+                className="w-full bg-background border border-input rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none" 
+                value={formData.dob} 
+                onChange={e => {
+                  let val = e.target.value;
+                  val = val.replace(/\D/g, '');
+                  if (val.length >= 3 && val.length <= 4) {
+                    val = val.slice(0, 2) + '/' + val.slice(2);
+                  } else if (val.length >= 5) {
+                    val = val.slice(0, 2) + '/' + val.slice(2, 4) + '/' + val.slice(4, 8);
+                  }
+                  setFormData({...formData, dob: val})
+                }} 
+              />
+            </div>
           
           <div className="pt-4 flex justify-end gap-3">
             <button 

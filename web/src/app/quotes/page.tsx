@@ -575,9 +575,9 @@ export default function QuotesPage() {
 
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground">Cargando solicitudes...</div>
+          <div className="p-8 text-center text-muted-foreground">{t.loadingQuotes}</div>
         ) : filteredQuotes.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">No hay solicitudes para mostrar.</div>
+          <div className="p-8 text-center text-muted-foreground">{t.noQuotes}</div>
         ) : (
           <>
             {/* Mobile View */}
