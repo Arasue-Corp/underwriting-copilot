@@ -266,7 +266,7 @@ export default function QuotesPage() {
     
     if (profile?.role === 'DEMO') {
       const { demoQuotes } = await import('@/lib/demo-data');
-      setQuotes(demoQuotes.filter((q: any) => !['REJECTED'].includes(q.status)));
+      setQuotes(demoQuotes || []);
       setLoading(false);
       return;
     }
@@ -277,7 +277,7 @@ export default function QuotesPage() {
       .order("created_at", { ascending: false })
 
     if (data) {
-      setQuotes(data.filter((q: any) => !['REJECTED'].includes(q.status)))
+      setQuotes(data || [])
     }
     setLoading(false)
   }
@@ -665,7 +665,7 @@ export default function QuotesPage() {
                       <Eye className="w-5 h-5" />
                     </button>
                     
-                    {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
+                    {(userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
                       <button 
                         onClick={() => setAssignQuote(quote)}
                         title={t.reassignTitle}
@@ -771,7 +771,7 @@ export default function QuotesPage() {
                           <Eye className="w-4 h-4" />
                         </button>
                         
-                        {quote.status !== 'QUOTED' && (userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
+                        {(userProfile?.role === 'MANAGER' || (userProfile?.role === 'ADMIN' || userProfile?.role === 'DEMO')) && (
                           <div className="inline-flex space-x-2">
                             <button 
                               onClick={() => setAssignQuote(quote)}
