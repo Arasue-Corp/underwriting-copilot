@@ -271,6 +271,27 @@ export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
     ]
   },
   {
+    id: 'bond',
+    name: 'Fianzas (Bond)',
+    nameEn: 'Bond',
+    description: 'Fianzas para cumplimiento de contratos, licencias comerciales, etc.',
+    descriptionEn: 'Bonds for contract performance, commercial licenses, etc.',
+    fields: [
+      { id: 'bond_type', label: 'Tipo de Fianza (Ej. Surety, Fidelity)', labelEn: 'Bond Type (e.g., Surety, Fidelity)', type: 'text' },
+      { id: 'bond_amount', label: 'Monto Solicitado', labelEn: 'Requested Amount', type: 'number' }
+    ]
+  },
+  {
+    id: 'roadside_assistance',
+    name: 'Asistencia en Carretera (Roadside Assistance)',
+    nameEn: 'Roadside Assistance',
+    description: 'Servicios de grúa, paso de corriente y asistencia vial.',
+    descriptionEn: 'Towing, jump-start, and roadside assistance services.',
+    fields: [
+      { id: 'ra_vehicles_count', label: 'Número de Vehículos', labelEn: 'Number of Vehicles', type: 'number' }
+    ]
+  },
+  {
     id: 'other',
     name: 'Otro / No Listado',
     nameEn: 'Other / Not Listed',
