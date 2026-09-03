@@ -21,7 +21,7 @@ export default function ClientsPage() {
       title: 'Directorio de Clientes',
       searchPlaceholder: 'Buscar cliente...',
       clientsFound: 'Clientes encontrados',
-      loading: 'Cargando...',
+      loading: 'Loading...',
       visits: 'visitas',
       selectToView: 'Selecciona un cliente para ver su información 360°',
       structure: 'Estructura:',

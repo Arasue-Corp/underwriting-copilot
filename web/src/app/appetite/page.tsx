@@ -358,7 +358,7 @@ export default function AppetiteBIDashboard() {
       {loading ? (
         <div className="py-20 text-center text-slate-500 flex flex-col items-center justify-center animate-pulse">
           <div className="w-10 h-10 border-4 border-slate-200 border-t-primary rounded-full animate-spin mb-4"></div>
-          Cargando inteligencia de mercado...
+          {language === 'es' ? 'Cargando inteligencia de mercado...' : 'Loading market intelligence...'}
         </div>
       ) : filteredData.length === 0 ? (
         <div className="py-24 text-center flex flex-col items-center justify-center bg-white border border-slate-200 border-dashed rounded-xl">

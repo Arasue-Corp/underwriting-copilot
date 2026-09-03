@@ -20,7 +20,7 @@ export default function CalendarPage() {
     es: {
       title: 'Calendario',
       subtitle: 'Visualiza tus tareas y visitas registradas',
-      loading: 'Cargando calendario...',
+      loading: 'Loading calendar...',
       tasks: 'Tareas',
       visits: 'Visitas',
       pending: 'Pendientes',

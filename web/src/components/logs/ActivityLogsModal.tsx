@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { X, History, Clock } from "lucide-react"
 import { getActivityLogs } from "@/app/actions/logs"
+import { useLanguage } from "@/components/language-provider"
 
 interface ActivityLogsModalProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ export function ActivityLogsModal({ isOpen, onClose, entityType, entityId, entit
   const [logs, setLogs] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const language = useLanguage()
 
   useEffect(() => {
     if (isOpen) {
@@ -30,7 +32,7 @@ export function ActivityLogsModal({ isOpen, onClose, entityType, entityId, entit
     if (res.success) {
       setLogs(res.data || [])
     } else {
-      setError(res.error || "Error cargando logs")
+      setError(res.error || (language === 'es' ? "Error cargando logs" : "Error loading logs"))
     }
     setLoading(false)
   }
@@ -39,8 +41,8 @@ export function ActivityLogsModal({ isOpen, onClose, entityType, entityId, entit
 
   // Function to parse diffs beautifully
   const renderDiff = (action: string, oldData: any, newData: any) => {
-    if (action === 'INSERT') return <div className="text-xs text-muted-foreground mt-1">Registro creado</div>
-    if (action === 'DELETE') return <div className="text-xs text-muted-foreground mt-1 text-red-500">Registro eliminado</div>
+    if (action === 'INSERT') return <div className="text-xs text-muted-foreground mt-1">{language === 'es' ? 'Registro creado' : 'Record created'}</div>
+    if (action === 'DELETE') return <div className="text-xs text-muted-foreground mt-1 text-red-500">{language === 'es' ? 'Registro eliminado' : 'Record deleted'}</div>
     
     if (action === 'UPDATE' && oldData && newData) {
       const changes: string[] = []
@@ -52,11 +54,11 @@ export function ActivityLogsModal({ isOpen, onClose, entityType, entityId, entit
         
         if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
            // Skip internal keys or format them nicely if needed
-           changes.push(`[${key}] cambió de '${oldVal || 'vacio'}' a '${newVal || 'vacio'}'`)
+           changes.push(language === 'es' ? `[${key}] cambió de '${oldVal || 'vacio'}' a '${newVal || 'vacio'}'` : `[${key}] changed from '${oldVal || 'empty'}' to '${newVal || 'empty'}'`)
         }
       }
       
-      if (changes.length === 0) return <div className="text-xs text-muted-foreground mt-1">Se actualizó sin cambios detectables (ej. timestamps)</div>
+      if (changes.length === 0) return <div className="text-xs text-muted-foreground mt-1">{language === 'es' ? 'Se actualizó sin cambios detectables (ej. timestamps)' : 'Updated with no detectable changes (e.g. timestamps)'}</div>
       
       return (
         <ul className="text-[11px] text-muted-foreground mt-2 space-y-1 list-disc pl-4">
@@ -84,16 +86,16 @@ export function ActivityLogsModal({ isOpen, onClose, entityType, entityId, entit
         <div className="p-5 overflow-y-auto flex-1 bg-muted/10">
           {entityName && (
             <p className="text-xs text-muted-foreground uppercase tracking-wider font-bold mb-4">
-              Registro: {entityName}
+              {language === 'es' ? 'Registro:' : 'Record:'} {entityName}
             </p>
           )}
 
           {loading ? (
-            <div className="text-center p-8 text-muted-foreground text-sm">Cargando actividad...</div>
+            <div className="text-center p-8 text-muted-foreground text-sm">{language === 'es' ? 'Cargando actividad...' : 'Loading activity...'}</div>
           ) : error ? (
             <div className="text-center p-8 text-red-500 text-sm">{error}</div>
           ) : logs.length === 0 ? (
-            <div className="text-center p-8 text-muted-foreground text-sm">No hay registros de actividad para este elemento.</div>
+            <div className="text-center p-8 text-muted-foreground text-sm">{language === 'es' ? 'No hay registros de actividad para este elemento.' : 'No activity records for this item.'}</div>
           ) : (
             <div className="relative space-y-4 before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-border before:to-transparent">
               {logs.map((log: any) => (

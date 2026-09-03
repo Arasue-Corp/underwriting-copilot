@@ -7,15 +7,17 @@ import { submitQuoteRequest } from "@/app/actions/quote"
 import { getClients } from "@/app/actions/clients"
 import { INSURANCE_PRODUCTS, InsuranceProduct, ProductField } from "@/lib/constants/insuranceProducts"
 
+import { useLanguage } from "@/components/language-provider"
+
 interface GenericQuoteModalProps {
   isOpen: boolean
   onClose: () => void
-  language?: 'en' | 'es'
   initialClientId?: string | null
   userRole?: string
 }
 
-export function GenericQuoteModal({ isOpen, onClose, language = 'es', initialClientId = null, userRole }: GenericQuoteModalProps) {
+export function GenericQuoteModal({ isOpen, onClose, initialClientId = null, userRole }: GenericQuoteModalProps) {
+  const language = useLanguage()
   const [isPending, startTransition] = useTransition()
   const [step, setStep] = useState(1)
   const [quoteCategory, setQuoteCategory] = useState<'commercial' | 'personal'>('commercial')

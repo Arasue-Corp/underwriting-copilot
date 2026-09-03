@@ -29,7 +29,7 @@ export default function VisitsPage() {
     es: {
       title: 'Bitácora & CRM',
       subtitle: 'Gestiona las visitas, llamadas y tareas de seguimiento con clientes.',
-      loading: 'Cargando bitácora...',
+      loading: 'Loading log...',
       empty: 'No hay actividades registradas aún.',
       updating: 'Actualizando...',
       updateSuccess: 'Actividad actualizada',
