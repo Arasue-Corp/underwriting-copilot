@@ -1,9 +1,10 @@
-﻿"use client"
+"use client"
 
 import { useState, useTransition } from 'react'
 import { X, Target, Calendar } from "lucide-react"
 import { toast } from "sonner"
 import { createGoal, GoalType, GoalPeriod } from "@/app/actions/goals"
+import { useLanguage } from '@/components/language-provider'
 
 interface AssignGoalModalProps {
   isOpen: boolean
@@ -14,6 +15,67 @@ interface AssignGoalModalProps {
 
 export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGoalModalProps) {
   const [isPending, startTransition] = useTransition()
+  const { language } = useLanguage()
+  const lang = language
+
+  const t = {
+    es: {
+      title: 'Asignar Nueva Meta',
+      selectAgentToast: 'Por favor selecciona un agente',
+      validAmountToast: 'Ingresa una cantidad válida',
+      successToast: 'Meta asignada correctamente',
+      errorToast: 'Error al asignar la meta',
+      agent: 'Agente',
+      selectAgent: '-- Seleccionar Agente --',
+      goalType: 'Tipo de Meta',
+      boundPrem: 'Prima Cerrada ($)',
+      quotedPrem: 'Prima Cotizada ($)',
+      comms: 'Comisiones ($)',
+      visits: 'Visitas a Clientes (#)',
+      frequency: 'Frecuencia',
+      daily: 'Diaria',
+      weekly: 'Semanal',
+      monthly: 'Mensual',
+      yearly: 'Anual',
+      qtyLabel: 'Cantidad (Número de Visitas)',
+      amtLabel: 'Monto Objetivo ($)',
+      qtyPh: 'Ej. 10',
+      amtPh: 'Ej. 15000',
+      startDt: 'Fecha de Inicio',
+      endDt: 'Fecha de Fin',
+      cancel: 'Cancelar',
+      save: 'Asignar Meta',
+      saving: 'Guardando...'
+    },
+    en: {
+      title: 'Assign New Goal',
+      selectAgentToast: 'Please select an agent',
+      validAmountToast: 'Enter a valid amount',
+      successToast: 'Goal assigned successfully',
+      errorToast: 'Error assigning goal',
+      agent: 'Agent',
+      selectAgent: '-- Select Agent --',
+      goalType: 'Goal Type',
+      boundPrem: 'Bound Premium ($)',
+      quotedPrem: 'Quoted Premium ($)',
+      comms: 'Commissions ($)',
+      visits: 'Client Visits (#)',
+      frequency: 'Frequency',
+      daily: 'Daily',
+      weekly: 'Weekly',
+      monthly: 'Monthly',
+      yearly: 'Yearly',
+      qtyLabel: 'Quantity (Number of Visits)',
+      amtLabel: 'Target Amount ($)',
+      qtyPh: 'e.g. 10',
+      amtPh: 'e.g. 15000',
+      startDt: 'Start Date',
+      endDt: 'End Date',
+      cancel: 'Cancel',
+      save: 'Assign Goal',
+      saving: 'Saving...'
+    }
+  }[lang]
   
   const [formData, setFormData] = useState({
     profile_id: '',
@@ -61,12 +123,12 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
     e.preventDefault()
     
     if (!formData.profile_id) {
-      toast.error('Por favor selecciona un agente')
+      toast.error(t.selectAgentToast)
       return
     }
 
     if (!formData.target_amount || Number(formData.target_amount) <= 0) {
-      toast.error('Ingresa una cantidad vlida')
+      toast.error(t.validAmountToast)
       return
     }
 
@@ -77,11 +139,11 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       })
 
       if (res.success) {
-        toast.success('Meta asignada correctamente')
+        toast.success(t.successToast)
         if (onSuccess) onSuccess()
         onClose()
       } else {
-        toast.error(res.error || 'Error al asignar la meta')
+        toast.error(res.error || t.errorToast)
       }
     })
   }
@@ -95,7 +157,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
             <div className="p-2 bg-primary/10 rounded-xl text-primary">
               <Target className="h-5 w-5" />
             </div>
-            <h2 className="text-xl font-bold font-playfair">Asignar Nueva Meta</h2>
+            <h2 className="text-xl font-bold">{t.title}</h2>
           </div>
           <button 
             onClick={onClose}
@@ -109,14 +171,14 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
           <form id="goal-form" onSubmit={handleSubmit} className="space-y-5">
             
             <div>
-              <label className="text-sm font-semibold mb-1 block">Agente</label>
+              <label className="text-sm font-semibold mb-1 block">{t.agent}</label>
               <select
                 className="w-full bg-background border border-input rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
                 value={formData.profile_id}
                 onChange={e => setFormData({...formData, profile_id: e.target.value})}
                 required
               >
-                <option value="">-- Seleccionar Agente --</option>
+                <option value="">{t.selectAgent}</option>
                 {agents.map(agent => (
                   <option key={agent.id} value={agent.id}>{agent.name}</option>
                 ))}
@@ -125,37 +187,37 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-semibold mb-1 block">Tipo de Meta</label>
+                <label className="text-sm font-semibold mb-1 block">{t.goalType}</label>
                 <select
                   className="w-full bg-background border border-input rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
                   value={formData.goal_type}
                   onChange={e => setFormData({...formData, goal_type: e.target.value as GoalType})}
                 >
-                  <option value="BOUND_PREMIUM">Prima Cerrada ($)</option>
-                  <option value="QUOTED_PREMIUM">Prima Cotizada ($)</option>
-                  <option value="COMMISSIONS">Comisiones ($)</option>
-                  <option value="VISITS">Visitas a Clientes (#)</option>
+                  <option value="BOUND_PREMIUM">{t.boundPrem}</option>
+                  <option value="QUOTED_PREMIUM">{t.quotedPrem}</option>
+                  <option value="COMMISSIONS">{t.comms}</option>
+                  <option value="VISITS">{t.visits}</option>
                 </select>
               </div>
               
               <div>
-                <label className="text-sm font-semibold mb-1 block">Frecuencia</label>
+                <label className="text-sm font-semibold mb-1 block">{t.frequency}</label>
                 <select
                   className="w-full bg-background border border-input rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
                   value={formData.period_type}
                   onChange={e => handlePeriodChange(e.target.value as GoalPeriod)}
                 >
-                  <option value="DAILY">Diaria</option>
-                  <option value="WEEKLY">Semanal</option>
-                  <option value="MONTHLY">Mensual</option>
-                  <option value="YEARLY">Anual</option>
+                  <option value="DAILY">{t.daily}</option>
+                  <option value="WEEKLY">{t.weekly}</option>
+                  <option value="MONTHLY">{t.monthly}</option>
+                  <option value="YEARLY">{t.yearly}</option>
                 </select>
               </div>
             </div>
 
             <div>
               <label className="text-sm font-semibold mb-1 block">
-                {formData.goal_type === 'VISITS' ? 'Cantidad (Nmero de Visitas)' : 'Monto Objetivo ($)'}
+                {formData.goal_type === 'VISITS' ? t.qtyLabel : t.amtLabel}
               </label>
               <input
                 type="number"
@@ -164,14 +226,14 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
                 className="w-full bg-background border border-input rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-primary outline-none"
                 value={formData.target_amount}
                 onChange={e => setFormData({...formData, target_amount: e.target.value})}
-                placeholder={formData.goal_type === 'VISITS' ? 'Ej. 10' : 'Ej. 15000'}
+                placeholder={formData.goal_type === 'VISITS' ? t.qtyPh : t.amtPh}
                 required
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/50">
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3"/> Fecha de Inicio</label>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3"/> {t.startDt}</label>
                 <input
                   type="date"
                   className="w-full bg-background border border-input rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
@@ -181,7 +243,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
                 />
               </div>
               <div>
-                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3"/> Fecha de Fin</label>
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3"/> {t.endDt}</label>
                 <input
                   type="date"
                   className="w-full bg-background border border-input rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
@@ -202,7 +264,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
             className="px-4 py-2 rounded-xl text-sm font-medium border bg-background hover:bg-muted transition-colors"
             disabled={isPending}
           >
-            Cancelar
+            {t.cancel}
           </button>
           <button 
             type="submit"
@@ -210,7 +272,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
             className="px-6 py-2 rounded-xl text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-2"
             disabled={isPending}
           >
-            {isPending ? 'Guardando...' : 'Asignar Meta'}
+            {isPending ? t.saving : t.save}
           </button>
         </div>
       </div>
