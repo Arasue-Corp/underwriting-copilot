@@ -1,10 +1,11 @@
-﻿"use client"
+"use client"
 
 import { useState } from 'react'
 import { Target, Plus, Trash2 } from "lucide-react"
 import { AssignGoalModal } from "./AssignGoalModal"
 import { GoalWithProgress, deleteGoal } from "@/app/actions/goals"
 import { toast } from "sonner"
+import { useLanguage } from '@/components/language-provider'
 
 interface GoalsManagementSectionProps {
   agents: { id: string, name: string }[]
@@ -15,41 +16,87 @@ interface GoalsManagementSectionProps {
 export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagementSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
+  const lang = useLanguage()
+
+  const t = {
+    es: {
+      confirmDelete: '¿Estás seguro de eliminar esta meta?',
+      deleted: 'Meta eliminada',
+      deleteError: 'Error al eliminar meta',
+      title: 'Metas y Objetivos',
+      desc: 'Monitorea y asigna metas para los agentes de la agencia.',
+      assignBtn: 'Asignar Meta',
+      colAgent: 'Agente',
+      colTypeFreq: 'Tipo / Frecuencia',
+      colProgress: 'Progreso',
+      colDates: 'Fechas',
+      colActions: 'Acciones',
+      empty: 'No hay metas activas registradas.',
+      delTitle: 'Eliminar Meta',
+      types: {
+        QUOTED_PREMIUM: 'Prima Cotizada',
+        BOUND_PREMIUM: 'Prima Cerrada',
+        COMMISSIONS: 'Comisiones',
+        VISITS: 'Visitas'
+      } as Record<string, string>,
+      periods: {
+        DAILY: 'Diaria',
+        WEEKLY: 'Semanal',
+        MONTHLY: 'Mensual',
+        YEARLY: 'Anual'
+      } as Record<string, string>
+    },
+    en: {
+      confirmDelete: 'Are you sure you want to delete this goal?',
+      deleted: 'Goal deleted',
+      deleteError: 'Error deleting goal',
+      title: 'Goals & Objectives',
+      desc: 'Monitor and assign goals for agency agents.',
+      assignBtn: 'Assign Goal',
+      colAgent: 'Agent',
+      colTypeFreq: 'Type / Frequency',
+      colProgress: 'Progress',
+      colDates: 'Dates',
+      colActions: 'Actions',
+      empty: 'No active goals registered.',
+      delTitle: 'Delete Goal',
+      types: {
+        QUOTED_PREMIUM: 'Quoted Premium',
+        BOUND_PREMIUM: 'Bound Premium',
+        COMMISSIONS: 'Commissions',
+        VISITS: 'Visits'
+      } as Record<string, string>,
+      periods: {
+        DAILY: 'Daily',
+        WEEKLY: 'Weekly',
+        MONTHLY: 'Monthly',
+        YEARLY: 'Yearly'
+      } as Record<string, string>
+    }
+  }[lang]
 
   const canManage = userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'DEMO'
 
   const formatCurrency = (val: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val)
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta meta?')) return
+    if (!confirm(t.confirmDelete)) return
     setIsDeleting(id)
     const res = await deleteGoal(id)
     setIsDeleting(null)
     if (res.success) {
-      toast.success('Meta eliminada')
+      toast.success(t.deleted)
     } else {
-      toast.error('Error al eliminar meta')
+      toast.error(t.deleteError)
     }
   }
 
   const getGoalTypeLabel = (type: string) => {
-    switch (type) {
-      case 'QUOTED_PREMIUM': return 'Prima Cotizada'
-      case 'BOUND_PREMIUM': return 'Prima Cerrada'
-      case 'COMMISSIONS': return 'Comisiones'
-      case 'VISITS': return 'Visitas'
-      default: return type
-    }
+    return t.types[type] || type
   }
 
   const getGoalPeriodLabel = (period: string) => {
-    switch (period) {
-      case 'DAILY': return 'Diaria'
-      case 'WEEKLY': return 'Semanal'
-      case 'MONTHLY': return 'Mensual'
-      case 'YEARLY': return 'Anual'
-      default: return period
-    }
+    return t.periods[period] || period
   }
 
   return (
@@ -58,16 +105,16 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
         <div>
           <h3 className="font-bold text-lg flex items-center gap-2">
             <Target className="h-5 w-5 text-primary" />
-            Metas y Objetivos
+            {t.title}
           </h3>
-          <p className="text-sm text-muted-foreground">Monitorea y asigna metas para los agentes de la agencia.</p>
+          <p className="text-sm text-muted-foreground">{t.desc}</p>
         </div>
         {canManage && (
           <button 
             onClick={() => setIsModalOpen(true)}
             className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-colors"
           >
-            <Plus className="h-4 w-4" /> Asignar Meta
+            <Plus className="h-4 w-4" /> {t.assignBtn}
           </button>
         )}
       </div>
@@ -76,11 +123,11 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
         <table className="w-full text-sm text-left whitespace-nowrap">
           <thead className="bg-muted/10 border-b border-border text-muted-foreground">
             <tr>
-              <th className="px-6 py-3 font-medium">Agente</th>
-              <th className="px-6 py-3 font-medium">Tipo / Frecuencia</th>
-              <th className="px-6 py-3 font-medium">Progreso</th>
-              <th className="px-6 py-3 font-medium">Fechas</th>
-              {canManage && <th className="px-6 py-3 font-medium text-right">Acciones</th>}
+              <th className="px-6 py-3 font-medium">{t.colAgent}</th>
+              <th className="px-6 py-3 font-medium">{t.colTypeFreq}</th>
+              <th className="px-6 py-3 font-medium">{t.colProgress}</th>
+              <th className="px-6 py-3 font-medium">{t.colDates}</th>
+              {canManage && <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>}
             </tr>
           </thead>
           <tbody>
@@ -119,7 +166,7 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
                         onClick={() => handleDelete(goal.id)}
                         disabled={isDeleting === goal.id}
                         className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Eliminar Meta"
+                        title={t.delTitle}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -131,7 +178,7 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
             {goals.length === 0 && (
               <tr>
                 <td colSpan={canManage ? 5 : 4} className="px-6 py-8 text-center text-muted-foreground">
-                  No hay metas activas registradas.
+                  {t.empty}
                 </td>
               </tr>
             )}

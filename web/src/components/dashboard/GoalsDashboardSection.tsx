@@ -1,10 +1,11 @@
-﻿"use client"
+"use client"
 
 import { useEffect, useState } from 'react'
 import { Target, Trophy, Flame, ChevronRight } from "lucide-react"
 import { GoalWithProgress } from "@/app/actions/goals"
 import confetti from "canvas-confetti"
 import Link from 'next/link'
+import { useLanguage } from '@/components/language-provider'
 
 interface GoalsDashboardSectionProps {
   goals: GoalWithProgress[]
@@ -14,6 +15,54 @@ interface GoalsDashboardSectionProps {
 
 export function GoalsDashboardSection({ goals, userRole, currentUserId }: GoalsDashboardSectionProps) {
   const [celebrated, setCelebrated] = useState<Record<string, boolean>>({})
+  const lang = useLanguage()
+
+  const t = {
+    es: {
+      title: 'Metas y Objetivos Activos',
+      manage: 'Gestionar',
+      agent: 'Agente:',
+      daily: 'D',
+      weekly: 'Sem',
+      monthly: 'Mes',
+      yearly: 'Año',
+      types: {
+        QUOTED_PREMIUM: 'Primas Cotizadas',
+        BOUND_PREMIUM: 'Primas Cerradas',
+        COMMISSIONS: 'Comisiones',
+        VISITS: 'Visitas a Clientes'
+      } as Record<string, string>,
+      msg: {
+        completed: "¡Increíble! Has alcanzado la meta. 🏆",
+        almost: (val: string) => `¡Casi lo logras! Solo faltan ${val}.`,
+        half: "¡Vas a la mitad del camino! Sigue así. 🔥",
+        start: "¡Buen comienzo! Mantén el ritmo. 🚀",
+        zero: "¡Tú puedes! Empieza a registrar actividad."
+      }
+    },
+    en: {
+      title: 'Active Goals & Objectives',
+      manage: 'Manage',
+      agent: 'Agent:',
+      daily: 'D',
+      weekly: 'Wk',
+      monthly: 'Mo',
+      yearly: 'Yr',
+      types: {
+        QUOTED_PREMIUM: 'Quoted Premium',
+        BOUND_PREMIUM: 'Bound Premium',
+        COMMISSIONS: 'Commissions',
+        VISITS: 'Client Visits'
+      } as Record<string, string>,
+      msg: {
+        completed: "Incredible! You reached the goal. 🏆",
+        almost: (val: string) => `Almost there! Only ${val} left.`,
+        half: "You're halfway there! Keep it up. 🔥",
+        start: "Great start! Keep the pace. 🚀",
+        zero: "You can do it! Start logging activity."
+      }
+    }
+  }[lang]
 
   // Determine which goals to show. 
   // If Admin/Manager, show all (maybe top 3 or a carousel if many, but let's just show them in a grid).
@@ -52,27 +101,21 @@ export function GoalsDashboardSection({ goals, userRole, currentUserId }: GoalsD
 
   if (displayGoals.length === 0) return null
 
-  const getMotivationalMessage = (progress: number, goalType: string, target: number, current: number) => {
-    if (progress >= 100) return "¡Increíble! Has alcanzado la meta. 🏆"
-    if (progress >= 80) return `¡Casi lo logras! Solo faltan ${formatValue(target - current, goalType)}.`
-    if (progress >= 50) return "¡Vas a la mitad del camino! Sigue así. 🔥"
-    if (progress > 0) return "¡Buen comienzo! Mantén el ritmo. 🚀"
-    return "¡Tú puedes! Empieza a registrar actividad."
-  }
-
   const formatValue = (val: number, type: string) => {
     if (type === 'VISITS') return val.toString()
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val)
   }
 
+  const getMotivationalMessage = (progress: number, goalType: string, target: number, current: number) => {
+    if (progress >= 100) return t.msg.completed
+    if (progress >= 80) return t.msg.almost(formatValue(target - current, goalType))
+    if (progress >= 50) return t.msg.half
+    if (progress > 0) return t.msg.start
+    return t.msg.zero
+  }
+
   const getGoalTypeLabel = (type: string) => {
-    switch (type) {
-      case 'QUOTED_PREMIUM': return 'Primas Cotizadas'
-      case 'BOUND_PREMIUM': return 'Primas Cerradas'
-      case 'COMMISSIONS': return 'Comisiones'
-      case 'VISITS': return 'Visitas a Clientes'
-      default: return type
-    }
+    return t.types[type] || type
   }
 
   const getColorClass = (progress: number) => {
@@ -88,11 +131,11 @@ export function GoalsDashboardSection({ goals, userRole, currentUserId }: GoalsD
         <div className="flex items-center justify-between">
           <h3 className="font-playfair font-semibold text-xl leading-none tracking-tight flex items-center gap-2">
             <Trophy className="h-5 w-5 text-amber-500" />
-            Metas y Objetivos Activos
+            {t.title}
           </h3>
           {(userRole === 'ADMIN' || userRole === 'MANAGER' || userRole === 'DEMO') && (
             <Link href="/agency" className="text-xs font-semibold text-primary flex items-center hover:underline">
-              Gestionar <ChevronRight className="h-3 w-3" />
+              {t.manage} <ChevronRight className="h-3 w-3" />
             </Link>
           )}
         </div>
@@ -117,11 +160,11 @@ export function GoalsDashboardSection({ goals, userRole, currentUserId }: GoalsD
                       {isCompleted && <Flame className="h-4 w-4 text-orange-500 animate-pulse" />}
                     </h4>
                     {userRole !== 'AGENT' && (
-                      <p className="text-xs text-muted-foreground mt-1">Agente: <span className="font-semibold text-foreground/80">{goal.profiles?.name}</span></p>
+                      <p className="text-xs text-muted-foreground mt-1">{t.agent} <span className="font-semibold text-foreground/80">{goal.profiles?.name}</span></p>
                     )}
                   </div>
                   <div className={`px-2 py-1 rounded-md text-xs font-bold ${isCompleted ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'}`}>
-                    {goal.period_type === 'DAILY' ? 'D' : goal.period_type === 'WEEKLY' ? 'Sem' : goal.period_type === 'MONTHLY' ? 'Mes' : 'Año'}
+                    {goal.period_type === 'DAILY' ? t.daily : goal.period_type === 'WEEKLY' ? t.weekly : goal.period_type === 'MONTHLY' ? t.monthly : t.yearly}
                   </div>
                 </div>
 
