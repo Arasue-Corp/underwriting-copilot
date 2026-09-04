@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from 'react'
-import { Target, Plus, Trash2 } from "lucide-react"
+import { Target, Plus, Trash2, History } from "lucide-react"
 import { AssignGoalModal } from "./AssignGoalModal"
+import { GoalHistoryModal } from "./GoalHistoryModal"
 import { GoalWithProgress, deleteGoal } from "@/app/actions/goals"
 import { toast } from "sonner"
 import { useLanguage } from '@/components/language-provider'
@@ -15,6 +16,7 @@ interface GoalsManagementSectionProps {
 
 export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagementSectionProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [historyGoal, setHistoryGoal] = useState<GoalWithProgress | null>(null)
   const [isDeleting, setIsDeleting] = useState<string | null>(null)
   const lang = useLanguage()
 
@@ -28,11 +30,12 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
       assignBtn: 'Asignar Meta',
       colAgent: 'Agente',
       colTypeFreq: 'Tipo / Frecuencia',
-      colProgress: 'Progreso',
-      colDates: 'Fechas',
+      colProgress: 'Progreso (Periodo Actual)',
+      colDates: 'Fechas (Periodo Actual)',
       colActions: 'Acciones',
       empty: 'No hay metas activas registradas.',
       delTitle: 'Eliminar Meta',
+      histTitle: 'Ver Bitácora',
       types: {
         QUOTED_PREMIUM: 'Prima Cotizada',
         BOUND_PREMIUM: 'Prima Cerrada',
@@ -55,11 +58,12 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
       assignBtn: 'Assign Goal',
       colAgent: 'Agent',
       colTypeFreq: 'Type / Frequency',
-      colProgress: 'Progress',
-      colDates: 'Dates',
+      colProgress: 'Progress (Current Period)',
+      colDates: 'Dates (Current Period)',
       colActions: 'Actions',
       empty: 'No active goals registered.',
       delTitle: 'Delete Goal',
+      histTitle: 'View Logbook',
       types: {
         QUOTED_PREMIUM: 'Quoted Premium',
         BOUND_PREMIUM: 'Bound Premium',
@@ -127,7 +131,7 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
               <th className="px-6 py-3 font-medium">{t.colTypeFreq}</th>
               <th className="px-6 py-3 font-medium">{t.colProgress}</th>
               <th className="px-6 py-3 font-medium">{t.colDates}</th>
-              {canManage && <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>}
+              <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>
             </tr>
           </thead>
           <tbody>
@@ -158,10 +162,17 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
                     </div>
                   </td>
                   <td className="px-6 py-4 text-xs text-muted-foreground">
-                    {goal.start_date} a {goal.end_date}
+                    {goal.current_period_start || goal.start_date} a {goal.current_period_end || goal.end_date}
                   </td>
-                  {canManage && (
-                    <td className="px-6 py-4 text-right">
+                  <td className="px-6 py-4 text-right">
+                    <button 
+                      onClick={() => setHistoryGoal(goal)}
+                      className="p-2 text-primary hover:bg-primary/10 rounded-lg transition-colors mr-1"
+                      title={t.histTitle}
+                    >
+                      <History className="h-4 w-4" />
+                    </button>
+                    {canManage && (
                       <button 
                         onClick={() => handleDelete(goal.id)}
                         disabled={isDeleting === goal.id}
@@ -170,14 +181,14 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
-                    </td>
-                  )}
+                    )}
+                  </td>
                 </tr>
               )
             })}
             {goals.length === 0 && (
               <tr>
-                <td colSpan={canManage ? 5 : 4} className="px-6 py-8 text-center text-muted-foreground">
+                <td colSpan={5} className="px-6 py-8 text-center text-muted-foreground">
                   {t.empty}
                 </td>
               </tr>
@@ -190,6 +201,12 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         agents={agents} 
+      />
+
+      <GoalHistoryModal
+        isOpen={!!historyGoal}
+        onClose={() => setHistoryGoal(null)}
+        goal={historyGoal}
       />
     </div>
   )
