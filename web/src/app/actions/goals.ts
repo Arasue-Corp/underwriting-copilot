@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { toZonedTime, fromZonedTime } from "date-fns-tz"
 
 export type GoalType = 'QUOTED_PREMIUM' | 'BOUND_PREMIUM' | 'COMMISSIONS' | 'VISITS'
 export type GoalPeriod = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY'
@@ -38,8 +39,11 @@ export interface GoalHistoryPeriod {
 }
 
 function getPeriodBoundariesForDate(date: Date, period: GoalPeriod) {
-  const start = new Date(date)
-  const end = new Date(date)
+  const timeZone = 'America/Los_Angeles'
+  const zonedDate = toZonedTime(date, timeZone)
+
+  const start = new Date(zonedDate)
+  const end = new Date(zonedDate)
   
   if (period === 'DAILY') {
     start.setHours(0,0,0,0)
@@ -64,7 +68,11 @@ function getPeriodBoundariesForDate(date: Date, period: GoalPeriod) {
     end.setMonth(11, 31)
     end.setHours(23,59,59,999)
   }
-  return { start, end }
+  
+  const utcStart = fromZonedTime(start, timeZone)
+  const utcEnd = fromZonedTime(end, timeZone)
+
+  return { start: utcStart, end: utcEnd, zonedStart: start, zonedEnd: end }
 }
 
 export async function createGoal(data: {
@@ -146,10 +154,10 @@ async function calculateProgressForGoals(supabase: any, agencyId: string, goals:
   const now = new Date()
 
   const goalPeriods = goals.map(g => {
-    const { start, end } = getPeriodBoundariesForDate(now, g.period_type)
+    const { start, end, zonedStart, zonedEnd } = getPeriodBoundariesForDate(now, g.period_type)
     if (start.getTime() < globalMin) globalMin = start.getTime()
     if (end.getTime() > globalMax) globalMax = end.getTime()
-    return { ...g, pStart: start.getTime(), pEnd: end.getTime(), startStr: start.toISOString(), endStr: end.toISOString() }
+    return { ...g, pStart: start.getTime(), pEnd: end.getTime(), startStr: zonedStart.toISOString(), endStr: zonedEnd.toISOString() }
   })
 
   const minDateStr = new Date(globalMin).toISOString()
@@ -333,7 +341,10 @@ export async function getGoalHistory(goalId: string): Promise<GoalHistoryPeriod[
 
   const periods: { pStart: number, pEnd: number, startStr: string, endStr: string, isCurrent: boolean }[] = []
   
-  const startDate = new Date(goal.start_date)
+  const timeZone = 'America/Los_Angeles'
+  // Use toZonedTime so that cursor starts exactly at the wall-clock date of start_date
+  // Since start_date is a YYYY-MM-DD string, new Date(goal.start_date + "T00:00:00") creates a date
+  const startDate = new Date(goal.start_date + 'T00:00:00')
   const now = new Date()
   const { start: currentStart } = getPeriodBoundariesForDate(now, goal.period_type)
 
@@ -344,28 +355,29 @@ export async function getGoalHistory(goalId: string): Promise<GoalHistoryPeriod[
   const maxIterations = 365 * 5 // Max 5 years of daily goals
 
   while (cursor.getTime() <= currentStart.getTime() && iterations < maxIterations) {
-    const { start, end } = getPeriodBoundariesForDate(cursor, goal.period_type)
+    const { start, end, zonedStart, zonedEnd } = getPeriodBoundariesForDate(cursor, goal.period_type)
     
     // Make sure we haven't already added this exact period
     if (!periods.find(p => p.pStart === start.getTime())) {
       periods.push({
         pStart: start.getTime(),
         pEnd: end.getTime(),
-        startStr: start.toISOString(),
-        endStr: end.toISOString(),
+        startStr: zonedStart.toISOString(),
+        endStr: zonedEnd.toISOString(),
         isCurrent: start.getTime() === currentStart.getTime()
       })
     }
 
     // Advance cursor to next period
     if (goal.period_type === 'DAILY') {
-      cursor.setDate(cursor.getDate() + 1)
+      cursor = new Date(cursor.getTime() + 24 * 60 * 60 * 1000)
     } else if (goal.period_type === 'WEEKLY') {
-      cursor.setDate(cursor.getDate() + 7)
+      cursor = new Date(cursor.getTime() + 7 * 24 * 60 * 60 * 1000)
     } else if (goal.period_type === 'MONTHLY') {
-      cursor.setMonth(cursor.getMonth() + 1)
+      // Create a Date in the middle of the next month to avoid edge cases
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 15))
     } else if (goal.period_type === 'YEARLY') {
-      cursor.setFullYear(cursor.getFullYear() + 1)
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear() + 1, 6, 1))
     }
     iterations++
   }
