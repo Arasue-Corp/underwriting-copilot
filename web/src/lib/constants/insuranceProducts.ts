@@ -94,6 +94,7 @@ export const INSURANCE_PRODUCTS: InsuranceProduct[] = [
       { id: 'ca_mvr', label: 'MVRs (Historial de manejo)', labelEn: 'MVRs (Motor Vehicle Records)', type: 'file' },
       { id: 'ca_radius', label: 'Radio de Operación (Millas)', labelEn: 'Radius of Operation (Miles)', type: 'number' },
       { id: 'ca_usage', label: 'Uso de Vehículos (Servicio, Retail, Comercial)', labelEn: 'Vehicle Usage (Service, Retail, Commercial)', type: 'textarea' },
+      { id: 'ca_usdot', label: 'USDOT', labelEn: 'USDOT', type: 'text', required: false },
     ]
   },
   {
