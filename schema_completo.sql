@@ -1,4 +1,4 @@
-﻿-- Initial Schema for Underwriting Co-Pilot
+-- Initial Schema for Underwriting Co-Pilot
 
 -- Create Enums
 CREATE TYPE profile_role AS ENUM ('ADMIN', 'MANAGER', 'AGENT');
@@ -450,7 +450,7 @@ ON storage.objects FOR INSERT
 WITH CHECK (
     bucket_id = 'quotes-bucket'
     AND auth.role() = 'authenticated'
-    AND (public.get_user_role() = 'MANAGER' OR public.get_user_role() = 'ADMIN')
+    AND (public.get_user_role() = 'MANAGER' OR public.get_user_role() = 'ADMIN' OR public.get_user_role() = 'DEMO' OR public.get_user_role() = 'AGENT')
 );
 
 -- Crear polÃ­tica de lectura pÃºblica (para que getPublicUrl funcione sin problemas)

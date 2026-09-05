@@ -80,3 +80,24 @@ BEGIN
             );
     END IF;
 END $$;
+
+-- Permitir que usuarios DEMO (y AGENT por si acaso) puedan subir archivos a quotes-bucket
+DROP POLICY IF EXISTS "Users can upload to quotes-bucket" ON storage.objects;
+
+CREATE POLICY "Users can upload to quotes-bucket"
+ON storage.objects FOR INSERT
+WITH CHECK (
+    bucket_id = 'quotes-bucket'
+    AND auth.role() = 'authenticated'
+    AND (
+        public.get_user_role() = 'MANAGER' 
+        OR public.get_user_role() = 'ADMIN' 
+        OR public.get_user_role() = 'DEMO'
+        OR public.get_user_role() = 'AGENT'
+    )
+);
+
+-- Ensure quotes-bucket exists
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('quotes-bucket', 'quotes-bucket', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
