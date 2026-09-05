@@ -14,6 +14,9 @@ export default function ProposalsPage() {
   const [loading, setLoading] = useState(true)
   const [userProfile, setUserProfile] = useState<any>(null)
   const [logsQuote, setLogsQuote] = useState<any>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' })
   
   const supabase = createClient()
   const langContext = useLanguage()
@@ -125,14 +128,62 @@ export default function ProposalsPage() {
     loadData()
   }, [])
 
+  const sortedProposals = [...proposals].sort((a, b) => {
+    let aValue = a[sortConfig.key]
+    let bValue = b[sortConfig.key]
+    
+    if (sortConfig.key === 'client_name') {
+      aValue = a.client_name || ''
+      bValue = b.client_name || ''
+    } else if (sortConfig.key === 'quoted_premium') {
+      aValue = a.quotes_provided?.[0]?.total_premium || 0
+      bValue = b.quotes_provided?.[0]?.total_premium || 0
+    } else if (sortConfig.key === 'carrier_commission') {
+      aValue = a.quotes_provided?.[0]?.agency_commission_percentage || 0
+      bValue = b.quotes_provided?.[0]?.agency_commission_percentage || 0
+    } else if (sortConfig.key === 'status') {
+      aValue = a.status || ''
+      bValue = b.status || ''
+    } else if (sortConfig.key === 'created_at') {
+      aValue = new Date(a.created_at).getTime()
+      bValue = new Date(b.created_at).getTime()
+    }
+
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const totalPages = Math.ceil(sortedProposals.length / itemsPerPage)
+  const paginatedProposals = sortedProposals.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
             <h2 className="text-3xl font-bold tracking-tight">{t.title}</h2>
             <p className="text-muted-foreground text-sm mt-1">{t.subtitle}</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">{lang === 'es' ? 'Ordenar por:' : 'Sort by:'}</span>
+            <select 
+              value={`${sortConfig.key}-${sortConfig.direction}`}
+              onChange={(e) => {
+                const [key, direction] = e.target.value.split('-')
+                setSortConfig({ key, direction })
+              }}
+              className="h-9 px-3 py-1 bg-background border border-border rounded-md text-sm outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="created_at-desc">{lang === 'es' ? 'Más recientes' : 'Newest'}</option>
+              <option value="created_at-asc">{lang === 'es' ? 'Más antiguos' : 'Oldest'}</option>
+              <option value="client_name-asc">{lang === 'es' ? 'Cliente (A-Z)' : 'Client (A-Z)'}</option>
+              <option value="client_name-desc">{lang === 'es' ? 'Cliente (Z-A)' : 'Client (Z-A)'}</option>
+              <option value="quoted_premium-desc">{lang === 'es' ? 'Prima Cotizada (Mayor a Menor)' : 'Premium (High to Low)'}</option>
+              <option value="quoted_premium-asc">{lang === 'es' ? 'Prima Cotizada (Menor a Mayor)' : 'Premium (Low to High)'}</option>
+              <option value="status-asc">{lang === 'es' ? 'Estatus' : 'Status'}</option>
+            </select>
+          </div>
         </div>
-      </div>
 
       <div className="rounded-xl border bg-card text-card-foreground shadow-sm overflow-hidden">
         {loading ? (
@@ -143,7 +194,7 @@ export default function ProposalsPage() {
           <>
             {/* Mobile View */}
             <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
-              {proposals.map((quote) => (
+              {paginatedProposals.map((quote) => (
                 <div key={quote.id} className="border border-border/50 rounded-xl p-5 space-y-4 bg-gradient-to-b from-muted/10 to-transparent shadow-sm relative overflow-hidden">
                   
                   <div className={`absolute top-0 left-0 w-1 h-full ${
@@ -223,7 +274,7 @@ export default function ProposalsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {proposals.map((quote) => (
+                  {paginatedProposals.map((quote) => (
                     <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="px-6 py-4 font-bold">{quote.client_name}</td>
                       <td className="px-6 py-4 text-muted-foreground">{quote.client_business_type}</td>
@@ -274,9 +325,48 @@ export default function ProposalsPage() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
-            </div>
-          </>
+                </table>
+              </div>
+              <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/5">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">{lang === 'es' ? 'Mostrar' : 'Show'}</span>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value))
+                      setCurrentPage(1)
+                    }}
+                    className="h-8 px-2 bg-background border border-border rounded-md text-sm outline-none"
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <span className="text-sm text-muted-foreground">{lang === 'es' ? 'por página' : 'per page'}</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                  >
+                    {lang === 'es' ? 'Anterior' : 'Previous'}
+                  </button>
+                  <span className="text-sm font-medium min-w-[3rem] text-center">
+                    {currentPage} / {totalPages || 1}
+                  </span>
+                  <button 
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                    className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                  >
+                    {lang === 'es' ? 'Siguiente' : 'Next'}
+                  </button>
+                </div>
+              </div>
+            </>
         )}
       </div>
 

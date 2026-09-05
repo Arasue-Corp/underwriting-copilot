@@ -17,6 +17,9 @@ export default function QuotesPage() {
   const [userProfile, setUserProfile] = useState<any>(null)
   const [agencyMembers, setAgencyMembers] = useState<any[]>([])
   const [teamUsers, setTeamUsers] = useState<any[]>([])
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' })
   const supabase = createClient()
   const language = useLanguage()
   const lang = language
@@ -564,12 +567,60 @@ export default function QuotesPage() {
     return true
   })
 
+  const sortedQuotes = [...filteredQuotes].sort((a, b) => {
+    let aValue = a[sortConfig.key]
+    let bValue = b[sortConfig.key]
+    
+    if (sortConfig.key === 'carrier') {
+      aValue = Array.isArray(a.quotes_provided) && a.quotes_provided.length > 0 ? a.quotes_provided[0].carrier : (a.carrier_id || '')
+      bValue = Array.isArray(b.quotes_provided) && b.quotes_provided.length > 0 ? b.quotes_provided[0].carrier : (b.carrier_id || '')
+    } else if (sortConfig.key === 'coverage_requested') {
+      aValue = a.coverage_requested || ''
+      bValue = b.coverage_requested || ''
+    } else if (sortConfig.key === 'client_name') {
+      aValue = a.client_name || ''
+      bValue = b.client_name || ''
+    } else if (sortConfig.key === 'status') {
+      aValue = a.status || ''
+      bValue = b.status || ''
+    } else if (sortConfig.key === 'created_at') {
+      aValue = new Date(a.created_at).getTime()
+      bValue = new Date(b.created_at).getTime()
+    }
+
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const totalPages = Math.ceil(sortedQuotes.length / itemsPerPage)
+  const paginatedQuotes = sortedQuotes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6 relative">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="text-3xl font-bold tracking-tight">{t.inbox}</h2>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-wrap gap-2">
+            <div className="flex items-center gap-2 mr-2">
+              <span className="text-sm font-medium text-muted-foreground">{language === 'es' ? 'Ordenar por:' : 'Sort by:'}</span>
+              <select 
+                value={`${sortConfig.key}-${sortConfig.direction}`}
+                onChange={(e) => {
+                  const [key, direction] = e.target.value.split('-')
+                  setSortConfig({ key, direction })
+                }}
+                className="h-9 px-3 py-1 bg-background border border-border rounded-md text-sm outline-none focus:ring-2 focus:ring-primary/50"
+              >
+                <option value="created_at-desc">{language === 'es' ? 'Más recientes' : 'Newest'}</option>
+                <option value="created_at-asc">{language === 'es' ? 'Más antiguos' : 'Oldest'}</option>
+                <option value="client_name-asc">{language === 'es' ? 'Cliente (A-Z)' : 'Client (A-Z)'}</option>
+                <option value="client_name-desc">{language === 'es' ? 'Cliente (Z-A)' : 'Client (Z-A)'}</option>
+                <option value="carrier-asc">{language === 'es' ? 'Aseguradora (A-Z)' : 'Carrier (A-Z)'}</option>
+                <option value="coverage_requested-asc">{language === 'es' ? 'Cobertura (A-Z)' : 'Coverage (A-Z)'}</option>
+                <option value="status-asc">{language === 'es' ? 'Estatus' : 'Status'}</option>
+              </select>
+            </div>
+            <div className="flex flex-wrap gap-2">
             <button onClick={() => setFilter('ALL')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ALL' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.all}</button>
             <button onClick={() => setFilter('ASSIGNED_TO_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'ASSIGNED_TO_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.assignedToMe}</button>
             <button onClick={() => setFilter('CREATED_BY_ME')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === 'CREATED_BY_ME' ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted hover:bg-muted/80'}`}>{t.createdByMe}</button>
@@ -594,7 +645,7 @@ export default function QuotesPage() {
           <>
             {/* Mobile View */}
             <div className="grid grid-cols-1 gap-4 p-4 md:hidden">
-              {filteredQuotes.map((quote) => (
+              {paginatedQuotes.map((quote) => (
                 <div key={quote.id} className="border border-border/50 rounded-xl p-5 space-y-4 bg-gradient-to-b from-muted/10 to-transparent shadow-sm relative overflow-hidden">
                   
                   {/* Decorator line */}
@@ -721,7 +772,7 @@ export default function QuotesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredQuotes.map((quote) => (
+                  {paginatedQuotes.map((quote) => (
                     <tr key={quote.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="px-6 py-4 font-medium">{quote.client_name}</td>
                       <td className="px-6 py-4">

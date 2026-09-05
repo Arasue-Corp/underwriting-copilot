@@ -19,6 +19,9 @@ export default function PoliciesPage() {
   const [editingPolicy, setEditingPolicy] = useState<any | null>(null)
   const [viewingPolicy, setViewingPolicy] = useState<any | null>(null)
   const [documentsPolicy, setDocumentsPolicy] = useState<any | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [sortConfig, setSortConfig] = useState({ key: 'created_at', direction: 'desc' })
 
   const t = {
     es: {
@@ -121,6 +124,35 @@ export default function PoliciesPage() {
     )
   })
 
+  const sortedPolicies = [...filtered].sort((a, b) => {
+    let aValue = a[sortConfig.key]
+    let bValue = b[sortConfig.key]
+    
+    if (sortConfig.key === 'client_name') {
+      aValue = a.client_company_name ? `${a.client_first_name} ${a.client_company_name}` : a.client_first_name
+      bValue = b.client_company_name ? `${b.client_first_name} ${b.client_company_name}` : b.client_first_name
+    } else if (sortConfig.key === 'bound_premium') {
+      aValue = Number(a.bound_premium) || 0
+      bValue = Number(b.bound_premium) || 0
+    } else if (sortConfig.key === 'earned_commission') {
+      aValue = Number(a.earned_commission) || 0
+      bValue = Number(b.earned_commission) || 0
+    } else if (sortConfig.key === 'carrier_id') {
+      aValue = a.carrier_id || ''
+      bValue = b.carrier_id || ''
+    } else if (sortConfig.key === 'created_at') {
+      aValue = new Date(a.created_at).getTime()
+      bValue = new Date(b.created_at).getTime()
+    }
+
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+    return 0
+  })
+
+  const totalPages = Math.ceil(sortedPolicies.length / itemsPerPage)
+  const paginatedPolicies = sortedPolicies.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -186,7 +218,7 @@ export default function PoliciesPage() {
                   <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">{t.noData}</td>
                 </tr>
               ) : (
-                filtered.map((policy) => (
+                paginatedPolicies.map((policy) => (
                   <tr key={policy.id} className="hover:bg-muted/30 transition-colors">
                     <td className="px-6 py-4 font-medium text-foreground">{policy.year} - {policy.month}</td>
                     <td className="px-6 py-4 font-mono text-muted-foreground">{policy.policy_number || 'TBD'}</td>
@@ -251,11 +283,50 @@ export default function PoliciesPage() {
                 ))
               )}
             </tbody>
-          </table>
+            </table>
+          </div>
+          <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/5">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{lang === 'es' ? 'Mostrar' : 'Show'}</span>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value))
+                  setCurrentPage(1)
+                }}
+                className="h-8 px-2 bg-background border border-border rounded-md text-sm outline-none"
+              >
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <span className="text-sm text-muted-foreground">{lang === 'es' ? 'por página' : 'per page'}</span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                {lang === 'es' ? 'Anterior' : 'Previous'}
+              </button>
+              <span className="text-sm font-medium min-w-[3rem] text-center">
+                {currentPage} / {totalPages || 1}
+              </span>
+              <button 
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || totalPages === 0}
+                className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+              >
+                {lang === 'es' ? 'Siguiente' : 'Next'}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <PolicyModal 
+        <PolicyModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => { setIsModalOpen(false); loadPolicies() }}
