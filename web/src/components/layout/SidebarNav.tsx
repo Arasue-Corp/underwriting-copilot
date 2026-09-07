@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import { useLanguage } from "@/components/language-provider"
-import { Home, Search, FileText, Users, Database, Building2, ShieldCheck, Layers, Calendar, CalendarDays, History } from "lucide-react"
+import { Home, Search, FileText, Users, Database, Building2, ShieldCheck, Layers, Calendar, CalendarDays, History, CheckSquare } from "lucide-react"
 
 export default function SidebarNav({ role, t }: { role: string, t: any }) {
   const pathname = usePathname()
@@ -71,6 +71,12 @@ export default function SidebarNav({ role, t }: { role: string, t: any }) {
         <Link href="/calendar" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/calendar")}`}>
           <CalendarDays className={`h-4 w-4 ${getIconClasses("/calendar")}`} />
           {t.calendar}
+        </Link>
+      </li>
+      <li>
+        <Link href="/tasks" className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${getActiveClasses("/tasks")}`}>
+          <CheckSquare className={`h-4 w-4 ${getIconClasses("/tasks")}`} />
+          {lang === 'es' ? 'Tareas' : 'Tasks'}
         </Link>
       </li>
       {(role === 'ADMIN' || role === 'DEMO') && (

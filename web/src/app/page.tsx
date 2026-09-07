@@ -9,6 +9,8 @@ import { getAgencyGoals } from "@/app/actions/goals"
 import { cookies } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { getVisits } from "@/app/actions/visits"
+import { getTasks } from "@/app/actions/tasks"
+import { TasksDashboardSection } from "@/components/dashboard/TasksDashboardSection"
 
 export const dynamic = 'force-dynamic';
 
@@ -120,15 +122,18 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   let quotes: any[] = [];
   let quotesError = null;
   let visits: any[] = [];
+  let tasks: any[] = [];
   
   if (role === 'DEMO') {
     const { demoQuotes, demoVisits } = await import('@/lib/demo-data');
     quotes = demoQuotes;
     visits = demoVisits;
+    tasks = []; // Mock tasks could be added here if needed
   } else {
     const { data: dbQuotes, error } = await quotesQuery;
     quotes = dbQuotes || [];
     quotesError = error;
+    tasks = await getTasks();
     if (role === 'ADMIN' || role === 'MANAGER') {
       visits = await getVisits({ 
         startDate: startDate as string | undefined, 
@@ -422,6 +427,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
           </div>
         </div>
       </div>
+
+      <TasksDashboardSection tasks={tasks} />
 
       {/* Visits Section (Admin/Manager only) */}
       {((role === 'ADMIN' || role === 'DEMO') || role === 'MANAGER') && (
