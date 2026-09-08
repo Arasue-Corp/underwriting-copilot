@@ -9,7 +9,7 @@ export async function getTasks() {
     .from('tasks')
     .select(`
       *,
-      client:client_id (id, name, company),
+      client:client_id (id, name),
       assignee:assignee_id (id, name, role),
       creator:creator_id (id, name)
     `)
