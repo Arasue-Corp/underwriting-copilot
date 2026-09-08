@@ -7,6 +7,8 @@ import { useLanguage } from "@/components/language-provider"
 import { toast } from "sonner"
 import { format } from "date-fns"
 import { es as esLocale } from "date-fns/locale"
+import { createClient } from "@/lib/supabase/client"
+import { TaskModal } from "@/components/tasks/TaskModal"
 
 export default function TasksPage() {
   const langContext = useLanguage()
@@ -17,6 +19,13 @@ export default function TasksPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("ALL")
   const [sortConfig, setSortConfig] = useState({ key: 'due_date', direction: 'asc' })
+
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [clients, setClients] = useState<any[]>([])
+  const [agents, setAgents] = useState<any[]>([])
+  const [userProfile, setUserProfile] = useState<any>(null)
+  
+  const supabase = createClient()
 
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
@@ -86,6 +95,24 @@ export default function TasksPage() {
     setLoading(true)
     const data = await getTasks()
     setTasks(data || [])
+    
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: profile } = await supabase.from('profiles').select('id, agency_id, role, name').eq('id', user.id).single()
+      if (profile) {
+        setUserProfile(profile)
+        if (profile.role !== 'AGENT') {
+          const { data: agts } = await supabase.from('profiles').select('id, name, role').eq('agency_id', profile.agency_id)
+          if (agts) setAgents(agts)
+        } else {
+          setAgents([profile])
+        }
+        
+        const { data: cls } = await supabase.from('clients').select('id, name').eq('agency_id', profile.agency_id).order('name')
+        if (cls) setClients(cls)
+      }
+    }
+    
     setLoading(false)
   }
 
@@ -165,6 +192,12 @@ export default function TasksPage() {
           <h1 className="text-4xl font-bold tracking-tight text-foreground">{t.title}</h1>
           <p className="text-muted-foreground">{t.subtitle}</p>
         </div>
+        <button 
+          onClick={() => setIsTaskModalOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          {lang === 'es' ? '+ Nueva Tarea' : '+ New Task'}
+        </button>
       </div>
 
       <div className="rounded-2xl border bg-card text-card-foreground shadow-sm overflow-hidden flex flex-col">
@@ -329,6 +362,18 @@ export default function TasksPage() {
         </div>
 
       </div>
+      
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => setIsTaskModalOpen(false)} 
+        onSuccess={() => {
+          setIsTaskModalOpen(false)
+          loadTasks()
+        }}
+        clients={clients}
+        agents={agents}
+        userProfile={userProfile}
+      />
     </div>
   )
 }

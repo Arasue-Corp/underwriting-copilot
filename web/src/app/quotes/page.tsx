@@ -894,6 +894,86 @@ export default function QuotesPage() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{lang === 'es' ? 'Mostrar' : 'Show'}</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="h-8 px-2 bg-background border border-border rounded-md text-sm outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-muted-foreground">{lang === 'es' ? 'por página' : 'per page'}</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                >
+                  {lang === 'es' ? 'Anterior' : 'Previous'}
+                </button>
+                <span className="text-sm font-medium min-w-[3rem] text-center">
+                  {currentPage} / {totalPages || 1}
+                </span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                >
+                  {lang === 'es' ? 'Siguiente' : 'Next'}
+                </button>
+              </div>
+            </div>
+
+            {/* Pagination */}
+            <div className="p-4 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/5">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{lang === 'es' ? 'Mostrar' : 'Show'}</span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value))
+                    setCurrentPage(1)
+                  }}
+                  className="h-8 px-2 bg-background border border-border rounded-md text-sm outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={25}>25</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-muted-foreground">{lang === 'es' ? 'por página' : 'per page'}</span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                >
+                  {lang === 'es' ? 'Anterior' : 'Previous'}
+                </button>
+                <span className="text-sm font-medium min-w-[3rem] text-center">
+                  {currentPage} / {totalPages || 1}
+                </span>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages || totalPages === 0}
+                  className="px-3 py-1 rounded-md border border-border bg-background text-sm hover:bg-muted disabled:opacity-50 transition-colors"
+                >
+                  {lang === 'es' ? 'Siguiente' : 'Next'}
+                </button>
+              </div>
+            </div>
           </>
         )}
       </div>
