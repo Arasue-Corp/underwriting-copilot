@@ -9,9 +9,7 @@ export async function getTasks() {
     .from('tasks')
     .select(`
       *,
-      client:client_id (id, name),
-      assignee:assignee_id (id, name, role),
-      creator:creator_id (id, name)
+      client:client_id (id, name)
     `)
     .order('due_date', { ascending: true })
 
@@ -20,7 +18,31 @@ export async function getTasks() {
     return []
   }
 
-  return data || []
+  if (!data || data.length === 0) return []
+
+  // Fetch profiles for assignee and creator
+  const profileIds = new Set<string>()
+  data.forEach((task: any) => {
+    if (task.assignee_id) profileIds.add(task.assignee_id)
+    if (task.creator_id) profileIds.add(task.creator_id)
+  })
+
+  if (profileIds.size > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, name, role')
+      .in('id', Array.from(profileIds))
+
+    if (profiles) {
+      const profileMap = new Map(profiles.map(p => [p.id, p]))
+      data.forEach((task: any) => {
+        if (task.assignee_id) task.assignee = profileMap.get(task.assignee_id)
+        if (task.creator_id) task.creator = profileMap.get(task.creator_id)
+      })
+    }
+  }
+
+  return data
 }
 
 export async function createTask(taskData: any) {
