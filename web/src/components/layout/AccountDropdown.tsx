@@ -6,6 +6,7 @@ import { LogOut, User, Building, Settings, X, Loader2, CheckCircle2 } from "luci
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
 import { updateProfileName } from "@/app/actions/profile"
+import { useLanguage } from "@/components/language-provider"
 
 export default function AccountDropdown({ 
   profile 
@@ -14,6 +15,31 @@ export default function AccountDropdown({
 }) {
   const router = useRouter()
   const supabase = createClient()
+  const langContext = useLanguage()
+  const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
+
+  const t = {
+    es: {
+      editProfile: "Editar Perfil",
+      logout: "Cerrar Sesión",
+      fullName: "Nombre y Apellido",
+      namePlaceholder: "Tu nombre completo",
+      saving: "Guardando...",
+      saveChanges: "Guardar Cambios",
+      successMsg: "Perfil actualizado exitosamente",
+      unknownError: "Error desconocido"
+    },
+    en: {
+      editProfile: "Edit Profile",
+      logout: "Sign Out",
+      fullName: "Full Name",
+      namePlaceholder: "Your full name",
+      saving: "Saving...",
+      saveChanges: "Save Changes",
+      successMsg: "Profile updated successfully",
+      unknownError: "Unknown error"
+    }
+  }[lang]
   
   const [isOpen, setIsOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
@@ -47,13 +73,13 @@ export default function AccountDropdown({
     const res = await updateProfileName(newName)
     
     if (res.success) {
-      setUpdateStatus({ type: 'success', message: 'Perfil actualizado exitosamente' })
+      setUpdateStatus({ type: 'success', message: t.successMsg })
       setTimeout(() => {
         setIsEditModalOpen(false)
         setUpdateStatus(null)
       }, 1500)
     } else {
-      setUpdateStatus({ type: 'error', message: res.error || 'Error desconocido' })
+      setUpdateStatus({ type: 'error', message: res.error || t.unknownError })
     }
     setIsUpdating(false)
   }
@@ -98,7 +124,7 @@ export default function AccountDropdown({
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
             <Settings className="h-4 w-4" />
-            Editar Perfil
+            {t.editProfile}
           </button>
         </div>
         <div className="p-2">
@@ -107,7 +133,7 @@ export default function AccountDropdown({
             className="w-full flex items-center gap-2 px-3 py-2 text-sm font-medium text-rose-500 hover:bg-rose-500/10 rounded-md transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Cerrar Sesión
+            {t.logout}
           </button>
         </div>
       </div>
@@ -120,7 +146,7 @@ export default function AccountDropdown({
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Settings className="w-5 h-5 text-primary" />
-                Editar Perfil
+                {t.editProfile}
               </h3>
               <button 
                 onClick={() => {
@@ -137,13 +163,13 @@ export default function AccountDropdown({
             <form onSubmit={handleUpdateProfile} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-1">
-                  Nombre y Apellido
+                  {t.fullName}
                 </label>
                 <input 
                   type="text"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
-                  placeholder="Tu nombre completo"
+                  placeholder={t.namePlaceholder}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background focus:ring-2 focus:ring-primary outline-none"
                   required
                 />
@@ -165,7 +191,7 @@ export default function AccountDropdown({
                   className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-2 rounded-md font-medium transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {isUpdating && <Loader2 className="w-4 h-4 animate-spin" />}
-                  {isUpdating ? 'Guardando...' : 'Guardar Cambios'}
+                  {isUpdating ? t.saving : t.saveChanges}
                 </button>
               </div>
             </form>

@@ -13,7 +13,8 @@ export function VisitsTable({ visits }: { visits: any[] }) {
       client: 'Cliente',
       status: 'Estado',
       notes: 'Notas',
-      noVisits: 'No hay visitas recientes'
+      noVisits: 'No hay visitas recientes',
+      unknown: 'Desconocido'
     },
     en: {
       date: 'Date',
@@ -21,7 +22,8 @@ export function VisitsTable({ visits }: { visits: any[] }) {
       client: 'Client',
       status: 'Status',
       notes: 'Notes',
-      noVisits: 'No recent visits'
+      noVisits: 'No recent visits',
+      unknown: 'Unknown'
     }
   }[lang]
 
@@ -52,13 +54,13 @@ export function VisitsTable({ visits }: { visits: any[] }) {
           {recentVisits.map((visit) => (
             <tr key={visit.id} className="border-b border-border hover:bg-muted/20 transition-colors">
               <td className="px-4 py-3 font-medium text-foreground whitespace-nowrap">
-                {new Date(visit.created_at).toLocaleDateString()}
+                {new Date(visit.created_at).toLocaleDateString(lang === 'es' ? 'es-ES' : 'en-US')}
               </td>
               <td className="px-4 py-3">
-                <div className="font-medium text-foreground">{visit.creator?.name || 'Unknown'}</div>
+                <div className="font-medium text-foreground">{visit.creator?.name || t.unknown}</div>
               </td>
               <td className="px-4 py-3 text-foreground/80 font-medium">
-                {visit.client?.name || 'Unknown'}
+                {visit.client?.name || t.unknown}
               </td>
               <td className="px-4 py-3">
                 <span className={`text-[10px] uppercase px-2 py-0.5 rounded-full font-bold ${

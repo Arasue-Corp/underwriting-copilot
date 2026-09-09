@@ -26,7 +26,7 @@ export default function ProposalsPage() {
     es: {
       title: 'Propuestas Listas',
       subtitle: 'Propuestas generadas por Underwriting listas para ser presentadas a tu cliente.',
-      loading: 'Loading proposals...',
+      loading: 'Cargando propuestas...',
       empty: 'Aún no tienes propuestas generadas.',
       updating: 'Actualizando estado...',
       updateSuccess: 'Estado actualizado correctamente',

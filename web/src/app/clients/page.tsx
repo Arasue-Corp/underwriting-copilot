@@ -21,7 +21,8 @@ export default function ClientsPage() {
       title: 'Directorio de Clientes',
       searchPlaceholder: 'Buscar cliente...',
       clientsFound: 'Clientes encontrados',
-      loading: 'Loading...',
+      loading: 'Cargando...',
+      quotes: 'cotizaciones',
       visits: 'visitas',
       selectToView: 'Selecciona un cliente para ver su información 360°',
       structure: 'Estructura:',
@@ -29,6 +30,8 @@ export default function ClientsPage() {
       contact: 'Contacto:',
       dob: 'DOB:',
       notRegistered: 'No registrado',
+      activityHistoryTitle: 'Ver registro de actividad',
+      delete: 'Eliminar',
       editClient: 'Editar Cliente',
       logVisit: 'Registrar Visita',
       newTask: 'Nueva Tarea',
@@ -49,6 +52,7 @@ export default function ClientsPage() {
       searchPlaceholder: 'Search client...',
       clientsFound: 'Clients found',
       loading: 'Loading...',
+      quotes: 'quotes',
       visits: 'visits',
       selectToView: 'Select a client to view their 360° information',
       structure: 'Structure:',
@@ -56,6 +60,8 @@ export default function ClientsPage() {
       contact: 'Contact:',
       dob: 'DOB:',
       notRegistered: 'Not registered',
+      activityHistoryTitle: 'View activity log',
+      delete: 'Delete',
       editClient: 'Edit Client',
       logVisit: 'Log Visit',
       newTask: 'New Task',
@@ -66,7 +72,10 @@ export default function ClientsPage() {
       renews: 'Renews:',
       visitLog: 'Visit & Activity Log',
       noVisits: 'No visits registered for this client.',
-      dataError: 'Error loading data'
+      dataError: 'Error loading data',
+      newQuote: 'New Quote',
+      clientVisits: 'Client Visits',
+      recentQuotes: 'Recent Quotes'
     }
   }[lang]
 
@@ -231,7 +240,7 @@ export default function ClientsPage() {
                     {client.name}
                   </h4>
                   <div className="text-xs text-muted-foreground mt-1">
-                    {client.quote_requests?.length || 0} quotes • {client.visits?.length || 0} {t.visits}
+                    {client.quote_requests?.length || 0} {t.quotes} • {client.visits?.length || 0} {t.visits}
                   </div>
                 </div>
                 <ChevronRight className={`h-4 w-4 ${selectedClient?.id === client.id ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -298,7 +307,7 @@ export default function ClientsPage() {
                       <button 
                         onClick={(e) => { e.stopPropagation(); setIsLogsModalOpen(true); }}
                         className="bg-muted text-muted-foreground hover:bg-muted/80 p-2 rounded-lg shadow-sm border border-border flex items-center justify-center"
-                        title="Ver registro de actividad"
+                        title={t.activityHistoryTitle}
                       >
                         <History className="w-5 h-5" />
                       </button>
@@ -309,7 +318,7 @@ export default function ClientsPage() {
                           className="bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 px-4 py-2 rounded-lg font-medium shadow-sm flex items-center gap-2 border border-rose-500/20"
                         >
                           <Trash2 className="w-4 h-4" />
-                          {'Eliminar'}
+                          {t.delete}
                         </button>
                     )}
                     {((userRole === 'ADMIN' || userRole === 'DEMO') || userRole === 'MANAGER') && (

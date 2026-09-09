@@ -1,16 +1,17 @@
 "use client"
 
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid } from "recharts"
+import { useLanguage } from "@/components/language-provider"
 
 export function OverviewChart({ data }: { data?: any[] }) {
-  const chartData = data && data.length > 0 ? data : [
-    { name: "Ene", total: 0 },
-    { name: "Feb", total: 0 },
-    { name: "Mar", total: 0 },
-    { name: "Abr", total: 0 },
-    { name: "May", total: 0 },
-    { name: "Jun", total: 0 },
-  ]
+  const langContext = useLanguage()
+  const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
+
+  const defaultMonths = lang === 'es'
+    ? ["Ene", "Feb", "Mar", "Abr", "May", "Jun"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
+
+  const chartData = data && data.length > 0 ? data : defaultMonths.map(name => ({ name, total: 0 }))
 
   return (
     <ResponsiveContainer width="100%" height={300}>

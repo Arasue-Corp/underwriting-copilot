@@ -51,7 +51,7 @@ export default function CarriersPage() {
       carrierName: "Nombre de Aseguradora",
       addedOn: "Agregada el",
       action: "Acción",
-      loading: "Loading carriers...",
+      loading: "Cargando aseguradoras...",
       noResults: "No hay resultados.",
       edit: "Editar",
       registerCarrier: "Registrar Aseguradora",

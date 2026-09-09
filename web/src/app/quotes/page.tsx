@@ -56,7 +56,7 @@ export default function QuotesPage() {
       assignedToMe: "Asignadas a mí",
       createdByMe: "Creadas por mí",
       newQuote: "Nueva Cotización",
-      loadingQuotes: "Loading requests...",
+      loadingQuotes: "Cargando solicitudes...",
       noQuotes: "No hay solicitudes para mostrar.",
       statusMap: {
         PENDING_MANAGER: "Pendiente Manager",

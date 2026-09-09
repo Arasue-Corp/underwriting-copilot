@@ -83,7 +83,8 @@ export default async function RootLayout({
       users: 'User Management',
       myAgency: 'My Agency',
       settings: 'Settings',
-      calendar: 'Calendar'
+      calendar: 'Calendar',
+      developedBy: 'Developed by'
     },
     es: {
       dashboard: 'Dashboard',
@@ -93,13 +94,14 @@ export default async function RootLayout({
       clients: 'Prospectos / Clientes',
       visits: 'Bitácora / CRM',
       admin: 'Administración',
-      ingestion: 'BI Ingestion',
+      ingestion: 'Ingesta de Datos BI',
       agencies: 'Agencias',
       carriers: 'Aseguradoras',
       users: 'Gestión de Usuarios',
       myAgency: 'Mi Agencia',
       settings: 'Configuración',
-      calendar: 'Calendario'
+      calendar: 'Calendario',
+      developedBy: 'Desarrollado por'
     }
   }[lang];
 
@@ -134,7 +136,7 @@ export default async function RootLayout({
                     </a>
                   </div>
                   <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
-                    Desarrollado por <br/>
+                    {t.developedBy} <br/>
                     <span className="text-primary font-bold">Arasue Forge</span>
                   </div>
                 </aside>

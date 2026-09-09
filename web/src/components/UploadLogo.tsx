@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Upload, Loader2, CheckCircle2 } from "lucide-react"
+import { useLanguage } from "@/components/language-provider"
 
 interface UploadLogoProps {
   table: "agencies" | "clients"
@@ -15,6 +16,25 @@ export default function UploadLogo({ table, recordId, currentLogoUrl }: UploadLo
   const [success, setSuccess] = useState(false)
   const [logoUrl, setLogoUrl] = useState(currentLogoUrl)
   const supabase = createClient()
+  const langContext = useLanguage()
+  const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
+
+  const t = {
+    es: {
+      uploading: "Subiendo...",
+      updated: "Actualizado",
+      changeLogo: "Cambiar Logo",
+      recommended: "Recomendado: Cuadrado, max 2MB",
+      errorPrefix: "Error al subir el logo: "
+    },
+    en: {
+      uploading: "Uploading...",
+      updated: "Updated",
+      changeLogo: "Change Logo",
+      recommended: "Recommended: Square, max 2MB",
+      errorPrefix: "Error uploading logo: "
+    }
+  }[lang]
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -52,7 +72,7 @@ export default function UploadLogo({ table, recordId, currentLogoUrl }: UploadLo
       setTimeout(() => setSuccess(false), 3000)
     } catch (err: any) {
       console.error("Error uploading logo:", err)
-      alert("Error al subir el logo: " + err.message)
+      alert(t.errorPrefix + err.message)
     } finally {
       setLoading(false)
     }
@@ -78,7 +98,7 @@ export default function UploadLogo({ table, recordId, currentLogoUrl }: UploadLo
           ) : (
             <Upload className="h-4 w-4" />
           )}
-          <span>{loading ? "Subiendo..." : success ? "Actualizado" : "Cambiar Logo"}</span>
+          <span>{loading ? t.uploading : success ? t.updated : t.changeLogo}</span>
           <input 
             type="file" 
             className="sr-only" 
@@ -87,7 +107,7 @@ export default function UploadLogo({ table, recordId, currentLogoUrl }: UploadLo
             disabled={loading}
           />
         </label>
-        <p className="text-xs text-muted-foreground mt-1">Recomendado: Cuadrado, max 2MB</p>
+        <p className="text-xs text-muted-foreground mt-1">{t.recommended}</p>
       </div>
     </div>
   )

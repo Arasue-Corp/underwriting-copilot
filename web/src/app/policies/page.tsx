@@ -47,7 +47,7 @@ export default function PoliciesPage() {
       delete: "Eliminar",
       deleteConfirm: "¿Estás seguro de eliminar esta póliza?",
       noData: "No se encontraron pólizas.",
-      loading: "Loading..."
+      loading: "Cargando pólizas..."
     },
     en: {
       title: "Policies Registry",

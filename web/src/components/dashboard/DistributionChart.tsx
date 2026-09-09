@@ -1,10 +1,14 @@
 "use client"
 
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip, Legend } from "recharts"
+import { useLanguage } from "@/components/language-provider"
 
 export function DistributionChart({ data }: { data?: any[] }) {
+  const langContext = useLanguage()
+  const lang = (langContext === 'en' || langContext === 'es') ? langContext : 'es'
+
   const chartData = data && data.length > 0 ? data : [
-    { name: "Sin datos", value: 1 }
+    { name: lang === 'es' ? "Sin datos" : "No data", value: 1 }
   ];
 
   return (
