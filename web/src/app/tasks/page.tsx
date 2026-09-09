@@ -9,6 +9,7 @@ import { format } from "date-fns"
 import { es as esLocale } from "date-fns/locale"
 import { createClient } from "@/lib/supabase/client"
 import { TaskModal } from "@/components/tasks/TaskModal"
+import { TaskViewModal } from "@/components/tasks/TaskViewModal"
 
 export default function TasksPage() {
   const langContext = useLanguage()
@@ -21,6 +22,7 @@ export default function TasksPage() {
   const [sortConfig, setSortConfig] = useState({ key: 'due_date', direction: 'asc' })
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false)
+  const [selectedTask, setSelectedTask] = useState<any>(null)
   const [clients, setClients] = useState<any[]>([])
   const [agents, setAgents] = useState<any[]>([])
   const [userProfile, setUserProfile] = useState<any>(null)
@@ -273,8 +275,8 @@ export default function TasksPage() {
                 </tr>
               ) : (
                 paginatedTasks.map((task) => (
-                  <tr key={task.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={task.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => setSelectedTask(task)}>
+                    <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                       <select
                         value={task.status}
                         onChange={(e) => handleStatusChange(task.id, e.target.value)}
@@ -305,7 +307,7 @@ export default function TasksPage() {
                         <span>{task.assignee?.name || t.creator + ' ' + task.creator?.name}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => handleDelete(task.id)}
                         className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
@@ -373,6 +375,12 @@ export default function TasksPage() {
         clients={clients}
         agents={agents}
         userProfile={userProfile}
+      />
+      
+      <TaskViewModal 
+        isOpen={!!selectedTask} 
+        onClose={() => setSelectedTask(null)} 
+        task={selectedTask} 
       />
     </div>
   )
