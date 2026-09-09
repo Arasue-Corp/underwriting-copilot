@@ -102,7 +102,7 @@ export function GoalHistoryModal({ isOpen, onClose, goal }: GoalHistoryModalProp
             <div>
               <h2 className="text-xl font-bold leading-none">{t.title}</h2>
               <p className="text-sm text-muted-foreground mt-1">
-                {goal.profiles?.name} • {getGoalTypeLabel(goal.goal_type)} ({getPeriodLabel(goal.period_type)})
+                {goal.profiles?.name} • {getGoalTypeLabel(goal.goal_type)} ({getPeriodLabel(goal.period_type)}) • <span className="font-mono text-xs">{lang === 'es' ? 'Vigencia:' : 'Window:'} {goal.start_date} → {goal.end_date}</span>
               </p>
             </div>
           </div>

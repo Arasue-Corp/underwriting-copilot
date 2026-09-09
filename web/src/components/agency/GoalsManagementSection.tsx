@@ -130,7 +130,7 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
               <th className="px-6 py-3 font-medium">{t.colAgent}</th>
               <th className="px-6 py-3 font-medium">{t.colTypeFreq}</th>
               <th className="px-6 py-3 font-medium">{t.colProgress}</th>
-              <th className="px-6 py-3 font-medium">{t.colDates}</th>
+              <th className="px-6 py-3 font-medium">{lang === 'es' ? 'Periodo / Vigencia' : 'Period / Range'}</th>
               <th className="px-6 py-3 font-medium text-right">{t.colActions}</th>
             </tr>
           </thead>
@@ -161,8 +161,13 @@ export function GoalsManagementSection({ agents, goals, userRole }: GoalsManagem
                       ></div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-muted-foreground">
-                    {goal.current_period_start || goal.start_date} a {goal.current_period_end || goal.end_date}
+                  <td className="px-6 py-4 text-xs">
+                    <div className="font-medium text-foreground">
+                      {goal.current_period_start || goal.start_date} <span className="text-muted-foreground">{lang === 'es' ? 'al' : 'to'}</span> {goal.current_period_end || goal.end_date}
+                    </div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">
+                      {lang === 'es' ? 'Vigencia total:' : 'Total window:'} {goal.start_date} → {goal.end_date}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-right">
                     <button 

@@ -345,8 +345,12 @@ export async function getGoalHistory(goalId: string): Promise<GoalHistoryPeriod[
   // Use toZonedTime so that cursor starts exactly at the wall-clock date of start_date
   // Since start_date is a YYYY-MM-DD string, new Date(goal.start_date + "T00:00:00") creates a date
   const startDate = new Date(goal.start_date + 'T00:00:00')
+  const endDate = goal.end_date ? new Date(goal.end_date + 'T23:59:59.999') : new Date('2099-12-31T23:59:59')
   const now = new Date()
   const { start: currentStart } = getPeriodBoundariesForDate(now, goal.period_type)
+
+  // We show all periods from start_date up to MIN(now, end_date)
+  const maxBoundary = now.getTime() < endDate.getTime() ? currentStart.getTime() : endDate.getTime()
 
   let cursor = new Date(startDate)
   
@@ -354,18 +358,21 @@ export async function getGoalHistory(goalId: string): Promise<GoalHistoryPeriod[
   let iterations = 0
   const maxIterations = 365 * 5 // Max 5 years of daily goals
 
-  while (cursor.getTime() <= currentStart.getTime() && iterations < maxIterations) {
+  while (cursor.getTime() <= maxBoundary && iterations < maxIterations) {
     const { start, end, zonedStart, zonedEnd } = getPeriodBoundariesForDate(cursor, goal.period_type)
     
-    // Make sure we haven't already added this exact period
-    if (!periods.find(p => p.pStart === start.getTime())) {
-      periods.push({
-        pStart: start.getTime(),
-        pEnd: end.getTime(),
-        startStr: zonedStart.toISOString(),
-        endStr: zonedEnd.toISOString(),
-        isCurrent: start.getTime() === currentStart.getTime()
-      })
+    // Only include periods that intersect with [startDate, endDate]
+    if (start.getTime() <= endDate.getTime() && end.getTime() >= startDate.getTime()) {
+      // Make sure we haven't already added this exact period
+      if (!periods.find(p => p.pStart === start.getTime())) {
+        periods.push({
+          pStart: start.getTime(),
+          pEnd: end.getTime(),
+          startStr: zonedStart.toISOString(),
+          endStr: zonedEnd.toISOString(),
+          isCurrent: start.getTime() === currentStart.getTime()
+        })
+      }
     }
 
     // Advance cursor to next period

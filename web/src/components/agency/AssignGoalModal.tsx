@@ -22,6 +22,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       title: 'Asignar Nueva Meta Recurrente',
       selectAgentToast: 'Por favor selecciona un agente',
       validAmountToast: 'Ingresa una cantidad válida',
+      validDatesToast: 'La fecha de fin debe ser posterior o igual a la fecha de inicio',
       successToast: 'Meta recurrente asignada correctamente',
       errorToast: 'Error al asignar la meta',
       agent: 'Agente',
@@ -31,16 +32,19 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       quotedPrem: 'Prima Cotizada ($)',
       comms: 'Comisiones ($)',
       visits: 'Visitas a Clientes (#)',
-      frequency: 'Frecuencia',
-      daily: 'Diaria (se renueva cada día)',
-      weekly: 'Semanal (se renueva cada lunes)',
-      monthly: 'Mensual (se renueva cada mes)',
-      yearly: 'Anual (se renueva cada año)',
+      frequency: 'Frecuencia de Monitoreo',
+      daily: 'Diaria (monitoreo día por día)',
+      weekly: 'Semanal (monitoreo lunes a domingo)',
+      monthly: 'Mensual (monitoreo mes a mes)',
+      yearly: 'Anual (monitoreo año por año)',
       qtyLabel: 'Cantidad Objetivo por Periodo',
       amtLabel: 'Monto Objetivo por Periodo ($)',
       qtyPh: 'Ej. 10',
       amtPh: 'Ej. 15000',
-      startDt: 'Inicio de Recurrencia',
+      periodDates: 'Periodo de Vigencia de la Meta',
+      periodDatesDesc: 'La meta se monitoreará de forma recurrente periodo a periodo entre estas dos fechas.',
+      startDt: 'Fecha de Inicio',
+      endDt: 'Fecha de Fin',
       cancel: 'Cancelar',
       save: 'Asignar Meta',
       saving: 'Guardando...'
@@ -49,6 +53,7 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       title: 'Assign New Recurring Goal',
       selectAgentToast: 'Please select an agent',
       validAmountToast: 'Enter a valid amount',
+      validDatesToast: 'End date must be greater than or equal to start date',
       successToast: 'Recurring goal assigned successfully',
       errorToast: 'Error assigning goal',
       agent: 'Agent',
@@ -58,28 +63,37 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       quotedPrem: 'Quoted Premium ($)',
       comms: 'Commissions ($)',
       visits: 'Client Visits (#)',
-      frequency: 'Frequency',
-      daily: 'Daily (renews every day)',
-      weekly: 'Weekly (renews every Monday)',
-      monthly: 'Monthly (renews every month)',
-      yearly: 'Yearly (renews every year)',
+      frequency: 'Monitoring Frequency',
+      daily: 'Daily (monitored day by day)',
+      weekly: 'Weekly (monitored Monday to Sunday)',
+      monthly: 'Monthly (monitored month by month)',
+      yearly: 'Yearly (monitored year by year)',
       qtyLabel: 'Target Quantity per Period',
       amtLabel: 'Target Amount per Period ($)',
       qtyPh: 'e.g. 10',
       amtPh: 'e.g. 15000',
-      startDt: 'Recurrence Start Date',
+      periodDates: 'Goal Active Monitoring Window',
+      periodDatesDesc: 'The goal will be monitored recursively period by period between these two dates.',
+      startDt: 'Start Date',
+      endDt: 'End Date',
       cancel: 'Cancel',
       save: 'Assign Goal',
       saving: 'Saving...'
     }
   }[lang]
   
+  const todayStr = new Date().toISOString().split('T')[0]
+  // Default end date: end of current year
+  const currentYear = new Date().getFullYear()
+  const defaultEndStr = `${currentYear}-12-31`
+
   const [formData, setFormData] = useState({
     profile_id: '',
     goal_type: 'BOUND_PREMIUM' as GoalType,
     period_type: 'MONTHLY' as GoalPeriod,
     target_amount: '',
-    start_date: new Date().toISOString().split('T')[0]
+    start_date: todayStr,
+    end_date: defaultEndStr
   })
 
   if (!isOpen) return null
@@ -97,11 +111,16 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
       return
     }
 
+    if (formData.end_date && formData.start_date && formData.end_date < formData.start_date) {
+      toast.error(t.validDatesToast)
+      return
+    }
+
     startTransition(async () => {
       const res = await createGoal({
         ...formData,
         target_amount: Number(formData.target_amount),
-        end_date: '2099-12-31' // Far future date, effectively infinite recurrence
+        end_date: formData.end_date
       })
 
       if (res.success) {
@@ -197,15 +216,40 @@ export function AssignGoalModal({ isOpen, onClose, agents, onSuccess }: AssignGo
               />
             </div>
 
-            <div className="pt-2 border-t border-border/50">
-              <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Calendar className="w-3 h-3"/> {t.startDt}</label>
-              <input
-                type="date"
-                className="w-full bg-background border border-input rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
-                value={formData.start_date}
-                onChange={e => setFormData({...formData, start_date: e.target.value})}
-                required
-              />
+            <div className="pt-3 border-t border-border/50">
+              <div className="mb-2">
+                <span className="text-xs font-semibold text-foreground flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-primary"/> {t.periodDates}
+                </span>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  {t.periodDatesDesc}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t.startDt}</label>
+                  <input
+                    type="date"
+                    className="w-full bg-background border border-input rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                    value={formData.start_date}
+                    onChange={e => setFormData({...formData, start_date: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">{t.endDt}</label>
+                  <input
+                    type="date"
+                    className="w-full bg-background border border-input rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary outline-none"
+                    value={formData.end_date}
+                    min={formData.start_date}
+                    onChange={e => setFormData({...formData, end_date: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
             </div>
 
           </form>
