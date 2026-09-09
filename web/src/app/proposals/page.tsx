@@ -42,7 +42,7 @@ export default function ProposalsPage() {
       viewPresentation: 'Ver Presentación',
       statuses: {
         QUOTED: 'Pendiente Presentar',
-        PROCESSING: 'Cambiar / Revisar',
+        PENDING_MANAGER: 'Cambiar / Revisar',
         ACCEPTED: 'Aceptada',
         REJECTED: 'Rechazada'
       }
@@ -66,7 +66,7 @@ export default function ProposalsPage() {
       viewPresentation: 'View Presentation',
       statuses: {
         QUOTED: 'Pending Presentation',
-        PROCESSING: 'Change / Review',
+        PENDING_MANAGER: 'Change / Review',
         ACCEPTED: 'Accepted',
         REJECTED: 'Rejected'
       }
@@ -211,12 +211,12 @@ export default function ProposalsPage() {
                         className={`mb-2 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border outline-none appearance-none cursor-pointer ${
                           quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
                           quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
-                          quote.status === 'PROCESSING' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                          quote.status === 'PENDING_MANAGER' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
                           'bg-blue-500/10 text-blue-600 border-blue-500/30'
                         }`}
                       >
                           <option value="QUOTED">{t.statuses.QUOTED}</option>
-                          <option value="PROCESSING">{t.statuses.PROCESSING}</option>
+                          <option value="PENDING_MANAGER">{t.statuses.PENDING_MANAGER}</option>
                           <option value="ACCEPTED">{t.statuses.ACCEPTED}</option>
                           <option value="REJECTED">{t.statuses.REJECTED}</option>
                       </select>
@@ -290,12 +290,12 @@ export default function ProposalsPage() {
                             className={`text-xs font-semibold px-2 py-1.5 rounded-md border outline-none appearance-none cursor-pointer pr-6 ${
                               quote.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30' :
                               quote.status === 'REJECTED' ? 'bg-red-500/10 text-red-600 border-red-500/30' :
-                              quote.status === 'PROCESSING' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
+                              quote.status === 'PENDING_MANAGER' ? 'bg-amber-500/10 text-amber-600 border-amber-500/30' :
                               'bg-blue-500/10 text-blue-600 border-blue-500/30'
                             }`}
                           >
                             <option value="QUOTED">{t.statuses.QUOTED}</option>
-                            <option value="PROCESSING">{t.statuses.PROCESSING}</option>
+                            <option value="PENDING_MANAGER">{t.statuses.PENDING_MANAGER}</option>
                             <option value="ACCEPTED">{t.statuses.ACCEPTED}</option>
                             <option value="REJECTED">{t.statuses.REJECTED}</option>
                           </select>
