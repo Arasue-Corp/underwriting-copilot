@@ -42,7 +42,7 @@ USING (get_user_role() = 'DEMO' AND EXISTS (SELECT 1 FROM profiles WHERE profile
 
 CREATE POLICY "Demo can view agency visits" 
 ON public.visits FOR SELECT 
-USING (get_user_role() = 'DEMO' AND EXISTS (SELECT 1 FROM profiles WHERE profiles.id = visits.agent_id AND profiles.agency_id = get_user_agency()));
+USING (get_user_role() = 'DEMO' AND agency_id = get_user_agency());
 
 CREATE POLICY "Demo can read agency policies" 
 ON public.policies FOR SELECT 

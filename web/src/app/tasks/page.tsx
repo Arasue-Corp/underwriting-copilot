@@ -35,7 +35,7 @@ export default function TasksPage() {
   const t = {
     es: {
       title: "Mis Tareas",
-      subtitle: "GestiÃ³n de tareas activas e historial.",
+      subtitle: "Gestión de tareas activas e historial.",
       searchPlaceholder: "Buscar tarea o cliente...",
       status: "Estatus",
       all: "Todas",
@@ -50,14 +50,14 @@ export default function TasksPage() {
       actions: "Acciones",
       loading: "Cargando tareas...",
       noData: "No se encontraron tareas.",
-      deleteConfirm: "Â¿EstÃ¡s seguro de eliminar esta tarea?",
+      deleteConfirm: "¿Estás seguro de eliminar esta tarea?",
       statusUpdateSuccess: "Estatus actualizado",
       deleteSuccess: "Tarea eliminada",
       deleteError: "Error al eliminar la tarea",
-      sortNewest: "MÃ¡s recientes",
-      sortOldest: "MÃ¡s antiguas",
-      sortDueSoon: "MÃ¡s prÃ³ximas a vencer",
-      sortDueLate: "MÃ¡s lejanas a vencer",
+      sortNewest: "Más recientes",
+      sortOldest: "Más antiguas",
+      sortDueSoon: "Más próximas a vencer",
+      sortDueLate: "Más lejanas a vencer",
       sortBy: "Ordenar por:"
     },
     en: {

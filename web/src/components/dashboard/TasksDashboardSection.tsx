@@ -17,7 +17,7 @@ export function TasksDashboardSection({ tasks }: { tasks: any[] }) {
   const t = {
     es: {
       title: "Tareas Activas",
-      desc: "Tus prÃ³ximas tareas pendientes.",
+      desc: "Tus próximas tareas pendientes.",
       viewAll: "Ver todas",
       noTasks: "No tienes tareas activas en este momento.",
       status: {

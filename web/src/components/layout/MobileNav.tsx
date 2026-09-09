@@ -4,13 +4,16 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
-import { Menu, X, Home, Search, FileText, Database, Building2, ShieldCheck, Users, Settings, Layers, Calendar } from "lucide-react"
+import { Menu, X, Home, Search, FileText, Database, Building2, ShieldCheck, Users, Layers, CalendarDays, History, CheckSquare } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
+import { useLanguage } from "@/components/language-provider"
+
 export default function MobileNav({ role, t }: { role: string, t: any }) {
   const [isOpen, setIsOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
+  const lang = useLanguage()
 
   const getActiveClasses = (path: string) => {
     if (path === "/") {
@@ -100,8 +103,20 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
             </li>
             <li>
               <Link href="/visits" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/visits")}`}>
-                <Calendar className="h-5 w-5" />
+                <History className="h-5 w-5" />
                 {t.visits}
+              </Link>
+            </li>
+            <li>
+              <Link href="/calendar" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/calendar")}`}>
+                <CalendarDays className="h-5 w-5" />
+                {t.calendar}
+              </Link>
+            </li>
+            <li>
+              <Link href="/tasks" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/tasks")}`}>
+                <CheckSquare className="h-5 w-5" />
+                {lang === 'es' ? 'Tareas' : 'Tasks'}
               </Link>
             </li>
             {(role === 'ADMIN' || role === 'DEMO') && (
@@ -127,15 +142,29 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
                     {t.users}
                   </Link>
                 </li>
+                <li>
+                  <Link href="/admin/carriers" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/admin/carriers")}`}>
+                    <ShieldCheck className="h-5 w-5" />
+                    {t.carriers}
+                  </Link>
+                </li>
               </>
             )}
             {(role === 'MANAGER' || (role === 'ADMIN' || role === 'DEMO')) && (
-              <li>
-                <Link href="/agency" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/agency")}`}>
-                  <Users className="h-5 w-5" />
-                  {t.myAgency}
-                </Link>
-              </li>
+              <>
+                <li>
+                  <Link href="/policies" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/policies")}`}>
+                    <ShieldCheck className="h-5 w-5" />
+                    {lang === 'es' ? 'Pólizas' : 'Policies'}
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/agency" onClick={() => setIsOpen(false)} className={`flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium transition-colors ${getActiveClasses("/agency")}`}>
+                    <Users className="h-5 w-5" />
+                    {t.myAgency}
+                  </Link>
+                </li>
+              </>
             )}
           </ul>
         </nav>
@@ -147,10 +176,6 @@ export default function MobileNav({ role, t }: { role: string, t: any }) {
             <div onClick={() => setIsOpen(false)}>
               <LanguageToggle />
             </div>
-            <a href="#" className="flex items-center gap-3 rounded-md px-3 py-3 text-base font-medium text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors" onClick={() => setIsOpen(false)}>
-              <Settings className="h-5 w-5" />
-              {t.settings || "Configuración"}
-            </a>
           </div>
         </div>
         </>,

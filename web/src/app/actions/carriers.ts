@@ -19,6 +19,14 @@ export async function getCarriers() {
 
 export async function addCarrier(name: string, logoUrl?: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "No autenticado" }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'DEMO')) {
+    return { success: false, error: "Acceso denegado: Se requiere rol de Administrador" }
+  }
+
   const { data, error } = await supabase
     .from("carriers")
     .insert({ name, logo_url: logoUrl })
@@ -36,6 +44,13 @@ export async function addCarrier(name: string, logoUrl?: string) {
 
 export async function updateCarrier(id: string, oldName: string, newName: string, logoUrl?: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: "No autenticado" }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'DEMO')) {
+    return { success: false, error: "Acceso denegado: Se requiere rol de Administrador" }
+  }
   
   // 1. Update the carrier record itself
   const updateData: any = {}

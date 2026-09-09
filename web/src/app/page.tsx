@@ -125,10 +125,10 @@ export default async function Dashboard(props: { searchParams: Promise<{ [key: s
   let tasks: any[] = [];
   
   if (role === 'DEMO') {
-    const { demoQuotes, demoVisits } = await import('@/lib/demo-data');
+    const { demoQuotes, demoVisits, demoTasks } = await import('@/lib/demo-data');
     quotes = demoQuotes;
     visits = demoVisits;
-    tasks = []; // Mock tasks could be added here if needed
+    tasks = demoTasks || [];
   } else {
     const { data: dbQuotes, error } = await quotesQuery;
     quotes = dbQuotes || [];

@@ -15,7 +15,7 @@ export async function getActivityLogs(entityType: string, entityId: string) {
     .eq('id', user.id)
     .single()
 
-  if (profile?.role !== 'ADMIN') {
+  if (!profile || !['ADMIN', 'MANAGER', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "No autorizado" }
   }
 

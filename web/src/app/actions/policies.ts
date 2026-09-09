@@ -10,7 +10,7 @@ export async function getPolicies() {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role, agency_id").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN'].includes(profile.role)) {
+  if (!profile || !['MANAGER', 'ADMIN', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "Unauthorized role." }
   }
 
@@ -35,7 +35,7 @@ export async function createPolicy(formData: any) {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role, agency_id").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN'].includes(profile.role)) {
+  if (!profile || !['MANAGER', 'ADMIN', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "Unauthorized role." }
   }
 
@@ -62,7 +62,7 @@ export async function updatePolicy(policyId: string, formData: any) {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN'].includes(profile.role)) {
+  if (!profile || !['MANAGER', 'ADMIN', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "Unauthorized role." }
   }
 
@@ -92,7 +92,7 @@ export async function deletePolicy(policyId: string) {
   if (!user) return { success: false, error: "Unauthorized" }
 
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
-  if (!profile || !['MANAGER', 'ADMIN'].includes(profile.role)) {
+  if (!profile || !['MANAGER', 'ADMIN', 'DEMO'].includes(profile.role)) {
     return { success: false, error: "Unauthorized role." }
   }
 

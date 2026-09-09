@@ -114,38 +114,42 @@ export default async function RootLayout({
               <div className="flex flex-col md:flex-row min-h-screen flex-1 w-full">
                 <LayoutWrapper
             sidebar={
-              <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
-                <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
-                  <div className="flex items-center gap-3">
-                    <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-10 h-10 object-contain rounded-xl shadow-sm" />
-                    <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
+              user ? (
+                <aside className="w-64 border-r border-border/40 bg-card/40 backdrop-blur-3xl text-sidebar-foreground hidden md:flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-20">
+                  <div className="h-16 flex items-center px-6 border-b border-border/40 bg-card/20">
+                    <div className="flex items-center gap-3">
+                      <img src="/icono-crisol-cuadrado.png" alt="Crisol Icon" className="w-10 h-10 object-contain rounded-xl shadow-sm" />
+                      <span className="font-playfair font-bold tracking-tight text-xl bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">Crisol</span>
+                    </div>
                   </div>
-                </div>
-                <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
-                  <SidebarNav role={role} t={t} />
-                </nav>
-                <div className="p-4 border-t border-border/40 bg-card/20 space-y-2">
-                  <ThemeToggle />
-                  <LanguageToggle />
-                  <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
-                    <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
-                    {t.settings}
-                  </a>
-                </div>
-                <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
-                  Desarrollado por <br/>
-                  <span className="text-primary font-bold">Arasue Forge</span>
-                </div>
-              </aside>
+                  <nav className="flex-1 overflow-y-auto py-6 hide-scrollbar">
+                    <SidebarNav role={role} t={t} />
+                  </nav>
+                  <div className="p-4 border-t border-border/40 bg-card/20 space-y-2">
+                    <ThemeToggle />
+                    <LanguageToggle />
+                    <a href="#" className="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-card/60 hover:text-foreground transition-all hover:shadow-sm">
+                      <Settings className="h-4 w-4 transition-transform group-hover:rotate-45 group-hover:text-primary" />
+                      {t.settings}
+                    </a>
+                  </div>
+                  <div className="px-6 py-4 border-t border-border/40 bg-card/10 text-xs text-muted-foreground/60 text-center font-medium">
+                    Desarrollado por <br/>
+                    <span className="text-primary font-bold">Arasue Forge</span>
+                  </div>
+                </aside>
+              ) : null
             }
             header={
-              <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-                <MobileNav role={role} t={t} />
-                <div className="flex items-center gap-4 md:gap-6">
-                  {user && <NotificationBell />}
-                  <HeaderAuth />
-                </div>
-              </header>
+              user ? (
+                <header className="h-16 border-b border-border/40 flex items-center justify-between md:justify-end px-4 md:px-8 bg-card/40 backdrop-blur-3xl sticky top-0 z-10 shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+                  <MobileNav role={role} t={t} />
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <NotificationBell />
+                    <HeaderAuth />
+                  </div>
+                </header>
+              ) : null
             }
           >
             {children}

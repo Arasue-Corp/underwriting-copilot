@@ -13,8 +13,9 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname()
   const isPresentation = pathname?.match(/^\/proposals\/[a-zA-Z0-9-]+$/)
+  const isAuthPage = pathname?.startsWith('/login') || pathname?.startsWith('/update-password') || pathname?.startsWith('/auth')
 
-  if (isPresentation) {
+  if (isPresentation || isAuthPage || !sidebar) {
     return (
       <main className="flex-1 flex flex-col min-h-screen min-w-0 w-full bg-background">
         {children}
